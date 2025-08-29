@@ -4,56 +4,29 @@
     <meta charset="UTF-8">
     <title>Gimnasio Terrones</title>
     <link rel="icon" href="static/images/GT.png" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css/') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Carrusel de fondo -->
     <div class="background-slide" id="backgroundSlide"></div>
 
     <div class="container">
-       <div class="logo-container">
-        <img src="{{ url_for('static', filename='images/GT.png') }}" alt="Logo Gimnasio" class="logo">
+        <h1>Iniciar Sesión</h1>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/GT.png') }}" alt="Logo" class="logo">
         </div>
-        <form id="loginForm">
-            <label>Usuario:</label>
-            <input type="text" id="username" required>
-            <label>Contraseña:</label>
-            <input type="password" id="password" required>
+        <form id="loginForm" method="POST" action="/login">
+            <label for="username">Usuario:</label>
+            <input type="text" name="username" id="username" required>
+            <label for="password">Contraseña:</label>
+            <input type="password" name="password" id="password" required>
             <button type="submit">Ingresar</button>
         </form>
-
-        <h2>Token:</h2>
-        <textarea id="token" rows="4" readonly></textarea>
-
-        <h2>Probar ruta protegida:</h2>
-        <button id="protectedBtn">Ir</button>
-        <p id="protectedResult"></p>
+        <p id="error">{% if error %}{{ error }}{% endif %}</p>
     </div>
 
+    <!-- Script del login: lo dejamos igual -->
     <script>
-        // --- Carrusel de fondo ---
-        const images = [
-            "{{ url_for('static', filename='images/1Imagen.jpg') }}",
-            "{{ url_for('static', filename='images/2Imagen.jpg') }}",
-            "{{ url_for('static', filename='images/3Imagen.jpg') }}"
-        ];
-        let index = 0;
-        const bg = document.getElementById("backgroundSlide");
-
-        function changeBackground() {
-            bg.style.backgroundImage = `url('${images[index]}')`;
-            index = (index + 1) % images.length;
-        }
-
-        changeBackground();
-        setInterval(changeBackground, 5000); // cambia cada 5 segundos
-
-        // --- Login y protected ---
-        const form = document.getElementById("loginForm");
-        const tokenField = document.getElementById("token");
-        const protectedBtn = document.getElementById("protectedBtn");
-        const protectedResult = document.getElementById("protectedResult");
-        let token = "";
-
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             const username = document.getElementById("username").value;
@@ -64,25 +37,35 @@
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({username, password})
             });
-            const data = await res.json();
-            if (res.ok) {
-                token = data.access_token;
-                tokenField.value = token;
-            } else {
-                tokenField.value = data.message;
-            }
-        });
 
-        protectedBtn.addEventListener("click", async () => {
-            if (!token) {
-                protectedResult.textContent = "Primero inicia sesión.";
-                return;
-            }
-            const res = await fetch("/protected", {
-                headers: {Authorization: "Bearer " + token}
-            });
             const data = await res.json();
-            protectedResult.textContent = JSON.stringify(data);
+
+            if (res.ok) {
+                // Redirigimos pasando el token en la URL
+                window.location.href = `/bienvenido?token=${data.access_token}`;
+            } else {
+                document.getElementById("error").textContent = data.message;
+            }
         });
     </script>
+
+    <!-- Script separado para el carrusel -->
+    <script>
+        const backgrounds = [
+            "{{ url_for('static', filename='images/1Imagen.jpg') }}",
+            "{{ url_for('static', filename='images/2Imagen.jpg') }}",
+            "{{ url_for('static', filename='images/3Imagen.jpg') }}"
+        ];
+        let current = 0;
+        const slide = document.getElementById("backgroundSlide");
+
+        function changeBackground() {
+            current = (current + 1) % backgrounds.length;
+            slide.style.backgroundImage = `url('${backgrounds[current]}')`;
+        }
+
+        slide.style.backgroundImage = `url('${backgrounds[0]}')`;
+        setInterval(changeBackground, 5000);
+    </script>
 </body>
+</html>

@@ -2,48 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gimnasio Terrones - Dashboard</title>
-    <link rel="icon" href="{{ url_for('static', filename='images/GT.png') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Gimnasio Terrones</title>
+    <link rel="icon" href="static/images/GT.png" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Bienvenido al Dashboard</h1>
-        <p id="userInfo"></p>
-        <button id="logoutBtn">Cerrar sesión</button>
-    </div>
-
-    <script>
-        const userInfo = document.getElementById("userInfo");
-        const logoutBtn = document.getElementById("logoutBtn");
-        const token = localStorage.getItem("access_token");
-
-        if (!token) {
-            // No hay token, volvemos al login
-            window.location.href = "/";
-        }
-
-        // Consultamos la ruta protegida para mostrar info del usuario
-        fetch("/protected", {
-            method: "GET",
-            headers: { "Authorization": "Bearer " + token }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.logged_in_as) {
-                const user = data.logged_in_as;
-                userInfo.textContent = `ID: ${user.id}, Usuario: ${user.username}, Rol: ${user.rol}`;
-            } else {
-                // Token inválido
-                window.location.href = "/";
-            }
-        })
-        .catch(() => window.location.href = "/");
-
-        logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("access_token");
-            window.location.href = "/";
-        });
-    </script>
+    <h1>Bienvenido, {{ usuario }}!</h1>
+    <p>Has iniciado sesión correctamente.</p>
 </body>
 </html>

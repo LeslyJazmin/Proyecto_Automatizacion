@@ -43,7 +43,11 @@ body {
 
 /* Contenedor del formulario */
 .container {
-    background: rgba(255, 255, 255, 0.9); /* semitransparente */
+    background: linear-gradient(
+        180deg,                  /* de arriba hacia abajo */
+        rgba(255, 255, 255, 0.9),    /* rojo arriba */
+        rgba(162, 162, 162, 0.9)       /* negro abajo */
+    );
     padding: 30px 40px;
     border-radius: 12px;
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
