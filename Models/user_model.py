@@ -1,15 +1,14 @@
+import os
 import pyodbc
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from uuid import uuid4
+from dotenv import load_dotenv
 
-DB_CONNECTION = (
-    "Driver={ODBC Driver 17 for SQL Server};"
-    "Server=Automatizacion.mssql.somee.com;"
-    "Database=Automatizacion;"
-    "Uid=JAZNAMUCHE_SQLLogin_1;"
-    "Pwd=trwua7fd3g;"
-)
+# Cargar variables de entorno desde .env
+load_dotenv()
+
+DB_CONNECTION = os.getenv("DB_CONNECTION")
 
 def get_db_connection():
     return pyodbc.connect(DB_CONNECTION)
@@ -26,7 +25,7 @@ def create_user(username, celular, email, password, rol="usuario"):
     conn = get_db_connection()
     cursor = conn.cursor()
     password_hash = generate_password_hash(password)
-    id_usuario = f"USR{uuid4().hex[:8]}"
+    id_usuario = f"USR{uuid4().hex[:8]}"   # ID único alfanumérico
     fecha_creacion = datetime.now()
 
     cursor.execute("""

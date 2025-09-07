@@ -1,9 +1,12 @@
-from flask import request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import json
 from Models.user_model import find_user_by_username, create_user
 from werkzeug.security import check_password_hash
 
+bp = Blueprint("auth", __name__)  # 👈 este es el Blueprint
+
+@bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     username = data.get("username")
@@ -17,12 +20,14 @@ def login():
     else:
         return jsonify({"error": "Usuario o contraseña incorrectos"}), 401
 
+@bp.route("/bienvenido")
 @jwt_required()
 def bienvenido():
     identity = get_jwt_identity()
     user = json.loads(identity)
     return render_template("dashboard.html", usuario=user["username"])
 
+@bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
     username = data.get("username")
