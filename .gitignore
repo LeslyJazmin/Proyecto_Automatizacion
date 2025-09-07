@@ -32,3 +32,9 @@ build/
 
 # Node modules si usas npm / frontend
 node_modules/
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
