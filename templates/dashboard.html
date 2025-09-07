@@ -2,12 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gimnasio Terrones</title>
-    <link rel="icon" href="static/images/GT.png" type="image/x-icon">
+    <title>Bienvenido - Gimnasio Terrones</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/GT.png') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
-    <h1>Bienvenido, {{ usuario }}!</h1>
-    <p>Has iniciado sesión correctamente.</p>
+    <div class="sidebar">
+        <h2>Gestión del Inventario</h2>
+
+        <!-- Imagen debajo del título -->
+        <div class="sidebar-logo">
+            <img src="{{ url_for('static', filename='images/GTB.png') }}" alt="Logo Gimnasio">
+        </div>
+
+        <ul>
+            <li><a href="/dashboard">🏠 Menú Principal</a></li>
+            <li><a href="/inventario">📦 Inventario</a></li>
+            <li><a href="/reportes">📊 Reportes</a></li>
+            <li><a href="/logout" class="logout">🚪 Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Bienvenido, {{ usuario }} 👋</h1>
+            <p>Has iniciado sesión correctamente en el sistema de inventario.</p>
+        
+             <!-- Tabla de ejemplo -->
+            <table class="tabla-inventario">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Puesto</th>
+                        <th>Celular</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Proteína Whey</td>
+                        <td>Suplementos</td>
+                        <td>25</td>
+                        <td>Disponible</td>
+                    </tr>
+                    <tr>
+                        <td>Guantes</td>
+                        <td>Accesorios</td>
+                        <td>10</td>
+                        <td>Bajo stock</td>
+                    </tr>
+                    <tr>
+                        <td>Toallas</td>
+                        <td>Equipamiento</td>
+                        <td>0</td>
+                        <td>Agotado</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>

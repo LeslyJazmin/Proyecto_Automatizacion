@@ -25,28 +25,46 @@
         <p id="error">{% if error %}{{ error }}{% endif %}</p>
     </div>
 
-    <!-- Script del login: lo dejamos igual -->
     <script>
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+    const form = document.getElementById("loginForm");
 
-            const res = await fetch("/login", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({username, password})
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        const res = await fetch("/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username, password})
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // ✅ Guardamos el token de forma segura en localStorage
+            localStorage.setItem("token", data.access_token);
+
+            // ✅ Ahora pedimos /bienvenido con el token en cabecera
+            const bienvenido = await fetch("/bienvenido", {
+                headers: {
+                    "Authorization": "Bearer " + data.access_token
+                }
             });
 
-            const data = await res.json();
-
-            if (res.ok) {
-                // Redirigimos pasando el token en la URL
-                window.location.href = `/bienvenido?token=${data.access_token}`;
+            if (bienvenido.ok) {
+                // ✅ Convierte la respuesta en texto (el HTML del dashboard)
+                const html = await bienvenido.text();
+                document.open();
+                document.write(html);
+                document.close();
             } else {
-                document.getElementById("error").textContent = data.message;
+                document.getElementById("error").textContent = "Error al validar token";
             }
-        });
+        } else {
+            document.getElementById("error").textContent = data.error || "Error en el login";
+        }
+    });
     </script>
 
     <!-- Script separado para el carrusel -->
