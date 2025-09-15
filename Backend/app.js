@@ -1,15 +1,14 @@
-import express from "express";
-import cors from "cors";
-import authRoutes from "./routes/authRoutes.js";
+const express = require("express");
+const cors = require("cors");
+const authRoutes = require("./Routes/authRoutes");
+const { connectDB } = require("./config/db");
 
 const app = express();
-
-app.use(cors({
-  origin: "http://localhost:3000",  // <-- muy importante
-  credentials: true,
-}));
-
+app.use(cors());
 app.use(express.json());
+
+connectDB();
+
 app.use("/api/auth", authRoutes);
 
-export default app;
+module.exports = app;
