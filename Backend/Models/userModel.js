@@ -16,7 +16,7 @@ async function createUser(user) {
     const pool = db.getPool();
     await pool
         .request()
-        .input("id_usuario", sql.NVarChar(6), user.id_usuario)
+        .input("id_usuario", sql.NVarChar(7), user.id_usuario)
         .input("username", sql.NVarChar(50), user.username)
         .input("celular", sql.Char(9), user.celular)
         .input("email", sql.VarChar(50), user.email)
@@ -45,7 +45,7 @@ async function getUserById(id) {
     const pool = db.getPool();
     const result = await pool
         .request()
-        .input("id_usuario", sql.NVarChar(6), id)
+        .input("id_usuario", sql.NVarChar(7), id)
         .query("SELECT * FROM Usuarios WHERE id_usuario = @id_usuario");
     return result.recordset[0];
 }
@@ -55,7 +55,7 @@ async function updateUser(id, data) {
     const pool = db.getPool();
     const result = await pool
         .request()
-        .input("id_usuario", sql.NVarChar(6), id)
+        .input("id_usuario", sql.NVarChar(7), id)
         .input("username", sql.NVarChar(50), data.username)
         .input("celular", sql.Char(9), data.celular)
         .input("email", sql.VarChar(50), data.email)
@@ -78,7 +78,7 @@ async function deleteUser(id) {
     const pool = db.getPool();
     const result = await pool
         .request()
-        .input("id_usuario", sql.NVarChar(6), id)
+        .input("id_usuario", sql.NVarChar(7), id)
         .query("DELETE FROM Usuarios WHERE id_usuario = @id_usuario");
     return result.rowsAffected[0];
 }

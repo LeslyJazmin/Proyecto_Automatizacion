@@ -1,49 +1,64 @@
 const API_URL = "http://localhost:5000/api/users";
 
-// Leer token del localStorage
+// Obtener token de forma segura
 function getToken() {
   return localStorage.getItem("token");
 }
 
-// Crear usuario (solo admin)
+// Función auxiliar para crear headers con token
+function getHeaders(isJson = true) {
+  const headers = {};
+  if (isJson) headers["Content-Type"] = "application/json";
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+// Función auxiliar para manejar errores de fetch
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
+  return data;
+}
+
+// Crear usuario
 export async function createUser(userData) {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${getToken()}`,
-    },
+    headers: getHeaders(true),
     body: JSON.stringify(userData),
   });
-  return await res.json();
+  return handleResponse(res);
 }
 
 // Listar usuarios
 export async function listUsers() {
-  const res = await fetch(API_URL, {
-    headers: { "Authorization": `Bearer ${getToken()}` }
-  });
-  return await res.json();
+  const res = await fetch(API_URL, { headers: getHeaders(false) });
+  return handleResponse(res);
 }
 
 // Actualizar usuario
 export async function updateUser(id, userData) {
   const res = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${getToken()}`
-    },
-    body: JSON.stringify(userData)
+    headers: getHeaders(true),
+    body: JSON.stringify(userData),
   });
-  return await res.json();
+  return handleResponse(res);
 }
 
 // Eliminar usuario
 export async function deleteUser(id) {
   const res = await fetch(`${API_URL}/${id}`, {
     method: "DELETE",
-    headers: { "Authorization": `Bearer ${getToken()}` }
+    headers: getHeaders(false),
   });
-  return await res.json();
+  return handleResponse(res);
+}
+
+// Obtener usuario por ID
+export async function getUserById(id) {
+  const res = await fetch(`${API_URL}/${id}`, { headers: getHeaders(false) });
+  if (!res.ok) throw new Error("Usuario no encontrado");
+  return res.json();
 }

@@ -17,9 +17,10 @@ export default function Login({ setUser, setToken }) {
 
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
+  // Rotar imágenes de fondo cada 5 segundos
   useEffect(() => {
     const interval = setInterval(() => {
-      setBgIndex(prev => (prev + 1) % images.length);
+      setBgIndex((prev) => (prev + 1) % images.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -35,7 +36,8 @@ export default function Login({ setUser, setToken }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      // 1️⃣ Login
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -49,12 +51,31 @@ export default function Login({ setUser, setToken }) {
       }
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
 
+      // 2️⃣ Verificar que el usuario aún exista
+      const userRes = await fetch(`${API_BASE}/api/users/${data.user.id_usuario}`, {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      if (!userRes.ok) {
+        // Usuario eliminado o no encontrado
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setError("El usuario ya no existe");
+        setLoading(false);
+        return;
+      }
+      const userData = await userRes.json();
+
+      // 3️⃣ Guardar usuario y token
+      localStorage.setItem("user", JSON.stringify(userData));
       setToken(data.token);
-      setUser(data.user);
+      setUser(userData);
 
-      navigate("/dashboard");
+      // 4️⃣ Redirigir según rol
+      if (userData.rol === "admin") navigate("/admin-dashboard");
+      else if (userData.rol === "user") navigate("/trabajador-dashboard");
+      else navigate("/dashboard");
+
     } catch (err) {
       console.error("Login error:", err);
       setError("Error de conexión con el servidor");
@@ -64,7 +85,7 @@ export default function Login({ setUser, setToken }) {
   }
 
   return (
-   <div
+    <div
       className="min-h-screen flex justify-end items-center transition-all duration-1000"
       style={{
         backgroundImage: `url(${images[bgIndex]})`,
@@ -72,7 +93,6 @@ export default function Login({ setUser, setToken }) {
         backgroundPosition: "center",
       }}
     >
-      {/* Panel de login */}
       <div className="relative w-full max-w-sm h-[500px] mr-10 p-8 rounded-xl bg-black bg-opacity-70 overflow-hidden">
         {/* Borde animado */}
         <div className="absolute inset-0 rounded-xl pointer-events-none">
@@ -89,7 +109,10 @@ export default function Login({ setUser, setToken }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 relative z-10 flex flex-col justify-between h-[350px]">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 relative z-10 flex flex-col justify-between h-[350px]"
+        >
           <div>
             <label htmlFor="email" className="block mb-1 font-medium text-gray-300">
               Email
@@ -98,7 +121,7 @@ export default function Login({ setUser, setToken }) {
               id="email"
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@ejemplo.com"
               required
               disabled={loading}
@@ -115,7 +138,7 @@ export default function Login({ setUser, setToken }) {
               id="password"
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"
               required
               disabled={loading}

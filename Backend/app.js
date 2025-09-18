@@ -1,8 +1,8 @@
+// 📂 app.js
 const express = require("express");
 const cors = require("cors");
 
-const authRoutes = require("./Routes/authRoutes");
-const userRoutes = require("./Routes/userRoutes");
+const userRoutes = require("./Routes/userRoutes");  // rutas de usuarios + login
 const { connectDB } = require("./config/db");
 
 const app = express();
@@ -12,16 +12,15 @@ app.use(express.json());
 // Conectar a la base de datos
 connectDB();
 
-// Rutas principales
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+// ✅ Montamos todas las rutas bajo un solo prefijo
+app.use("/api", userRoutes);
 
-// Endpoint de prueba para verificar que el servidor está corriendo
+// Endpoint de prueba
 app.get("/", (req, res) => {
     res.send("✅ API funcionando");
 });
 
-// Middleware de manejo de errores global
+// Middleware global de manejo de errores
 app.use((err, req, res, next) => {
     console.error("❌ Error en servidor:", err.stack);
     res.status(500).json({ message: "Error interno del servidor", error: err.message });
