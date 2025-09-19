@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import Login from "./components/Login";
-import AdminDashboard from "./components/AdminDashboard";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
 
-  // ✅ Recuperar token y usuario guardado al cargar la app
+  // Recuperar token y usuario guardado al cargar la app
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
@@ -14,17 +14,21 @@ function App() {
     if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
 
-  // 🔐 Si no hay token, mostrar login
+  // Si no hay token, mostrar login
   if (!token) {
     return <Login setToken={setToken} setUser={setUser} />;
   }
 
-  // 👤 Si el usuario es admin, mostrar dashboard
+  // Dashboard según rol
   if (user?.rol === "admin") {
-    return <AdminDashboard />;
+    return <AdminDashboard user={user} setUser={setUser} setToken={setToken} />;
   }
 
-  // 🏠 Vista por defecto para otros roles
+  if (user?.rol === "user") {
+    return <div>Bienvenido {user.username}, esta es la vista de trabajador</div>;
+  }
+
+  // Vista por defecto
   return <div>Bienvenido {user?.username}</div>;
 }
 
