@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 
 const userRoutes = require("./Routes/userRoutes");  // rutas de usuarios + login
+const empresaRoutes = require("./Routes/empresaRoutes"); // ✅ NUEVO: rutas de empresa
 const { connectDB } = require("./config/db");
 
 const app = express();
@@ -14,6 +15,7 @@ connectDB();
 
 // ✅ Montamos todas las rutas bajo un solo prefijo
 app.use("/api", userRoutes);
+app.use("/api/empresa", empresaRoutes); // ✅ NUEVO: montamos las rutas de empresa
 
 // Endpoint de prueba
 app.get("/", (req, res) => {

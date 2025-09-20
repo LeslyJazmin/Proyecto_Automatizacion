@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
+import InfoEmpresa from "../components/InfoEmpresa"; // ✅ importar componente
 import useUsers from "../hooks/useUsers";
 import { UserPlus } from "lucide-react";
 
@@ -26,23 +27,31 @@ function AdminDashboard() {
       <Sidebar onLogout={handleLogout} />
 
       <div className="flex-1 p-8">
+        {/* --- Bienvenida --- */}
         <div className="bg-white shadow-md rounded-lg p-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-800">
             👋 ¡Bienvenido, {currentUser.username || "Administrador"}!
           </h1>
-          <p className="text-gray-600">Rol: {currentUser.rol || "admin"}</p>
+          <p className="text-gray-600">
+            Rol: {currentUser.rol === "admin" ? "Administrador" : "Trabajador"}
+          </p>
         </div>
 
+        {/* --- Información de la empresa --- */}
+        <InfoEmpresa /> {/* ✅ se muestra aquí */}
+
+        {/* --- Botón para crear trabajador --- */}
         {currentUser.rol === "admin" && (
-           <button
+          <button
             onClick={() => setModalOpen(true)}
             className="flex items-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mb-6"
           >
-            <UserPlus className="w-5 h-5" /> {/* ícono agregado */}
+            <UserPlus className="w-5 h-5" />
             <span>Crear Trabajador</span>
           </button>
         )}
 
+        {/* --- Modal de creación --- */}
         <CreateUserModal
           modalOpen={modalOpen}
           setModalOpen={setModalOpen}
@@ -52,6 +61,7 @@ function AdminDashboard() {
           onCreate={createNewUser}
         />
 
+        {/* --- Lista de usuarios --- */}
         <UserList
           users={users}
           loading={loading}
