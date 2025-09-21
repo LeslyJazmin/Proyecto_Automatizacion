@@ -1,10 +1,12 @@
-// 📂 routes/empresaRoutes.js
+// 📂 routes/infoEmpresaRoutes.js
 const express = require("express");
-const router = express.Router();
-const empresaController = require("../Controllers/empresaController");
-const { verifyToken, isAdmin } = require("../Middleware/authMiddleware");
+const { fetchInfoEmpresa, updateEmpresa } = require("../Controllers/empresaController");
+const { verifyToken } = require("../middleware/authMiddleware"); // middleware JWT
 
-// 📌 Ruta protegida para obtener la información de la empresa
-router.get("/", verifyToken, isAdmin, empresaController.getInfoEmpresa);
+const router = express.Router();
+
+// 📌 Rutas de infoEmpresa
+router.get("/", verifyToken, fetchInfoEmpresa);
+router.put("/", verifyToken, updateEmpresa);
 
 module.exports = router;

@@ -19,3 +19,16 @@ export async function getInfoEmpresa() {
   if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
   return data;
 }
+
+// ✅ Actualizar información de la empresa
+export async function updateInfoEmpresa(body) {
+  const res = await fetch(API_URL, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
+  return data; // <- el backend debe devolver la info actualizada o al menos el campo modificado
+}

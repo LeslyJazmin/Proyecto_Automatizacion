@@ -2,9 +2,22 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
-import InfoEmpresa from "../components/InfoEmpresa"; // ✅ importar componente
+import InfoEmpresa from "../components/InfoEmpresa";
 import useUsers from "../hooks/useUsers";
 import { UserPlus } from "lucide-react";
+
+// Componente para el botón moderno de crear trabajador
+function CreateUserButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-300 transform hover:scale-105"
+    >
+      <UserPlus className="w-5 h-5 text-white" />
+      <span>Crear Trabajador</span>
+    </button>
+  );
+}
 
 function AdminDashboard() {
   const {
@@ -38,20 +51,19 @@ function AdminDashboard() {
         </div>
 
         {/* --- Información de la empresa --- */}
-        <InfoEmpresa /> {/* ✅ se muestra aquí */}
+        <InfoEmpresa />
 
-        {/* --- Botón para crear trabajador --- */}
-        {currentUser.rol === "admin" && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mb-6"
-          >
-            <UserPlus className="w-5 h-5" />
-            <span>Crear Trabajador</span>
-          </button>
-        )}
+        {/* --- Encabezado lista de usuarios con botón a la derecha --- */}
+        <div className="flex justify-between items-center mb-4 mt-6">
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+            Personal a Cargo
+          </h2>
+          {currentUser.rol === "admin" && (
+            <CreateUserButton onClick={() => setModalOpen(true)} />
+          )}
+        </div>
 
-        {/* --- Modal de creación --- */}
+        {/* --- Modal creación de usuario --- */}
         <CreateUserModal
           modalOpen={modalOpen}
           setModalOpen={setModalOpen}
