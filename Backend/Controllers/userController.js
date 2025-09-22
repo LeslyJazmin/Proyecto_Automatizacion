@@ -116,10 +116,10 @@ async function getUser(req, res) {
 // Actualizar usuario
 async function updateUserData(req, res) {
   const { id } = req.params;
-  const { username, celular, email, rol, activo } = req.body;
+  const { username, celular, email } = req.body; // 👈 solo los que se pueden editar
 
   try {
-    await updateUser(id, { username, celular, email, rol, activo });
+    await updateUser(id, { username, celular, email });
     res.json({ message: "Usuario actualizado correctamente" });
   } catch (err) {
     console.error("❌ Error en updateUserData:", err.message);

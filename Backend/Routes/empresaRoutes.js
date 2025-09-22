@@ -1,7 +1,7 @@
 // 📂 routes/infoEmpresaRoutes.js
 const express = require("express");
 const { fetchInfoEmpresa, updateEmpresa } = require("../Controllers/empresaController");
-const { verifyToken } = require("../middleware/authMiddleware"); // middleware JWT
+const { verifyToken } = require("../Middleware/authMiddleware"); // middleware JWT
 
 const router = express.Router();
 

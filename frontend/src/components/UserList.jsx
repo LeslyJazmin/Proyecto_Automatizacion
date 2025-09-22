@@ -4,14 +4,12 @@ import Modal from "./ui/Modal";
 
 export default function UserList({ users, loading, error, currentUser, onEdit, onDelete }) {
   const [editUser, setEditUser] = useState(null);
-  const [updating, setUpdating] = useState(false); // <- Estado de carga para edición
+  const [updating, setUpdating] = useState(false);
+  const [deleteUserModal, setDeleteUserModal] = useState(null); // 👈 usuario a eliminar
 
   if (loading) return <p className="text-gray-300 text-center">Cargando usuarios...</p>;
   if (error) return <p className="text-red-400 text-center">Error: {error}</p>;
-
-  if (!users || users.length === 0) {
-    return <p className="text-gray-400 text-center">No hay usuarios registrados.</p>;
-  }
+  if (!users || users.length === 0) return <p className="text-gray-400 text-center">No hay usuarios registrados.</p>;
 
   return (
     <div className="overflow-x-auto rounded-2xl shadow-[0_0_35px_#ff1a1a88] border border-red-700 bg-gradient-to-b from-black via-black to-red-950">
@@ -30,11 +28,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
           {users.map((user) => (
             <tr
               key={user.id_usuario}
-              className={`transition duration-300 ${
-                currentUser.id_usuario === user.id_usuario
-                  ? "bg-red-950/70"
-                  : "bg-black/80"
-              } hover:bg-red-900/50`}
+              className={`transition duration-300 ${currentUser.id_usuario === user.id_usuario ? "bg-red-950/70" : "bg-black/80"} hover:bg-red-900/50`}
             >
               <td className="px-5 py-3 text-white">{user.username}</td>
               <td className="px-5 py-3 text-white">{user.email}</td>
@@ -52,7 +46,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
                 </button>
                 {currentUser.id_usuario !== user.id_usuario && (
                   <button
-                    onClick={() => onDelete(user.id_usuario)}
+                    onClick={() => setDeleteUserModal(user)}
                     className="p-2 bg-black/70 hover:bg-red-700 rounded-full shadow-[0_0_10px_#ff1a1a55] transition-transform hover:scale-110"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
@@ -64,7 +58,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
         </tbody>
       </table>
 
-      {/* Modal para editar usuario */}
+      {/* --- Modal para editar usuario --- */}
       <Modal
         isOpen={!!editUser}
         onClose={() => setEditUser(null)}
@@ -74,12 +68,12 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              setUpdating(true); // <- empieza guardando
+              setUpdating(true);
               try {
                 await onEdit(editUser);
                 setEditUser(null);
               } finally {
-                setUpdating(false); // <- termina guardando
+                setUpdating(false);
               }
             }}
             className="space-y-4"
@@ -89,9 +83,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
               <input
                 type="text"
                 value={editUser.username}
-                onChange={(e) =>
-                  setEditUser({ ...editUser, username: e.target.value })
-                }
+                onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
                 className="w-full p-2 rounded-lg bg-black/50 border border-red-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -100,9 +92,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
               <input
                 type="email"
                 value={editUser.email}
-                onChange={(e) =>
-                  setEditUser({ ...editUser, email: e.target.value })
-                }
+                onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
                 className="w-full p-2 rounded-lg bg-black/50 border border-red-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -111,24 +101,48 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
               <input
                 type="text"
                 value={editUser.celular || ""}
-                onChange={(e) =>
-                  setEditUser({ ...editUser, celular: e.target.value })
-                }
+                onChange={(e) => setEditUser({ ...editUser, celular: e.target.value })}
                 className="w-full p-2 rounded-lg bg-black/50 border border-red-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
 
             <button
               type="submit"
-              disabled={updating} // <- deshabilita mientras guarda
-              className={`w-full ${
-                updating ? "bg-gray-600" : "bg-red-700 hover:bg-red-600"
-              } text-white py-2 rounded-lg shadow-[0_0_15px_#ff1a1a88] transition-transform hover:scale-105`}
+              disabled={updating}
+              className={`w-full ${updating ? "bg-gray-600" : "bg-red-700 hover:bg-red-600"} text-white py-2 rounded-lg shadow-[0_0_15px_#ff1a1a88] transition-transform hover:scale-105`}
             >
               {updating ? "Guardando..." : "Guardar Cambios"}
             </button>
           </form>
         )}
+      </Modal>
+
+      {/* --- Modal de confirmación de eliminación --- */}
+      <Modal
+        isOpen={!!deleteUserModal}
+        onClose={() => setDeleteUserModal(null)}
+        title="¿Eliminar usuario?"
+      >
+        <p className="text-gray-300 text-center mb-6">
+          ¿Seguro que deseas eliminar a <strong>{deleteUserModal?.username}</strong>?
+        </p>
+        <div className="flex justify-center space-x-4">
+          <button
+            onClick={() => setDeleteUserModal(null)}
+            className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => {
+              if (deleteUserModal) onDelete(deleteUserModal.id_usuario);
+              setDeleteUserModal(null);
+            }}
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+          >
+            Eliminar
+          </button>
+        </div>
       </Modal>
     </div>
   );

@@ -1,17 +1,17 @@
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import Modal from "../components/ui/Modal";
 import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
 import InfoEmpresa from "../components/InfoEmpresa";
 import useUsers from "../hooks/useUsers";
-import { UserPlus } from "lucide-react";
+import { UserPlus} from "lucide-react";
 
-// Componente para el botón moderno de crear trabajador
 function CreateUserButton({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-800 transition-all duration-300 transform hover:scale-105"
+      className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:from-yellow-600 hover:to-orange-800 transition-all duration-300 transform hover:scale-105"
     >
       <UserPlus className="w-5 h-5 text-white" />
       <span>Crear Trabajador</span>
@@ -19,41 +19,86 @@ function CreateUserButton({ onClick }) {
   );
 }
 
-function AdminDashboard() {
+export default function AdminDashboard() {
   const {
-    users, loading, error, currentUser,
-    modalOpen, setModalOpen,
-    newUser, setNewUser, creating,
-    createNewUser, updateUserData, deleteUserData
+    users,
+    loading,
+    error,
+    currentUser,
+    modalOpen,
+    setModalOpen,
+    newUser,
+    setNewUser,
+    creating,
+    createNewUser,
+    updateUserData,
+    deleteUserData,
+    showEmailUpdatedModal,
+    setShowEmailUpdatedModal,
   } = useUsers();
 
-  const navigate = useNavigate();
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [deleteUserModal, setDeleteUserModal] = useState({ open: false, userId: null });
+  const [tokenExpiring, setTokenExpiring] = useState(false);
 
-  function handleLogout() {
+  // --- Manejo logout ---
+  function handleLogoutConfirm() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    window.location.href = "/login";
   }
+
+  // --- Manejo email actualizado ---
+  function handleEmailUpdatedConfirm() {
+    setShowEmailUpdatedModal(false);
+    handleLogoutConfirm();
+  }
+
+  // --- Modal eliminar usuario ---
+  function handleDeleteUserConfirm() {
+    deleteUserData(deleteUserModal.userId);
+    setDeleteUserModal({ open: false, userId: null });
+  }
+
+  // --- Manejo token próximo a expirar ---
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const { jwtDecode } = require("jwt-decode");
+      const decoded = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeLeft = decoded.exp - currentTime;
+
+      if (timeLeft <= 180) {
+        setTokenExpiring(true);
+      }
+
+      const timer = setTimeout(() => setTokenExpiring(true), (timeLeft - 180) * 1000);
+      return () => clearTimeout(timer);
+    } catch (err) {
+      console.error("Token inválido:", err);
+      handleLogoutConfirm();
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar onLogout={() => setLogoutModalOpen(true)} active="empresa" />
 
       <div className="flex-1 p-8">
-        {/* --- Bienvenida --- */}
+        {/* Bienvenida */}
         <div className="bg-white shadow-md rounded-lg p-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-800">
             👋 ¡Bienvenido, {currentUser.username || "Administrador"}!
           </h1>
-          <p className="text-gray-600">
-            Rol: {currentUser.rol === "admin" ? "Administrador" : "Trabajador"}
-          </p>
         </div>
 
-        {/* --- Información de la empresa --- */}
+        {/* Información de la empresa */}
         <InfoEmpresa />
 
-        {/* --- Encabezado lista de usuarios con botón a la derecha --- */}
+        {/* Encabezado lista de usuarios */}
         <div className="flex justify-between items-center mb-4 mt-6">
           <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
             Personal a Cargo
@@ -63,7 +108,7 @@ function AdminDashboard() {
           )}
         </div>
 
-        {/* --- Modal creación de usuario --- */}
+        {/* Modales */}
         <CreateUserModal
           modalOpen={modalOpen}
           setModalOpen={setModalOpen}
@@ -73,18 +118,100 @@ function AdminDashboard() {
           onCreate={createNewUser}
         />
 
-        {/* --- Lista de usuarios --- */}
+        <Modal
+          isOpen={logoutModalOpen}
+          onClose={() => setLogoutModalOpen(false)}
+          title="¿Cerrar sesión?"
+        >
+          <p className="text-gray-300 text-center mb-6">
+            ¿Estás seguro que deseas salir de tu cuenta?
+          </p>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setLogoutModalOpen(false)}
+              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleLogoutConfirm}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={deleteUserModal.open}
+          onClose={() => setDeleteUserModal({ open: false, userId: null })}
+          title="¿Eliminar usuario?"
+        >
+          <p className="text-gray-300 text-center mb-6">
+            ¿Seguro que deseas eliminar este usuario?
+          </p>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setDeleteUserModal({ open: false, userId: null })}
+              className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleDeleteUserConfirm}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            >
+              Eliminar
+            </button>
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={showEmailUpdatedModal}
+          onClose={handleEmailUpdatedConfirm}
+          title="Correo actualizado"
+        >
+          <p className="text-gray-300 text-center mb-6">
+            Tu correo fue actualizado. Debes volver a iniciar sesión.
+          </p>
+          <div className="flex justify-center">
+            <button
+              onClick={handleEmailUpdatedConfirm}
+              className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            >
+              Volver a iniciar sesión
+            </button>
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={tokenExpiring}
+          onClose={handleLogoutConfirm}
+          title="Sesión a punto de expirar"
+        >
+          <p className="text-gray-300 text-center mb-4">
+            Tu sesión está a punto de expirar. Por seguridad, debes iniciar sesión nuevamente.
+          </p>
+          <div className="flex justify-center">
+            <button
+              onClick={handleLogoutConfirm}
+              className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            >
+              Iniciar Sesión Nuevamente
+            </button>
+          </div>
+        </Modal>
+
+        {/* Lista de usuarios */}
         <UserList
           users={users}
           loading={loading}
           error={error}
           currentUser={currentUser}
           onEdit={updateUserData}
-          onDelete={deleteUserData}
+          onDelete={(id) => setDeleteUserModal({ open: true, userId: id })}
         />
       </div>
     </div>
   );
 }
-
-export default AdminDashboard;

@@ -50,27 +50,40 @@ async function getUserById(id) {
     return result.recordset[0];
 }
 
-// Actualizar usuario (devuelve filas afectadas)
+// Actualizar usuario (sin modificar rol ni activo)
 async function updateUser(id, data) {
     const pool = db.getPool();
-    const result = await pool
-        .request()
-        .input("id_usuario", sql.NVarChar(7), id)
-        .input("username", sql.NVarChar(50), data.username)
-        .input("celular", sql.Char(9), data.celular)
-        .input("email", sql.VarChar(50), data.email)
-        .input("rol", sql.VarChar(50), data.rol)
-        .input("activo", sql.Bit, data.activo)
-        .query(`
-            UPDATE Usuarios 
-            SET username = @username,
-                celular = @celular,
-                email = @email,
-                rol = @rol,
-                activo = @activo
-            WHERE id_usuario = @id_usuario
-        `);
-    return result.rowsAffected[0]; // 0 si no se encontró
+
+    // Construir SET dinámico solo para los campos editables
+    const fields = [];
+    const request = pool.request();
+    request.input("id_usuario", sql.NVarChar(7), id);
+
+    if (data.username !== undefined) {
+        fields.push("username = @username");
+        request.input("username", sql.NVarChar(50), data.username);
+    }
+    if (data.celular !== undefined) {
+        fields.push("celular = @celular");
+        request.input("celular", sql.Char(9), data.celular);
+    }
+    if (data.email !== undefined) {
+        fields.push("email = @email");
+        request.input("email", sql.VarChar(50), data.email);
+    }
+
+    if (fields.length === 0) {
+        throw new Error("No hay campos válidos para actualizar");
+    }
+
+    const query = `
+        UPDATE Usuarios
+        SET ${fields.join(", ")}
+        WHERE id_usuario = @id_usuario
+    `;
+
+    const result = await request.query(query);
+    return result.rowsAffected[0]; // Devuelve la cantidad de filas afectadas
 }
 
 // Eliminar usuario (devuelve filas afectadas)
