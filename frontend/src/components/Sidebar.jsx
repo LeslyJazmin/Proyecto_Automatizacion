@@ -5,69 +5,60 @@ export default function Sidebar({ onLogout, logoutOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const getButtonClasses = (path) =>
-    `flex items-center space-x-3 w-full p-3 rounded-lg border transition-all
-    ${
-      (path === "logout" && logoutOpen) || location.pathname === path
-        ? "bg-red-800 border-red-500 text-white shadow-[0_0_15px_#ff4d4d]"
-        : "border-transparent hover:bg-red-900/40 hover:border-red-700"
-    }`;
+  const getButtonClasses = (path) => {
+    const isActive = (path === "logout" && logoutOpen) || location.pathname === path;
+    const baseClasses = `flex items-center space-x-4 w-full px-5 py-3 rounded-xl transition-all duration-300 transform hover:translate-x-1`;
+    const activeClasses = `bg-red-900/90 text-white shadow-lg ring-2 ring-red-700`;
+    const inactiveClasses = `text-gray-400 hover:text-white hover:bg-gray-800/60`;
+
+    return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+  };
 
   const getIconColor = (path) => {
-    // Icono activo = blanco, inactivo = color vino
-    if ((path === "logout" && logoutOpen) || location.pathname === path) return "#ffffff";
-    return "#a83232"; // color vino
+    const isActive = (path === "logout" && logoutOpen) || location.pathname === path;
+    return isActive ? "#ffffff" : "#b91c1c";
   };
 
   return (
-    <div className="w-72 bg-gradient-to-b from-[#4a0e0e] via-[#2e0505] to-black shadow-[0_0_20px_#4a0e0e] flex flex-col">
-      <div className="p-6 border-b border-[#2e0505] text-center">
-        <div className="flex items-center justify-center space-x-3 mb-3">
-          <Building2 color="#ff4d4d" className="w-8 h-8" />
-          <h2 className="text-xl font-bold text-white drop-shadow-[0_0_5px_#a83232]">
-            Mi Empresa
-          </h2>
+    <div className="w-72 h-screen bg-gradient-to-b from-gray-950 to-red-950 flex flex-col font-sans shadow-2xl fixed top-0 left-0 z-50">
+      {/* Cabecera */}
+      <div className="p-6 text-center">
+        <div className="flex items-center justify-center space-x-2">
+          <Building2 color="#ef4444" className="w-8 h-8 animate-pulse" />
+          <h2 className="text-2xl font-extrabold text-white tracking-wider drop-shadow-lg">EMPRESA</h2>
         </div>
-        <p className="text-sm text-gray-400 mb-4">Sistema de Gestión de Inventario</p>
+        <p className="text-xs font-light text-gray-400 mt-1 uppercase">Sistema de Gestión</p>
+        <div className="h-px bg-white/10 my-4"></div>
         <img
           src="/images/GT2.png"
           alt="Logo"
-          className="mx-auto w-70 h-48 object-contain drop-shadow-[0_0_10px_#a83232]"
+          // Clases modificadas para hacer la imagen más grande
+          className="mx-auto w-64 h-56 object-contain mt-4"
         />
       </div>
 
-      <div className="flex-1 p-4 space-y-4">
-        <button
-          className={getButtonClasses("/AdminDashboard")}
-          onClick={() => navigate("/AdminDashboard")}
-        >
-          <Info color={getIconColor("/AdminDashboard")} />
-          <span className="font-semibold text-white">Información de la Empresa</span>
+      {/* Navegación - Con scroll */}
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        <button className={getButtonClasses("/AdminDashboard")} onClick={() => navigate("/AdminDashboard")}>
+          <Info color={getIconColor("/AdminDashboard")} className="w-5 h-5" />
+          <span className="font-semibold text-sm tracking-wide">Información de empresa</span>
         </button>
-
-        <button
-          className={getButtonClasses("/GInventario")}
-          onClick={() => navigate("/GInventario")}
-        >
-          <Package color={getIconColor("/GInventario")} />
-          <span className="font-medium text-white">Gestión de Inventario</span>
+        <button className={getButtonClasses("/GInventario")} onClick={() => navigate("/GInventario")}>
+          <Package color={getIconColor("/GInventario")} className="w-5 h-5" />
+          <span className="font-semibold text-sm tracking-wide">Gestion de inventario</span>
         </button>
-
-        <button
-          className={getButtonClasses("/Reportes")}
-          onClick={() => navigate("/Reportes")}
-        >
-          <BarChart3 color={getIconColor("/Reportes")} />
-          <span className="font-medium text-white">Reportes</span>
+        <button className={getButtonClasses("/Reportes")} onClick={() => navigate("/Reportes")}>
+          <BarChart3 color={getIconColor("/Reportes")} className="w-5 h-5" />
+          <span className="font-semibold text-sm tracking-wide">Reportes</span>
         </button>
+      </div>
 
-        {/* Botón de Cerrar Sesión */}
-        <button
-          onClick={onLogout}
-          className={getButtonClasses("logout")}
-        >
-          <LogOut color={getIconColor("logout")} />
-          <span className="font-medium text-white">Cerrar Sesión</span>
+      {/* Botón de cerrar sesión - Fijo abajo */}
+      <div className="p-4 mt-8">
+        <div className="h-px bg-white/20 my-4"></div>
+        <button onClick={onLogout} className={getButtonClasses("logout")}>
+          <LogOut color={getIconColor("logout")} className="w-5 h-5" />
+          <span className="font-semibold text-sm tracking-wide">Cerrar Sesión</span>
         </button>
       </div>
     </div>
