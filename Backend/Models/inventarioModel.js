@@ -1,94 +1,91 @@
 const { poolPromise, sql } = require("../config/db");
 
-// Registrar producto si no existe (entrada)
-async function registrarProductoSiNoExiste(tipoProducto, datosProducto) {
-  const pool = await poolPromise;
+class Inventario {
 
-  if (tipoProducto === "ropa") {
-    const existe = await pool.request()
-      .input("id_ropa", sql.NVarChar(7), datosProducto.id_producto)
-      .query("SELECT * FROM RopaDeportiva WHERE id_ropa = @id_ropa");
+  // Registrar entrada (producto + inventario)
+  static async registrarEntrada(tipoProducto, datos) {
+    const pool = await poolPromise;
 
-    if (existe.recordset.length === 0) {
-      await pool.request()
-        .input("id_ropa", sql.NVarChar(7), datosProducto.id_producto)
-        .input("nombre", sql.NVarChar(20), datosProducto.nombre)
-        .input("marca", sql.NVarChar(20), datosProducto.marca)
-        .input("talla", sql.NVarChar(8), datosProducto.talla)
-        .input("color", sql.NVarChar(20), datosProducto.color)
-        .input("precio", sql.Decimal(10,2), datosProducto.precio)
-        // Campos opcionales
-        .input("ubicacion", sql.NVarChar(50), datosProducto.ubicacion || null)
-        .input("imagen", sql.NVarChar(255), datosProducto.imagen || null)
-        .query(`INSERT INTO RopaDeportiva 
-          (id_ropa,nombre,marca,talla,color,precio,ubicacion,imagen) 
-          VALUES (@id_ropa,@nombre,@marca,@talla,@color,@precio,@ubicacion,@imagen)`);
+    let tablaProducto, tablaInventario, productoDB;
+
+    if (tipoProducto === "ropa") {
+      tablaProducto = "RopaDeportiva";
+      tablaInventario = "InventarioRopa";
+
+      // Mapear campos del frontend a columnas de la tabla
+      productoDB = {
+        id_ropa: datos.producto.id_producto,
+        nombre: datos.producto.nombre,
+        marca: datos.producto.marca || null,
+        talla: datos.producto.talla || null,
+        color: datos.producto.color || null,
+        precio: parseFloat(datos.producto.precio),
+      };
+
+    } else if (tipoProducto === "comestible") {
+      tablaProducto = "ProductosComestibles";
+      tablaInventario = "InventarioComestible";
+
+      productoDB = {
+        id_comestible: datos.producto.id_producto,
+        nombre: datos.producto.nombre,
+        marca: datos.producto.marca || null,
+        sabor: datos.producto.sabor,
+        peso: datos.producto.peso ? parseFloat(datos.producto.peso) : null,
+        litros: datos.producto.litros ? parseFloat(datos.producto.litros) : null,
+        precio: parseFloat(datos.producto.precio),
+      };
+
+    } else {
+      throw new Error("Tipo de producto no válido");
     }
-  } else if (tipoProducto === "comestible") {
-    const existe = await pool.request()
-      .input("id_comestible", sql.NVarChar(7), datosProducto.id_producto)
-      .query("SELECT * FROM ProductosComestibles WHERE id_comestible = @id_comestible");
 
-    if (existe.recordset.length === 0) {
-      await pool.request()
-        .input("id_comestible", sql.NVarChar(7), datosProducto.id_producto)
-        .input("nombre", sql.NVarChar(50), datosProducto.nombre)
-        .input("marca", sql.NVarChar(20), datosProducto.marca)
-        .input("sabor", sql.NVarChar(20), datosProducto.sabor)
-        .input("peso", sql.Decimal(10,2), datosProducto.peso)
-        .input("litros", sql.Decimal(10,2), datosProducto.litros)
-        .input("precio", sql.Decimal(10,2), datosProducto.precio)
-        // Campos opcionales
-        .input("ubicacion", sql.NVarChar(50), datosProducto.ubicacion || null)
-        .input("imagen", sql.NVarChar(255), datosProducto.imagen || null)
-        .query(`INSERT INTO ProductosComestibles 
-          (id_comestible,nombre,marca,sabor,peso,litros,precio,ubicacion,imagen) 
-          VALUES (@id_comestible,@nombre,@marca,@sabor,@peso,@litros,@precio,@ubicacion,@imagen)`);
-    }
+    // --- INSERT PRODUCTO ---
+    const camposProducto = Object.keys(productoDB).join(",");
+    const valoresProducto = Object.keys(productoDB).map(k => `@${k}`).join(",");
+
+    let request = pool.request();
+    for (let key in productoDB) request.input(key, productoDB[key]);
+
+    await request.query(`INSERT INTO ${tablaProducto} (${camposProducto}) VALUES (${valoresProducto})`);
+
+    // --- INSERT INVENTARIO ---
+    const inventarioDB = {
+      id_inventario: datos.inventario.id_inventario,
+      id_producto: datos.inventario.id_producto, // debe coincidir con el id del producto insertado
+      cantidad: parseInt(datos.inventario.cantidad),
+      tipo_movimiento: datos.inventario.tipo_movimiento,
+      ruc_compra: datos.inventario.ruc_compra || null,
+      tipo_venta: datos.inventario.tipo_venta || null,
+      id_usuario: datos.inventario.id_usuario,
+    };
+
+    const camposInventario = Object.keys(inventarioDB).join(",");
+    const valoresInventario = Object.keys(inventarioDB).map(k => `@${k}`).join(",");
+
+    request = pool.request();
+    for (let key in inventarioDB) request.input(key, inventarioDB[key]);
+
+    await request.query(`INSERT INTO ${tablaInventario} (${camposInventario}) VALUES (${valoresInventario})`);
+  }
+
+  // Registrar salida
+  static async registrarSalida(tipoProducto, datos) {
+    const pool = await poolPromise;
+
+    let tablaInventario;
+    if (tipoProducto === "ropa") tablaInventario = "InventarioRopa";
+    else if (tipoProducto === "comestible") tablaInventario = "InventarioComestible";
+    else throw new Error("Tipo de producto no válido");
+
+    await pool.request()
+      .input("id_inventario", sql.NVarChar, datos.id_inventario)
+      .input("id_producto", sql.NVarChar, datos.id_producto)
+      .input("cantidad", sql.Int, parseInt(datos.cantidad))
+      .input("id_usuario", sql.NVarChar, datos.id_usuario)
+      .query(`INSERT INTO ${tablaInventario} (id_inventario, id_producto, cantidad, tipo_movimiento, id_usuario)
+              VALUES (@id_inventario, @id_producto, @cantidad, 'salida', @id_usuario)`);
   }
 }
 
-// Registrar entrada (compra)
-async function registrarEntrada(tipoProducto, datos) {
-  const pool = await poolPromise;
-
-  // Registrar producto si no existe
-  await registrarProductoSiNoExiste(tipoProducto, datos);
-
-  const tabla = tipoProducto === "ropa" ? "InventarioRopa" : "InventarioComestible";
-  const query = `
-    INSERT INTO ${tabla} 
-    (id_inventario,id_producto,cantidad,tipo_movimiento,ruc_compra,id_usuario)
-    VALUES (@id_inventario,@id_producto,@cantidad,'entrada',@ruc_compra,@id_usuario)
-  `;
-
-  await pool.request()
-    .input("id_inventario", sql.NVarChar(7), datos.id_inventario)
-    .input("id_producto", sql.NVarChar(7), datos.id_producto)
-    .input("cantidad", sql.Int, datos.cantidad)
-    .input("ruc_compra", sql.VarChar(15), datos.ruc_compra)
-    .input("id_usuario", sql.NVarChar(7), datos.id_usuario)
-    .query(query);
-}
-
-// Registrar salida (venta)
-async function registrarSalida(tipoProducto, datos) {
-  const pool = await poolPromise;
-  const tabla = tipoProducto === "ropa" ? "InventarioRopa" : "InventarioComestible";
-
-  const query = `
-    INSERT INTO ${tabla} 
-    (id_inventario,id_producto,cantidad,tipo_movimiento,tipo_venta,id_usuario)
-    VALUES (@id_inventario,@id_producto,@cantidad,'salida',@tipo_venta,@id_usuario)
-  `;
-
-  await pool.request()
-    .input("id_inventario", sql.NVarChar(7), datos.id_inventario)
-    .input("id_producto", sql.NVarChar(7), datos.id_producto)
-    .input("cantidad", sql.Int, datos.cantidad)
-    .input("tipo_venta", sql.NVarChar(10), datos.tipo_venta)
-    .input("id_usuario", sql.NVarChar(7), datos.id_usuario)
-    .query(query);
-}
-
-module.exports = { registrarEntrada, registrarSalida };
+module.exports = Inventario;

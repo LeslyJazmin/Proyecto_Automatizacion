@@ -7,9 +7,9 @@ const config = {
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
   options: {
-    encrypt: true,               // mantener en true
+    encrypt: true,
     enableArithAbort: true,
-    trustServerCertificate: true // 🔑 aceptar certificados autofirmados
+    trustServerCertificate: true
   },
   connectionTimeout: 30000,
   requestTimeout: 30000
@@ -17,24 +17,19 @@ const config = {
 
 let pool = null;
 
-// Conectar a la base de datos
 async function connectDB() {
-    try {
-        if (!pool) {
-            pool = await sql.connect(config);
-            console.log("✅ Conectado a SQL Server (Somee)");
-        }
-        return pool;
-    } catch (err) {
-        console.error("❌ Error al conectar a SQL Server:", err.message);
-        throw err;
+  try {
+    if (!pool) {
+      pool = await sql.connect(config);
+      console.log("✅ Conectado a SQL Server");
     }
-}
-
-// Obtener el pool conectado
-function getPool() {
-    if (!pool) throw new Error("⚠️ La base de datos no está conectada. Llama a connectDB() primero.");
     return pool;
+  } catch (err) {
+    console.error("❌ Error al conectar a SQL Server:", err.message);
+    throw err;
+  }
 }
 
-module.exports = { sql, connectDB, getPool };
+const poolPromise = connectDB(); // poolPromise igual funciona para modelos
+
+module.exports = { sql, poolPromise, connectDB };
