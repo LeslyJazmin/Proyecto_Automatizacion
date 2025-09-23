@@ -1,18 +1,15 @@
-const { poolPromise, sql } = require("../config/db");
+const { sql, getPool } = require("../config/db");
 
 class Inventario {
 
-  // Registrar entrada (producto + inventario)
   static async registrarEntrada(tipoProducto, datos) {
-    const pool = await poolPromise;
+    const pool = getPool(); // <-- aquí
 
     let tablaProducto, tablaInventario, productoDB;
 
     if (tipoProducto === "ropa") {
       tablaProducto = "RopaDeportiva";
       tablaInventario = "InventarioRopa";
-
-      // Mapear campos del frontend a columnas de la tabla
       productoDB = {
         id_ropa: datos.producto.id_producto,
         nombre: datos.producto.nombre,
@@ -21,11 +18,9 @@ class Inventario {
         color: datos.producto.color || null,
         precio: parseFloat(datos.producto.precio),
       };
-
     } else if (tipoProducto === "comestible") {
       tablaProducto = "ProductosComestibles";
       tablaInventario = "InventarioComestible";
-
       productoDB = {
         id_comestible: datos.producto.id_producto,
         nombre: datos.producto.nombre,
@@ -35,43 +30,34 @@ class Inventario {
         litros: datos.producto.litros ? parseFloat(datos.producto.litros) : null,
         precio: parseFloat(datos.producto.precio),
       };
+    } else throw new Error("Tipo de producto no válido");
 
-    } else {
-      throw new Error("Tipo de producto no válido");
-    }
-
-    // --- INSERT PRODUCTO ---
+    // Insertar producto
     const camposProducto = Object.keys(productoDB).join(",");
     const valoresProducto = Object.keys(productoDB).map(k => `@${k}`).join(",");
-
     let request = pool.request();
     for (let key in productoDB) request.input(key, productoDB[key]);
-
     await request.query(`INSERT INTO ${tablaProducto} (${camposProducto}) VALUES (${valoresProducto})`);
 
-    // --- INSERT INVENTARIO ---
+    // Insertar inventario
     const inventarioDB = {
       id_inventario: datos.inventario.id_inventario,
-      id_producto: datos.inventario.id_producto, // debe coincidir con el id del producto insertado
+      id_producto: datos.inventario.id_producto,
       cantidad: parseInt(datos.inventario.cantidad),
       tipo_movimiento: datos.inventario.tipo_movimiento,
       ruc_compra: datos.inventario.ruc_compra || null,
       tipo_venta: datos.inventario.tipo_venta || null,
       id_usuario: datos.inventario.id_usuario,
     };
-
     const camposInventario = Object.keys(inventarioDB).join(",");
     const valoresInventario = Object.keys(inventarioDB).map(k => `@${k}`).join(",");
-
     request = pool.request();
     for (let key in inventarioDB) request.input(key, inventarioDB[key]);
-
     await request.query(`INSERT INTO ${tablaInventario} (${camposInventario}) VALUES (${valoresInventario})`);
   }
 
-  // Registrar salida
   static async registrarSalida(tipoProducto, datos) {
-    const pool = await poolPromise;
+    const pool = getPool(); // <-- aquí también
 
     let tablaInventario;
     if (tipoProducto === "ropa") tablaInventario = "InventarioRopa";

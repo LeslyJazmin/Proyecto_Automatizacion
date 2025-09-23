@@ -30,6 +30,10 @@ async function connectDB() {
   }
 }
 
-const poolPromise = connectDB(); // poolPromise igual funciona para modelos
+// Obtener pool conectado
+function getPool() {
+  if (!pool) throw new Error("⚠️ La base de datos no está conectada. Llama a connectDB() primero.");
+  return pool;
+}
 
-module.exports = { sql, poolPromise, connectDB };
+module.exports = { sql, connectDB, getPool };
