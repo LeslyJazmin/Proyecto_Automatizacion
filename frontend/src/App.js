@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
+import GInventario from "./pages/GInventario";
+import Reportes from "./pages/Reportes";
 
 function App() {
   const [token, setToken] = useState(null);
@@ -15,21 +18,37 @@ function App() {
   }, []);
 
   // Si no hay token, mostrar login
-  if (!token) {
-    return <Login setToken={setToken} setUser={setUser} />;
-  }
+  if (!token) return <Login setToken={setToken} setUser={setUser} />;
 
-  // Dashboard según rol
-  if (user?.rol === "admin") {
-    return <AdminDashboard user={user} setUser={setUser} setToken={setToken} />;
-  }
+  return (
+    <Routes>
+      {user?.rol === "admin" && (
+        <>
+          <Route
+            path="/AdminDashboard"
+            element={
+              <AdminDashboard
+                user={user}
+                setUser={setUser}
+                setToken={setToken} // 🔹 Importante para manejar logout desde Dashboard
+              />
+            }
+          />
+          <Route path="/GInventario" element={<GInventario />} />
+          <Route path="/Reportes" element={<Reportes />} />
+          {/* Redirigir cualquier ruta desconocida al dashboard */}
+          <Route path="*" element={<Navigate to="/AdminDashboard" replace />} />
+        </>
+      )}
 
-  if (user?.rol === "user") {
-    return <div>Bienvenido {user.username}, esta es la vista de trabajador</div>;
-  }
-
-  // Vista por defecto
-  return <div>Bienvenido {user?.username}</div>;
+      {user?.rol === "user" && (
+        <Route
+          path="*"
+          element={<div>Bienvenido {user.username}, esta es la vista de trabajador</div>}
+        />
+      )}
+    </Routes>
+  );
 }
 
 export default App;

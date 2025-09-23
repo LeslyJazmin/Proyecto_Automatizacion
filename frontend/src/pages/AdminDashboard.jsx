@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Modal from "../components/ui/Modal";
 import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
 import InfoEmpresa from "../components/InfoEmpresa";
 import useUsers from "../hooks/useUsers";
-import { UserPlus} from "lucide-react";
+import { UserPlus } from "lucide-react";
 
 function CreateUserButton({ onClick }) {
   return (
@@ -20,6 +21,8 @@ function CreateUserButton({ onClick }) {
 }
 
 export default function AdminDashboard() {
+  const location = useLocation();
+
   const {
     users,
     loading,
@@ -83,9 +86,14 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Determinar qué botón debe estar activo en el Sidebar
+  let sidebarActive = "empresa"; // default
+  if (location.pathname === "/GInventario") sidebarActive = "inventario";
+  else if (location.pathname === "/Reportes") sidebarActive = "reportes";
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar onLogout={() => setLogoutModalOpen(true)} active="empresa" />
+      <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
       <div className="flex-1 p-8">
         {/* Bienvenida */}

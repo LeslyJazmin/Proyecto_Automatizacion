@@ -12,7 +12,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
   if (!users || users.length === 0) return <p className="text-gray-400 text-center">No hay usuarios registrados.</p>;
 
   return (
-    <div className="overflow-x-auto rounded-2xl shadow-[0_0_35px_#ff1a1a88] border border-red-700 bg-gradient-to-b from-black via-black to-red-950">
+    <div className="overflow-x-auto shadow-[0_0_35px_#ff1a1a88] border border-red-700 bg-gradient-to-b from-black via-black to-red-950">
       <table className="min-w-full border-collapse">
         <thead className="bg-gradient-to-r from-red-950 to-black">
           <tr>
