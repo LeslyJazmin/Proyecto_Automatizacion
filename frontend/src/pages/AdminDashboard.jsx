@@ -6,20 +6,8 @@ import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
 import InfoEmpresa from "../components/InfoEmpresa";
 import useUsers from "../hooks/useUsers";
-import { UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react"; // ✅ volvemos a usar el ícono
 import { jwtDecode } from "jwt-decode";
-
-function CreateUserButton({ onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-lime-600 text-white font-semibold py-2 px-5 rounded-full shadow-lg hover:from-emerald-600 hover:to-lime-700 transition-transform duration-300 transform hover:scale-105"
-    >
-      <UserPlus className="w-5 h-5 text-white" />
-      <span>Crear Trabajador</span>
-    </button>
-  );
-}
 
 export default function AdminDashboard() {
   const location = useLocation();
@@ -82,59 +70,85 @@ export default function AdminDashboard() {
   let sidebarActive = location.pathname;
 
   return (
-    <div className="bg-gray-100 min-h-screen font-inter">
+    <div className="bg-neutral-100 min-h-screen font-sans flex">
+      {/* Sidebar */}
       <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
-      
-      <div className="ml-72 p-8 animate-fade-in-up">
-        <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-6 mb-6">
-          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 drop-shadow-md tracking-tight">
-            👋 Panel de Administrador
+
+      {/* Contenido principal */}
+      <main className="ml-72 p-8 w-full space-y-6 animate-fade-in">
+        {/* Encabezado principal */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-neutral-200 hover:shadow-2xl transition-all duration-500">
+          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-rose-700 via-rose-500 to-amber-500 tracking-tight">
+            👋 Bienvenido {currentUser.username || "Administrador"}
           </h1>
-          <p className="text-gray-600 mt-2 text-lg">
-            Gestión completa del personal y la información de la empresa.
+          <p className="text-gray-500 mt-2 text-lg">
+            Administra tu personal y la información de tu empresa en un solo lugar.
           </p>
         </div>
 
-        {/* CONTENEDOR FLEX PARA INFOEMPRESA Y LA IMAGEN */}
-        <div className="flex gap-6 items-start mb-6"> {/* items-start para alinear arriba */}
-          {/* InfoEmpresa ocupará un ancho limitado */}
-          <div className="w-1/2"> {/* Puedes ajustar este ancho como 1/2, 2/3, etc. */}
-            <InfoEmpresa />
+{/* Info + Imagen */}
+<div className="flex flex-col lg:flex-row gap-6 items-stretch">
+  {/* InfoEmpresa ocupa la mitad */}
+  <div className="flex-1">
+    <InfoEmpresa />
+  </div>
+
+  {/* Imagen ocupa la otra mitad pero más baja */}
+  <div className="flex-1 relative rounded-2xl overflow-hidden shadow-2xl 
+                  hover:scale-[1.02] transition-transform duration-200
+                  max-h-[328px]"> {/* ⬅️ altura máxima reducida */}
+    <img
+      src="/images/info.jpeg"
+      alt="Gimnasio moderno"
+      className="w-full h-full object-cover"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+  </div>
+</div>
+
+
+        {/* Personal a cargo */}
+        <div className="rounded-2xl shadow-xl border border-neutral-200 overflow-hidden transition-all">
+          {/* Encabezado degradado */}
+          <div
+            className="bg-gradient-to-r from-red-900 via-black to-red-950 
+                       border-b border-red-700 shadow-[0_0_25px_#ff1a1a66]
+                       p-5 flex justify-between items-center"
+          >
+            <h2 className="text-white text-2xl font-semibold tracking-wide">
+              Personal a Cargo
+            </h2>
+
+            {currentUser.rol === "admin" && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-xl 
+                           bg-gradient-to-r from-red-700 to-red-900
+                           hover:from-red-600 hover:to-red-800
+                           transition-all duration-300
+                           text-white font-medium shadow-md hover:shadow-lg"
+              >
+                <UserPlus className="w-5 h-5" /> {/* ✅ Ícono agregado aquí */}
+                <span>Crear Trabajador</span>
+              </button>
+            )}
           </div>
-          
-          {/* Contenedor para la imagen a la derecha */}
-          <div className="w-1/2 h-auto flex items-center justify-center bg-gradient-to-br from-red-200 to-red-400 rounded-2xl shadow-xl overflow-hidden">
-            {/* Aquí puedes usar la imagen que te generé o cualquier otra */}
-            <img 
-              src="https://tse1.mm.bing.net/th/id/OIP.B9YPaiQpg-1SLldcI8pfzgHaE8?rs=1&pid=ImgDetMain&o=7&rm=3" 
-              alt="Información de la empresa de gimnasio" 
-              className="w-full h-full object-cover rounded-2xl"
+
+          {/* Contenido */}
+          <div className="bg-white p-6">
+            <UserList
+              users={users}
+              loading={loading}
+              error={error}
+              currentUser={currentUser}
+              onEdit={updateUserData}
+              onDelete={(id) => setDeleteUserModal({ open: true, userId: id })}
             />
           </div>
         </div>
+      </main>
 
-        <div className="flex justify-between items-center mb-4 mt-6">
-          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-            Personal a Cargo
-          </h2>
-          {currentUser.rol === "admin" && (
-            <CreateUserButton onClick={() => setModalOpen(true)} />
-          )}
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-4 mt-6">
-          <UserList
-            users={users}
-            loading={loading}
-            error={error}
-            currentUser={currentUser}
-            onEdit={updateUserData}
-            onDelete={(id) => setDeleteUserModal({ open: true, userId: id })}
-          />
-        </div>
-      </div>
-      
-      {/* Modales */}
+      {/* Modales (igual que antes) */}
       <CreateUserModal
         modalOpen={modalOpen}
         setModalOpen={setModalOpen}
@@ -144,12 +158,10 @@ export default function AdminDashboard() {
         onCreate={createNewUser}
       />
 
-      <Modal
-        isOpen={logoutModalOpen}
-        onClose={() => setLogoutModalOpen(false)}
-        title="¿Cerrar sesión?"
-      >
-        <p className="text-gray-700 text-center mb-6">¿Estás seguro que deseas salir de tu cuenta?</p>
+      <Modal isOpen={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} title="¿Cerrar sesión?">
+        <p className="text-gray-700 text-center mb-6">
+          ¿Estás seguro que deseas salir de tu cuenta?
+        </p>
         <div className="flex justify-center space-x-4">
           <button
             onClick={() => setLogoutModalOpen(false)}
@@ -159,7 +171,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={handleLogoutConfirm}
-            className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
           >
             Cerrar Sesión
           </button>
@@ -171,7 +183,9 @@ export default function AdminDashboard() {
         onClose={() => setDeleteUserModal({ open: false, userId: null })}
         title="¿Eliminar usuario?"
       >
-        <p className="text-gray-700 text-center mb-6">¿Seguro que deseas eliminar este usuario?</p>
+        <p className="text-gray-700 text-center mb-6">
+          ¿Seguro que deseas eliminar este usuario?
+        </p>
         <div className="flex justify-center space-x-4">
           <button
             onClick={() => setDeleteUserModal({ open: false, userId: null })}
@@ -181,39 +195,35 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={handleDeleteUserConfirm}
-            className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
           >
             Eliminar
           </button>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={showEmailUpdatedModal}
-        onClose={handleEmailUpdatedConfirm}
-        title="Correo actualizado"
-      >
-        <p className="text-gray-700 text-center mb-6">Tu correo fue actualizado. Debes volver a iniciar sesión.</p>
+      <Modal isOpen={showEmailUpdatedModal} onClose={handleEmailUpdatedConfirm} title="Correo actualizado">
+        <p className="text-gray-700 text-center mb-6">
+          Tu correo fue actualizado. Debes volver a iniciar sesión.
+        </p>
         <div className="flex justify-center">
           <button
             onClick={handleEmailUpdatedConfirm}
-            className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
           >
             Volver a iniciar sesión
           </button>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={tokenExpiring}
-        onClose={handleLogoutConfirm}
-        title="Sesión a punto de expirar"
-      >
-        <p className="text-gray-700 text-center mb-4">Tu sesión está a punto de expirar. Por seguridad, debes iniciar sesión nuevamente.</p>
+      <Modal isOpen={tokenExpiring} onClose={handleLogoutConfirm} title="Sesión a punto de expirar">
+        <p className="text-gray-700 text-center mb-4">
+          Tu sesión está a punto de expirar. Por seguridad, debes iniciar sesión nuevamente.
+        </p>
         <div className="flex justify-center">
           <button
             onClick={handleLogoutConfirm}
-            className="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition shadow-lg"
+            className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
           >
             Iniciar Sesión Nuevamente
           </button>
