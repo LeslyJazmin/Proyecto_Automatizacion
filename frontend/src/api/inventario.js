@@ -1,92 +1,81 @@
-const API_URL = "http://localhost:5000/api/inventario"; // Ajusta si tienes otro dominio/backend
+const API_BASE = "http://localhost:5000/api/inventario";
 
-// 🟢 Crear entrada con FormData si hay imagen
-export const crearEntrada = async (tipoProducto, producto, inventario, imagenFile) => {
-  try {
-    const formData = new FormData();
-    formData.append("tipoProducto", tipoProducto);
-    formData.append("producto", JSON.stringify(producto));
-    formData.append("inventario", JSON.stringify(inventario));
-    if (imagenFile) formData.append("imagen", imagenFile);
+// Función auxiliar para headers con token
+function getToken() {
+  return localStorage.getItem("token");
+}
 
-    const res = await fetch(`${API_URL}/entrada`, {
-      method: "POST",
-      body: formData, // 👈 importante (sin headers manuales)
-    });
+function getHeaders(isJson = true) {
+  const headers = {};
+  if (isJson) headers["Content-Type"] = "application/json";
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
 
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error en crearEntrada:", error);
-    throw error;
-  }
-};
+// Manejo de respuesta
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
+  return data;
+}
 
-// 🔴 Crear salida
-export const crearSalida = async (tipoProducto, datos) => {
-  try {
-    const payload = { tipoProducto, ...datos };
+/* ---------------- ROPA ---------------- */
 
-    const res = await fetch(`${API_URL}/salida`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+// Registrar entrada de ropa
+export async function registrarEntradaRopa(data) {
+  const res = await fetch(`${API_BASE}/ropa/entrada`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
 
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error en crearSalida:", error);
-    throw error;
-  }
-};
+// Registrar salida de ropa
+export async function registrarSalidaRopa(data) {
+  const res = await fetch(`${API_BASE}/ropa/salida`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
 
-// 👕 Obtener ropa deportiva
-export const obtenerRopa = async () => {
-  try {
-    const res = await fetch(`${API_URL}/ropa`);
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error al obtener ropa:", error);
-    return [];
-  }
-};
+// Listar ropa
+export async function obtenerRopa() {
+  const res = await fetch(`${API_BASE}/ropa`, {
+    headers: getHeaders(false),
+  });
+  return handleResponse(res);
+}
 
-// 🍎 Obtener productos comestibles
-export const obtenerComestibles = async () => {
-  try {
-    const res = await fetch(`${API_URL}/comestibles`);
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error al obtener comestibles:", error);
-    return [];
-  }
-};
+/* ---------------- COMESTIBLES ---------------- */
 
-// 🔍 Buscar ropa
-export const buscarRopa = async (query) => {
-  try {
-    if (!query.trim()) return []; // evita peticiones vacías
-    const res = await fetch(`${API_URL}/buscar-ropa?query=${encodeURIComponent(query)}`);
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error buscar ropa:", error);
-    return [];
-  }
-};
+// Registrar entrada de comestible
+export async function registrarEntradaComestible(data) {
+  const res = await fetch(`${API_BASE}/comestibles/entrada`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
 
-// 🔍 Buscar comestibles
-export const buscarComestibles = async (query) => {
-  try {
-    if (!query.trim()) return [];
-    const res = await fetch(`${API_URL}/buscar-comestibles?query=${encodeURIComponent(query)}`);
-    if (!res.ok) throw new Error(`Error HTTP ${res.status}`);
-    return await res.json();
-  } catch (error) {
-    console.error("🚨 Error buscar comestibles:", error);
-    return [];
-  }
-};
+// Registrar salida de comestible
+export async function registrarSalidaComestible(data) {
+  const res = await fetch(`${API_BASE}/comestibles/salida`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+// Listar comestibles
+export async function obtenerComestibles() {
+  const res = await fetch(`${API_BASE}/comestibles`, {
+    headers: getHeaders(false),
+  });
+  return handleResponse(res);
+}
