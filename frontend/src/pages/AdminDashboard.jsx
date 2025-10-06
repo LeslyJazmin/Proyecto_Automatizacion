@@ -112,8 +112,10 @@ export default function AdminDashboard() {
           {/* Encabezado degradado */}
           <div
             className="bg-gradient-to-r from-red-900 via-black to-red-950 
-                       border-b border-red-700 shadow-[0_0_25px_#ff1a1a66]
-                       p-5 flex justify-between items-center"
+           border-b border-red-700 
+           shadow-[0_0_30px_#ff1a1acc] 
+           p-5 flex justify-between items-center"
+
           >
             <h2 className="text-white text-2xl font-semibold tracking-wide">
               Personal a Cargo

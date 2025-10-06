@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const userRoutes = require("./Routes/userRoutes");  
 const empresaRoutes = require("./Routes/empresaRoutes"); 
@@ -9,6 +10,12 @@ const { connectDB } = require("./config/db");
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Archivos estáticos subidos por usuarios
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Si quieres mantener también tus imágenes internas
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 // Endpoint de prueba
 app.get("/", (req, res) => {

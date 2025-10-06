@@ -8,7 +8,7 @@ const {
 // --- ROPA ---
 async function entradaRopa(req, res) {
   try {
-    const imagen = req.file ? `/images/${req.file.filename}` : null; // URL accesible
+    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen };
     const registro = await registrarEntradaRopa(data);
     res.json(registro);
@@ -32,7 +32,7 @@ async function listarRopaController(req, res) {
 
 async function entradaComestible(req, res) {
   try {
-    const imagen = req.file ? `/images/${req.file.filename}` : null;
+    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen };
     const registro = await registrarEntradaComestible(data);
     res.json(registro);

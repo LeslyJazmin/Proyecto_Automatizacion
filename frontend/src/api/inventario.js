@@ -24,10 +24,12 @@ async function handleResponse(res) {
 
 // Registrar entrada de ropa
 export async function registrarEntradaRopa(data) {
+  const isFormData = data instanceof FormData;
+
   const res = await fetch(`${API_BASE}/ropa/entrada`, {
     method: "POST",
-    headers: getHeaders(true),
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
 }
@@ -54,10 +56,12 @@ export async function obtenerRopa() {
 
 // Registrar entrada de comestible
 export async function registrarEntradaComestible(data) {
+  const isFormData = data instanceof FormData;
+
   const res = await fetch(`${API_BASE}/comestibles/entrada`, {
     method: "POST",
-    headers: getHeaders(true),
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
 }
