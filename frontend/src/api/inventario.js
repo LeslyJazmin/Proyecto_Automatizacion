@@ -1,6 +1,8 @@
 const API_BASE = "http://localhost:5000/api/inventario";
 
-// Función auxiliar para headers con token
+// =============================
+// 📌 Funciones auxiliares
+// =============================
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -13,7 +15,6 @@ function getHeaders(isJson = true) {
   return headers;
 }
 
-// Manejo de respuesta
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
@@ -22,14 +23,24 @@ async function handleResponse(res) {
 
 /* ---------------- ROPA ---------------- */
 
-// Registrar entrada de ropa
+// Registrar entrada de ropa (nueva)
 export async function registrarEntradaRopa(data) {
   const isFormData = data instanceof FormData;
 
   const res = await fetch(`${API_BASE}/ropa/entrada`, {
     method: "POST",
-    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
     body: isFormData ? data : JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+// Registrar entrada de ropa existente (solo suma stock)
+export async function registrarEntradaRopaExistente(data) {
+  const res = await fetch(`${API_BASE}/ropa/entrada-existente`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
   });
   return handleResponse(res);
 }
@@ -54,14 +65,24 @@ export async function obtenerRopa() {
 
 /* ---------------- COMESTIBLES ---------------- */
 
-// Registrar entrada de comestible
+// Registrar entrada de comestible (nuevo)
 export async function registrarEntradaComestible(data) {
   const isFormData = data instanceof FormData;
 
   const res = await fetch(`${API_BASE}/comestibles/entrada`, {
     method: "POST",
-    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
     body: isFormData ? data : JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+// Registrar entrada de comestible existente (solo stock)
+export async function registrarEntradaComestibleExistente(data) {
+  const res = await fetch(`${API_BASE}/comestibles/entrada-existente`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
   });
   return handleResponse(res);
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Package, Shirt,CupSoda,ClipboardPlus  } from "lucide-react"; // Icono del título
+import { Package, Shirt, CupSoda, ClipboardPlus } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import ModalEntrada from "../components/RegistroEntrada"; 
+import ModalEntrada from "../components/RegistroEntrada";
 import Button from "../components/ui/Button";
+import TablaInventario from "../components/TablaInventario"; // 👈 Tabla con loading integrado
 import {
   obtenerRopa,
   obtenerComestibles,
@@ -11,7 +12,6 @@ import {
 } from "../api/inventario";
 import { useLocation } from "react-router-dom";
 
-// Base URL del backend
 const API_URL = "http://localhost:5000";
 
 export default function GInventario() {
@@ -23,8 +23,13 @@ export default function GInventario() {
 
   const [ropa, setRopa] = useState([]);
   const [comestibles, setComestibles] = useState([]);
+
   const [mostrarRopa, setMostrarRopa] = useState(false);
   const [mostrarComestibles, setMostrarComestibles] = useState(false);
+
+  // ⏳ Estados de carga
+  const [loadingRopa, setLoadingRopa] = useState(true);
+  const [loadingComestibles, setLoadingComestibles] = useState(true);
 
   const usuarioId = "ADM2235";
   const location = useLocation();
@@ -32,10 +37,21 @@ export default function GInventario() {
   // Cargar datos
   const fetchDatos = async () => {
     try {
-      setRopa(await obtenerRopa());
-      setComestibles(await obtenerComestibles());
+      setLoadingRopa(true);
+      setLoadingComestibles(true);
+
+      const [ropaData, comestiblesData] = await Promise.all([
+        obtenerRopa(),
+        obtenerComestibles(),
+      ]);
+
+      setRopa(ropaData);
+      setComestibles(comestiblesData);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingRopa(false);
+      setLoadingComestibles(false);
     }
   };
 
@@ -87,18 +103,19 @@ export default function GInventario() {
             </h1>
           </div>
           <p className="mt-2 text-gray-600 text-lg">
-            Administra tus productos de manera sencilla y visualiza tus entradas y salidas en tiempo real.
+            Administra tus productos de manera sencilla y visualiza tus entradas
+            y salidas en tiempo real.
           </p>
         </div>
 
         {/* Sección Comestibles */}
         <div className="relative mb-6">
-          <img 
-            src="/images/PComestible.png" 
-            alt="Productos Comestibles" 
-            className="w-full h-62 object-cover shadow-xl rounded-xl" 
+          <img
+            src="/images/PComestible.png"
+            alt="Productos Comestibles"
+            className="w-full h-62 object-cover shadow-xl rounded-xl"
           />
-         {/* Botón Productos de Consumo */}
+          {/* Botón Productos de Consumo */}
           <button
             className="absolute top-4 left-4 
                       flex items-center gap-2
@@ -113,11 +130,12 @@ export default function GInventario() {
             <CupSoda className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
             <span>Ver</span>
           </button>
+
           {mostrarComestibles && (
             <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
               {/* Botón registrar comestible */}
               <div className="flex justify-end mb-3">
-              <Button
+                <Button
                   onClick={() => setModalComestiblesOpen(true)}
                   className="flex items-center gap-2 
                             bg-gradient-to-r from-green-600 via-green-700 to-green-800
@@ -129,55 +147,20 @@ export default function GInventario() {
                 >
                   <ClipboardPlus className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
                   <span>Registrar Entrada</span>
-              </Button>
+                </Button>
               </div>
+
               {/* Tabla Comestibles */}
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-300 rounded-lg">
-                  <thead className="bg-gray-200 text-gray-900">
-                    <tr>
-                      <th className="border px-4 py-2">ID</th>
-                      <th className="border px-4 py-2">Nombre</th>
-                      <th className="border px-4 py-2">Marca</th>
-                      <th className="border px-4 py-2">Sabor</th>
-                      <th className="border px-4 py-2">Peso</th>
-                      <th className="border px-4 py-2">Litros</th>
-                      <th className="border px-4 py-2">Precio</th>
-                      <th className="border px-4 py-2">Ubicación</th>
-                      <th className="border px-4 py-2">Imagen</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comestibles.map((p) => (
-                      <tr key={p.id_comestible} className="hover:bg-gray-100 transition">
-                        <td className="border px-4 py-2">{p.id_comestible}</td>
-                        <td className="border px-4 py-2">{p.nombre}</td>
-                        <td className="border px-4 py-2">{p.marca || "-"}</td>
-                        <td className="border px-4 py-2">{p.sabor}</td>
-                        <td className="border px-4 py-2">{p.peso || "-"}</td>
-                        <td className="border px-4 py-2">{p.litros || "-"}</td>
-                        <td className="border px-4 py-2">{p.precio}</td>
-                        <td className="border px-4 py-2">{p.ubicacion || "-"}</td>
-                        <td className="border px-4 py-2 text-center">
-                          {p.imagen ? (
-                            <button
-                              onClick={() => {
-                                setImagenSeleccionada(`${API_URL}${p.imagen}`);
-                                setImagenModalOpen(true);
-                              }}
-                                 className="bg-gradient-to-r from-red-900 via-red-700 to-black text-white px-3 py-1 rounded-md shadow-md hover:from-black hover:via-red-800 hover:to-black transition"
-                            >
-                              Ver Imagen
-                            </button>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <TablaInventario
+                datos={comestibles}
+                tipo="comestible"
+                API_URL={API_URL}
+                onVerImagen={(img) => {
+                  setImagenSeleccionada(img);
+                  setImagenModalOpen(true);
+                }}
+                loading={loadingComestibles}
+              />
 
               <ModalEntrada
                 isOpen={modalComestiblesOpen}
@@ -185,7 +168,9 @@ export default function GInventario() {
                 usuarioId={usuarioId}
                 title="Registrar Nuevo Producto Comestible"
                 tipo="comestible"
-                onSuccess={(formData) => handleRegistrarProducto("comestible", formData)}
+                onSuccess={(formData) =>
+                  handleRegistrarProducto("comestible", formData)
+                }
               />
             </div>
           )}
@@ -193,13 +178,13 @@ export default function GInventario() {
 
         {/* Sección Ropa */}
         <div className="relative mb-6">
-          <img 
-            src="/images/RDeportivo.png" 
-            alt="Ropa Deportiva" 
-            className="w-full h-62 object-cover shadow-xl rounded-xl" 
+          <img
+            src="/images/RDeportivo.png"
+            alt="Ropa Deportiva"
+            className="w-full h-62 object-cover shadow-xl rounded-xl"
           />
           <button
-              className="absolute top-4 right-4 
+            className="absolute top-4 right-4 
                         flex items-center gap-2
                         bg-gradient-to-r from-blue-600 via-blue-700 to-black
                         text-white px-5 py-2 font-bold rounded-lg
@@ -207,17 +192,17 @@ export default function GInventario() {
                         hover:shadow-[0_0_25px_#1e90ff,0_0_60px_#1e90ff99]
                         hover:scale-105
                         transition-all duration-300 ease-in-out"
-              onClick={() => setMostrarRopa((prev) => !prev)}
-            >
-              <Shirt className="w-5 h-5" />
-              Ver
-            </button>
+            onClick={() => setMostrarRopa((prev) => !prev)}
+          >
+            <Shirt className="w-5 h-5" />
+            Ver
+          </button>
 
           {mostrarRopa && (
             <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
               {/* Botón registrar ropa */}
               <div className="flex justify-end mb-3">
-               <Button
+                <Button
                   onClick={() => setModalRopaOpen(true)}
                   className="flex items-center gap-2 
                             bg-gradient-to-r from-green-600 via-green-700 to-green-800
@@ -229,54 +214,20 @@ export default function GInventario() {
                 >
                   <ClipboardPlus className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
                   <span>Registrar Entrada</span>
-              </Button>
+                </Button>
               </div>
 
               {/* Tabla Ropa */}
-              <div className="overflow-x-auto">
-                <table className="w-full border border-gray-300 rounded-lg">
-                  <thead className="bg-gray-200 text-gray-900">
-                    <tr>
-                      <th className="border px-4 py-2">ID</th>
-                      <th className="border px-4 py-2">Nombre</th>
-                      <th className="border px-4 py-2">Marca</th>
-                      <th className="border px-4 py-2">Talla</th>
-                      <th className="border px-4 py-2">Color</th>
-                      <th className="border px-4 py-2">Precio</th>
-                      <th className="border px-4 py-2">Ubicación</th>
-                      <th className="border px-4 py-2">Imagen</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ropa.map((p) => (
-                      <tr key={p.id_ropa} className="hover:bg-gray-100 transition">
-                        <td className="border px-4 py-2">{p.id_ropa}</td>
-                        <td className="border px-4 py-2">{p.nombre}</td>
-                        <td className="border px-4 py-2">{p.marca || "-"}</td>
-                        <td className="border px-4 py-2">{p.talla || "-"}</td>
-                        <td className="border px-4 py-2">{p.color || "-"}</td>
-                        <td className="border px-4 py-2">{p.precio}</td>
-                        <td className="border px-4 py-2">{p.ubicacion || "-"}</td>
-                        <td className="border px-4 py-2 text-center">
-                          {p.imagen ? (
-                            <button
-                              onClick={() => {
-                                setImagenSeleccionada(`${API_URL}${p.imagen}`);
-                                setImagenModalOpen(true);
-                              }}
-                              className="bg-gradient-to-r from-red-900 via-red-700 to-black text-white px-3 py-1 rounded-md shadow-md hover:from-black hover:via-red-800 hover:to-black transition"
-                            >
-                              Ver Imagen
-                            </button>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <TablaInventario
+                datos={ropa}
+                tipo="ropa"
+                API_URL={API_URL}
+                onVerImagen={(img) => {
+                  setImagenSeleccionada(img);
+                  setImagenModalOpen(true);
+                }}
+                loading={loadingRopa}
+              />
 
               <ModalEntrada
                 isOpen={modalRopaOpen}
@@ -284,7 +235,9 @@ export default function GInventario() {
                 usuarioId={usuarioId}
                 title="Registrar Nueva Prenda"
                 tipo="ropa"
-                onSuccess={(formData) => handleRegistrarProducto("ropa", formData)}
+                onSuccess={(formData) =>
+                  handleRegistrarProducto("ropa", formData)
+                }
               />
             </div>
           )}
@@ -301,7 +254,9 @@ export default function GInventario() {
             >
               ✖
             </button>
-            <h2 className="text-xl font-bold mb-4 text-center">📷 Vista de Imagen</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">
+              📷 Vista de Imagen
+            </h2>
             <img
               src={imagenSeleccionada}
               alt="Imagen del producto"
