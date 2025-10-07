@@ -3,12 +3,14 @@ import { Package, Shirt, CupSoda, ClipboardPlus } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import ModalEntrada from "../components/RegistroEntrada";
 import Button from "../components/ui/Button";
-import TablaInventario from "../components/TablaInventario"; // 👈 Tabla con loading integrado
+import TablaInventario from "../components/TablaInventario";
 import {
   obtenerRopa,
   obtenerComestibles,
   registrarEntradaRopa,
   registrarEntradaComestible,
+  buscarRopa,
+  buscarComestibles,
 } from "../api/inventario";
 import { useLocation } from "react-router-dom";
 
@@ -27,14 +29,14 @@ export default function GInventario() {
   const [mostrarRopa, setMostrarRopa] = useState(false);
   const [mostrarComestibles, setMostrarComestibles] = useState(false);
 
-  // ⏳ Estados de carga
   const [loadingRopa, setLoadingRopa] = useState(true);
   const [loadingComestibles, setLoadingComestibles] = useState(true);
 
   const usuarioId = "ADM2235";
   const location = useLocation();
+  const sidebarActive = location.pathname;
 
-  // Cargar datos
+  // ✅ Cargar datos iniciales
   const fetchDatos = async () => {
     try {
       setLoadingRopa(true);
@@ -48,7 +50,7 @@ export default function GInventario() {
       setRopa(ropaData);
       setComestibles(comestiblesData);
     } catch (err) {
-      console.error(err);
+      console.error("Error al cargar datos:", err);
     } finally {
       setLoadingRopa(false);
       setLoadingComestibles(false);
@@ -59,9 +61,32 @@ export default function GInventario() {
     fetchDatos();
   }, []);
 
-  const sidebarActive = location.pathname;
+  // ✅ Buscar ropa o comestibles por texto (API real)
+  const handleBuscar = async (tipo, valor) => {
+    if (valor.trim() === "") {
+      fetchDatos();
+      return;
+    }
 
-  // Registrar producto
+    try {
+      if (tipo === "ropa") {
+        setLoadingRopa(true);
+        const data = await buscarRopa(valor);
+        setRopa(data);
+      } else {
+        setLoadingComestibles(true);
+        const data = await buscarComestibles(valor);
+        setComestibles(data);
+      }
+    } catch (err) {
+      console.error("Error en búsqueda:", err);
+    } finally {
+      setLoadingRopa(false);
+      setLoadingComestibles(false);
+    }
+  };
+
+  // ✅ Registrar producto (ropa o comestible)
   const handleRegistrarProducto = async (tipo, formData) => {
     try {
       const data = new FormData();
@@ -72,7 +97,7 @@ export default function GInventario() {
       if (tipo === "ropa") {
         await registrarEntradaRopa(data);
         setModalRopaOpen(false);
-      } else if (tipo === "comestible") {
+      } else {
         await registrarEntradaComestible(data);
         setModalComestiblesOpen(false);
       }
@@ -94,7 +119,7 @@ export default function GInventario() {
       />
 
       <div className="ml-72 p-6">
-        {/* Encabezado */}
+        {/* ENCABEZADO PRINCIPAL */}
         <div className="mb-6">
           <div className="flex items-center gap-3">
             <Package size={38} className="text-red-700" />
@@ -108,17 +133,15 @@ export default function GInventario() {
           </p>
         </div>
 
-        {/* Sección Comestibles */}
+        {/* 🧃 SECCIÓN COMESTIBLES */}
         <div className="relative mb-6">
           <img
             src="/images/PComestible.png"
             alt="Productos Comestibles"
             className="w-full h-62 object-cover shadow-xl rounded-xl"
           />
-          {/* Botón Productos de Consumo */}
           <button
-            className="absolute top-4 left-4 
-                      flex items-center gap-2
+            className="absolute top-4 left-4 flex items-center gap-2
                       bg-gradient-to-r from-blue-600 via-blue-700 to-black
                       text-white px-5 py-2 font-bold rounded-lg
                       shadow-[0_0_15px_#1e90ff88,0_0_40px_#1e90ff44]
@@ -127,40 +150,68 @@ export default function GInventario() {
                       transition-all duration-300 ease-in-out"
             onClick={() => setMostrarComestibles((prev) => !prev)}
           >
-            <CupSoda className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
+            <CupSoda className="w-5 h-5" />
             <span>Ver</span>
           </button>
 
           {mostrarComestibles && (
             <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
-              {/* Botón registrar comestible */}
-              <div className="flex justify-end mb-3">
-                <Button
-                  onClick={() => setModalComestiblesOpen(true)}
-                  className="flex items-center gap-2 
-                            bg-gradient-to-r from-green-600 via-green-700 to-green-800
-                            text-white font-bold px-5 py-2 rounded-lg
-                            shadow-[0_0_12px_#22c55e66,0_0_25px_#16a34a33]
-                            hover:shadow-[0_0_20px_#22c55eaa,0_0_45px_#16a34a88]
-                            hover:scale-105
-                            transition-all duration-300 ease-in-out"
-                >
-                  <ClipboardPlus className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
-                  <span>Registrar Entrada</span>
-                </Button>
+              <div className="flex justify-between items-center mb-4">
+                {/* BOTONES */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setModalComestiblesOpen(true)}
+                    className="flex items-center gap-2 
+                              bg-gradient-to-r from-green-600 via-green-700 to-green-800
+                              text-white font-bold px-5 py-2 rounded-lg
+                              shadow-[0_0_12px_#22c55e66,0_0_25px_#16a34a33]
+                              hover:scale-105 hover:shadow-[0_0_20px_#22c55eaa]
+                              transition-all duration-300 ease-in-out"
+                  >
+                    <ClipboardPlus className="w-5 h-5 text-white" />
+                    <span>Registrar Entrada</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => alert("Abrir modal de salida (pendiente)")}
+                    className="flex items-center gap-2 
+                              bg-gradient-to-r from-red-600 via-red-700 to-red-800
+                              text-white font-bold px-5 py-2 rounded-lg
+                              shadow-[0_0_12px_#ef444466,0_0_25px_#b91c1c33]
+                              hover:scale-105 hover:shadow-[0_0_20px_#ef4444aa]
+                              transition-all duration-300 ease-in-out"
+                  >
+                    <ClipboardPlus className="w-5 h-5 text-white" />
+                    <span>Registrar Salida</span>
+                  </Button>
+                </div>
+
+                {/* BUSCADOR */}
+                <input
+                  type="text"
+                  placeholder="🔍 Buscar comestible por ID o nombre..."
+                  className="w-1/3 border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  onChange={(e) => handleBuscar("comestible", e.target.value)}
+                />
               </div>
 
-              {/* Tabla Comestibles */}
-              <TablaInventario
-                datos={comestibles}
-                tipo="comestible"
-                API_URL={API_URL}
-                onVerImagen={(img) => {
-                  setImagenSeleccionada(img);
-                  setImagenModalOpen(true);
-                }}
-                loading={loadingComestibles}
-              />
+              {loadingComestibles ? (
+                <p className="text-center text-gray-500 py-4 animate-pulse">
+                  ⏳ Cargando productos comestibles...
+                </p>
+              ) : (
+                <TablaInventario
+                  datos={comestibles}
+                  tipo="comestible"
+                  API_URL={API_URL}
+                  onVerImagen={(img) => {
+                    setImagenSeleccionada(img);
+                    setImagenModalOpen(true);
+                  }}
+                  loading={loadingComestibles}
+                  onActualizar={fetchDatos} // <-- Agregar esta línea
+                />
+              )}
 
               <ModalEntrada
                 isOpen={modalComestiblesOpen}
@@ -176,7 +227,7 @@ export default function GInventario() {
           )}
         </div>
 
-        {/* Sección Ropa */}
+        {/* 👕 SECCIÓN ROPA */}
         <div className="relative mb-6">
           <img
             src="/images/RDeportivo.png"
@@ -184,50 +235,74 @@ export default function GInventario() {
             className="w-full h-62 object-cover shadow-xl rounded-xl"
           />
           <button
-            className="absolute top-4 right-4 
-                        flex items-center gap-2
+            className="absolute top-4 right-4 flex items-center gap-2
                         bg-gradient-to-r from-blue-600 via-blue-700 to-black
                         text-white px-5 py-2 font-bold rounded-lg
                         shadow-[0_0_15px_#1e90ff88,0_0_40px_#1e90ff44]
-                        hover:shadow-[0_0_25px_#1e90ff,0_0_60px_#1e90ff99]
-                        hover:scale-105
+                        hover:scale-105 hover:shadow-[0_0_25px_#1e90ff]
                         transition-all duration-300 ease-in-out"
             onClick={() => setMostrarRopa((prev) => !prev)}
           >
             <Shirt className="w-5 h-5" />
-            Ver
+            <span>Ver</span>
           </button>
 
           {mostrarRopa && (
             <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
-              {/* Botón registrar ropa */}
-              <div className="flex justify-end mb-3">
-                <Button
-                  onClick={() => setModalRopaOpen(true)}
-                  className="flex items-center gap-2 
-                            bg-gradient-to-r from-green-600 via-green-700 to-green-800
-                            text-white font-bold px-5 py-2 rounded-lg
-                            shadow-[0_0_12px_#22c55e66,0_0_25px_#16a34a33]
-                            hover:shadow-[0_0_20px_#22c55eaa,0_0_45px_#16a34a88]
-                            hover:scale-105
-                            transition-all duration-300 ease-in-out"
-                >
-                  <ClipboardPlus className="w-5 h-5 text-white drop-shadow-[0_0_6px_#ffffffaa]" />
-                  <span>Registrar Entrada</span>
-                </Button>
+              <div className="flex justify-between items-center mb-4">
+                {/* BOTONES */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setModalRopaOpen(true)}
+                    className="flex items-center gap-2 
+                              bg-gradient-to-r from-green-600 via-green-700 to-green-800
+                              text-white font-bold px-5 py-2 rounded-lg
+                              hover:scale-105 shadow-[0_0_12px_#22c55e66]
+                              transition-all duration-300"
+                  >
+                    <ClipboardPlus className="w-5 h-5 text-white" />
+                    <span>Registrar Entrada</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => alert("Abrir modal de salida (pendiente)")}
+                    className="flex items-center gap-2 
+                              bg-gradient-to-r from-red-600 via-red-700 to-red-800
+                              text-white font-bold px-5 py-2 rounded-lg
+                              hover:scale-105 shadow-[0_0_12px_#ef444466]
+                              transition-all duration-300"
+                  >
+                    <ClipboardPlus className="w-5 h-5 text-white" />
+                    <span>Registrar Salida</span>
+                  </Button>
+                </div>
+
+                {/* BUSCADOR */}
+                <input
+                  type="text"
+                  placeholder="🔍 Buscar prenda por ID o nombre..."
+                  className="w-1/3 border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-red-600 outline-none transition-all"
+                  onChange={(e) => handleBuscar("ropa", e.target.value)}
+                />
               </div>
 
-              {/* Tabla Ropa */}
-              <TablaInventario
-                datos={ropa}
-                tipo="ropa"
-                API_URL={API_URL}
-                onVerImagen={(img) => {
-                  setImagenSeleccionada(img);
-                  setImagenModalOpen(true);
-                }}
-                loading={loadingRopa}
-              />
+              {loadingRopa ? (
+                <p className="text-center text-gray-500 py-4 animate-pulse">
+                  ⏳ Cargando prendas...
+                </p>
+              ) : (
+                <TablaInventario
+                  datos={ropa}
+                  tipo="ropa"
+                  API_URL={API_URL}
+                  onVerImagen={(img) => {
+                    setImagenSeleccionada(img);
+                    setImagenModalOpen(true);
+                  }}
+                  loading={loadingRopa}
+                  onActualizar={fetchDatos}
+                />
+              )}
 
               <ModalEntrada
                 isOpen={modalRopaOpen}
@@ -244,7 +319,7 @@ export default function GInventario() {
         </div>
       </div>
 
-      {/* Modal de Imagen */}
+      {/* 🖼️ MODAL DE IMAGEN */}
       {imagenModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full relative">
@@ -268,3 +343,4 @@ export default function GInventario() {
     </div>
   );
 }
+

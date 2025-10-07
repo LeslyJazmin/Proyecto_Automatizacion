@@ -86,25 +86,25 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-{/* Info + Imagen */}
-<div className="flex flex-col lg:flex-row gap-6 items-stretch">
-  {/* InfoEmpresa ocupa la mitad */}
-  <div className="flex-1">
-    <InfoEmpresa />
-  </div>
+        {/* Info + Imagen */}
+        <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+          {/* InfoEmpresa ocupa la mitad */}
+          <div className="flex-1">
+            <InfoEmpresa />
+          </div>
 
-  {/* Imagen ocupa la otra mitad pero más baja */}
-  <div className="flex-1 relative rounded-2xl overflow-hidden shadow-2xl 
-                  hover:scale-[1.02] transition-transform duration-200
-                  max-h-[328px]"> {/* ⬅️ altura máxima reducida */}
-    <img
-      src="/images/info.jpeg"
-      alt="Gimnasio moderno"
-      className="w-full h-full object-cover"
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-  </div>
-</div>
+          {/* Imagen ocupa la otra mitad pero más baja */}
+          <div className="flex-1 relative rounded-2xl overflow-hidden shadow-2xl 
+                          hover:scale-[1.02] transition-transform duration-200
+                          max-h-[328px]"> {/* ⬅️ altura máxima reducida */}
+            <img
+              src="/images/info.jpeg"
+              alt="Gimnasio moderno"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+          </div>
+        </div>
 
 
         {/* Personal a cargo */}

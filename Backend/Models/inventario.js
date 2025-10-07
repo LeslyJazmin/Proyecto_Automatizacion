@@ -179,6 +179,107 @@ async function listarComestibles() {
   return result.recordset;
 }
 
+async function listarMovimientosRopa() {
+  const pool = await getPool();
+  const result = await pool.request().query(`
+    SELECT i.tipo_movimiento, i.cantidad, i.tipo_comprobante, i.numero_comprobante, 
+           i.tipo_venta, u.username AS usuario, r.nombre AS producto, i.fecha
+    FROM InventarioRopa i
+    LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
+    LEFT JOIN RopaDeportiva r ON i.id_producto = r.id_ropa
+    ORDER BY i.fecha DESC
+  `);
+  return result.recordset;
+}
+
+async function listarMovimientosComestible() {
+  const pool = await getPool();
+  const result = await pool.request().query(`
+    SELECT i.tipo_movimiento, i.cantidad, i.tipo_comprobante, i.numero_comprobante, 
+           i.tipo_venta, u.username AS usuario, c.nombre AS producto, i.fecha
+    FROM InventarioComestible i
+    LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
+    LEFT JOIN ProductosComestibles c ON i.id_producto = c.id_comestible
+    ORDER BY i.fecha DESC
+  `);
+  return result.recordset;
+}
+
+// =============================
+// 📌 BUSCAR PRODUCTO POR ID O NOMBRE (LIKE)
+// =============================
+async function buscarRopa(criterio) {
+  const pool = await getPool();
+  const result = await pool.request()
+    .input("criterio", sql.NVarChar(50), `%${criterio}%`)
+    .query(`
+      SELECT r.*, i.cantidad
+      FROM RopaDeportiva r
+      LEFT JOIN InventarioRopa i ON r.id_ropa = i.id_producto
+      WHERE r.id_ropa LIKE @criterio OR r.nombre LIKE @criterio
+    `);
+  return result.recordset;
+}
+
+async function buscarComestible(criterio) {
+  const pool = await getPool();
+  const result = await pool.request()
+    .input("criterio", sql.NVarChar(50), `%${criterio}%`)
+    .query(`
+      SELECT c.*, i.cantidad
+      FROM ProductosComestibles c
+      LEFT JOIN InventarioComestible i ON c.id_comestible = i.id_producto
+      WHERE c.id_comestible LIKE @criterio OR c.nombre LIKE @criterio
+    `);
+  return result.recordset;
+}
+// =============================
+// 📌 ELIMINAR ROPA Y SU INVENTARIO
+// =============================
+async function eliminarRopa(id_ropa) {
+  const pool = await getPool();
+
+  // Primero eliminar los movimientos del inventario asociados
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .query(`
+      DELETE FROM InventarioRopa WHERE id_producto = @id_ropa
+    `);
+
+  // Luego eliminar el producto
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .query(`
+      DELETE FROM RopaDeportiva WHERE id_ropa = @id_ropa
+    `);
+
+  return { message: "🗑️ Producto de ropa y sus registros eliminados correctamente" };
+}
+
+// =============================
+// 📌 ELIMINAR COMESTIBLE Y SU INVENTARIO
+// =============================
+async function eliminarComestible(id_comestible) {
+  const pool = await getPool();
+
+  // Primero eliminar los movimientos del inventario asociados
+  await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .query(`
+      DELETE FROM InventarioComestible WHERE id_producto = @id_comestible
+    `);
+
+  // Luego eliminar el producto
+  await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .query(`
+      DELETE FROM ProductosComestibles WHERE id_comestible = @id_comestible
+    `);
+
+  return { message: "🗑️ Producto comestible y sus registros eliminados correctamente" };
+}
+
+
 module.exports = {
   registrarEntradaRopa,
   registrarEntradaComestible,
@@ -186,4 +287,10 @@ module.exports = {
   registrarEntradaComestibleExistente,
   listarRopa,
   listarComestibles,
+  listarMovimientosRopa,
+  listarMovimientosComestible,
+  buscarRopa,              
+  buscarComestible,     
+  eliminarRopa,
+  eliminarComestible,    
 };

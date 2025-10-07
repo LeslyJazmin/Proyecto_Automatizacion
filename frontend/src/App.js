@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import GInventario from "./pages/GInventario";
+import Movimientos from "./pages/Movimientos";
 import Reportes from "./pages/Reportes";
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
             }
           />
           <Route path="/GInventario" element={<GInventario />} />
+          <Route path="/Movimientos" element={<Movimientos />} />
           <Route path="/Reportes" element={<Reportes />} />
           {/* Redirigir cualquier ruta desconocida al dashboard */}
           <Route path="*" element={<Navigate to="/AdminDashboard" replace />} />

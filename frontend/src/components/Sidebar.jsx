@@ -5,35 +5,31 @@ export default function Sidebar({ onLogout, logoutOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Clases para los botones según si están activos o no
-  const getButtonClasses = (path) => {
-    const isActive = (path === "logout" && logoutOpen) || location.pathname === path;
-    const baseClasses =
-      `flex items-center space-x-4 w-full px-5 py-3 rounded-lg
-       transition-all duration-300 transform hover:translate-x-1`;
-    const activeClasses =
-      `bg-red-800/80 text-white shadow-md`;
-    const inactiveClasses =
-      `text-gray-300 hover:text-white hover:bg-red-900/30`;
-    return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+  // Función para determinar si la ruta está activa
+  const isActiveRoute = (path) => {
+    if (path === "logout") return logoutOpen;
+    return location.pathname.toLowerCase().startsWith(path.toLowerCase());
   };
 
-  // Iconos con color dinámico
-  const getIconProps = (path) => {
-    const isActive = (path === "logout" && logoutOpen) || location.pathname === path;
-    return {
-      color: isActive ? "#ffffff" : "#f87171",
-      className: "w-5 h-5"
-    };
+  // Clases de botón según si está activo
+  const getButtonClasses = (path) => {
+    const active = isActiveRoute(path);
+    const baseClasses =
+      "flex items-center space-x-4 w-full px-5 py-3 rounded-lg transition-all duration-300 transform hover:translate-x-1";
+    const activeClasses = "bg-red-800/80 text-white shadow-md";
+    const inactiveClasses = "text-gray-300 hover:text-white hover:bg-red-900/30";
+    return `${baseClasses} ${active ? activeClasses : inactiveClasses}`;
   };
+
+  // Props dinámicos para iconos
+  const getIconProps = (path) => ({
+    color: isActiveRoute(path) ? "#ffffff" : "#f87171",
+    className: "w-5 h-5",
+  });
 
   return (
     <div
-      className="w-72 h-screen 
-                 bg-gradient-to-b from-black via-red-950 to-black
-                 shadow-[0_0_25px_#ff1a1a66]
-                 flex flex-col font-sans fixed top-0 left-0 z-50
-                 border-r border-red-800/50"
+      className="w-72 h-screen bg-gradient-to-b from-black via-red-950 to-black shadow-[0_0_25px_#ff1a1a66] flex flex-col font-sans fixed top-0 left-0 z-50 border-r border-red-800/50"
     >
       {/* Cabecera */}
       <div className="p-6 text-center">
@@ -61,9 +57,7 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/AdminDashboard")}
         >
           <Info {...getIconProps("/AdminDashboard")} />
-          <span className="font-semibold text-sm tracking-wide">
-            Información de empresa
-          </span>
+          <span className="font-semibold text-sm tracking-wide">Información de empresa</span>
         </button>
 
         <button
@@ -71,9 +65,15 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/GInventario")}
         >
           <Package {...getIconProps("/GInventario")} />
-          <span className="font-semibold text-sm tracking-wide">
-            Gestión de inventario
-          </span>
+          <span className="font-semibold text-sm tracking-wide">Gestión de inventario</span>
+        </button>
+
+        <button
+          className={getButtonClasses("/Movimientos")}
+          onClick={() => navigate("/Movimientos")}
+        >
+          <Package {...getIconProps("/Movimientos")} />
+          <span className="font-semibold text-sm tracking-wide">Movimientos</span>
         </button>
 
         <button
@@ -81,9 +81,7 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/Reportes")}
         >
           <BarChart3 {...getIconProps("/Reportes")} />
-          <span className="font-semibold text-sm tracking-wide">
-            Reportes
-          </span>
+          <span className="font-semibold text-sm tracking-wide">Reportes</span>
         </button>
       </div>
 
