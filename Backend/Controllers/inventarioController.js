@@ -84,19 +84,57 @@ async function listarComestiblesController(req, res) {
   }
 }
 
+// --- LISTAR MOVIMIENTOS ROPA ---
 async function listarMovimientosRopaController(req, res) {
   try {
     const movimientos = await listarMovimientosRopa();
-    res.json(movimientos);
+
+    const dias = [
+      "Domingo", "Lunes", "Martes", "Miércoles",
+      "Jueves", "Viernes", "Sábado"
+    ];
+
+    const movimientosFormateados = movimientos.map(m => {
+      const fechaBD = m.fecha ? new Date(m.fecha) : null;
+
+      const fechaFormateada = fechaBD
+        ? `${dias[fechaBD.getDay()]} ${String(fechaBD.getDate()).padStart(2, "0")}/${String(fechaBD.getMonth() + 1).padStart(2, "0")}/${fechaBD.getFullYear()} - Hora: ` +
+          `${String(fechaBD.getHours()).padStart(2, "0")}:${String(fechaBD.getMinutes()).padStart(2, "0")}:${String(fechaBD.getSeconds()).padStart(2, "0")}`
+        : null;
+
+      return { ...m, fecha: fechaFormateada };
+    });
+
+    res.json(movimientosFormateados);
   } catch (err) {
     console.error("❌ Error al listar movimientos de ropa:", err);
     res.status(500).json({ message: err.message });
   }
 }
+
+
+// --- LISTAR MOVIMIENTOS COMESTIBLE ---
 async function listarMovimientosComestibleController(req, res) {
   try {
     const movimientos = await listarMovimientosComestible();
-    res.json(movimientos);
+
+    const dias = [
+      "Domingo", "Lunes", "Martes", "Miércoles",
+      "Jueves", "Viernes", "Sábado"
+    ];
+
+    const movimientosFormateados = movimientos.map(m => {
+      const fechaBD = m.fecha ? new Date(m.fecha) : null;
+
+      const fechaFormateada = fechaBD
+        ? `${dias[fechaBD.getDay()]} ${String(fechaBD.getDate()).padStart(2, "0")}/${String(fechaBD.getMonth() + 1).padStart(2, "0")}/${fechaBD.getFullYear()} - Hora: ` +
+          `${String(fechaBD.getHours()).padStart(2, "0")}:${String(fechaBD.getMinutes()).padStart(2, "0")}:${String(fechaBD.getSeconds()).padStart(2, "0")}`
+        : null;
+
+      return { ...m, fecha: fechaFormateada };
+    });
+
+    res.json(movimientosFormateados);
   } catch (err) {
     console.error("❌ Error al listar movimientos de comestible:", err);
     res.status(500).json({ message: err.message });

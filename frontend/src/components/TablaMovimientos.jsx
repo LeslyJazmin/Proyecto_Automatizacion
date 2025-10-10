@@ -51,8 +51,9 @@ export default function TablaMovimientos({ datos }) {
               <td className="px-4 py-3">{mov.numero_comprobante || "-"}</td>
               <td className="px-4 py-3">{mov.tipo_venta || "-"}</td>
               <td className="px-4 py-3 text-gray-600">
-                {mov.fecha ? new Date(mov.fecha).toLocaleString() : "-"}
-              </td>
+  {mov.fecha || "-"}
+</td>
+
             </tr>
           ))}
         </tbody>

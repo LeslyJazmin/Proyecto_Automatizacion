@@ -9,7 +9,8 @@ const config = {
   options: {
     encrypt: true,
     enableArithAbort: true,
-    trustServerCertificate: true
+    trustServerCertificate: true,
+    useUTC: false
   },
   connectionTimeout: 30000,
   requestTimeout: 30000
