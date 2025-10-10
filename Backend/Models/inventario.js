@@ -5,7 +5,7 @@ const { getPool, sql } = require("../config/db");
 // =============================
 function generarIdInventario(prefijo) {
   const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
-  return prefijo + random; // Ejemplo: IR1234 o IC5678
+  return prefijo + random;
 }
 
 // =============================
@@ -25,14 +25,15 @@ async function registrarEntradaRopa(data) {
     .input("precio", sql.Decimal(10, 2), precio)
     .input("ubicacion", sql.NVarChar(50), data.ubicacion || null)
     .input("imagen", sql.NVarChar(255), data.imagen || null)
+    .input("cantidad", sql.Int, cantidad)
     .query(`
       IF EXISTS (SELECT 1 FROM RopaDeportiva WHERE id_ropa = @id_ropa)
         UPDATE RopaDeportiva
-        SET nombre=@nombre, marca=@marca, talla=@talla, color=@color, precio=@precio, ubicacion=@ubicacion, imagen=@imagen
+        SET nombre=@nombre, marca=@marca, talla=@talla, color=@color, precio=@precio, ubicacion=@ubicacion, imagen=@imagen, cantidad=@cantidad
         WHERE id_ropa=@id_ropa
       ELSE
-        INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, ubicacion, imagen)
-        VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @ubicacion, @imagen)
+        INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, cantidad, ubicacion, imagen)
+        VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
   // Insertar movimiento
@@ -51,17 +52,27 @@ async function registrarEntradaRopa(data) {
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento, @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
     `);
 
-  return { message: "✅ Entrada de ropa registrada correctamente" };
+  return { success: true, message: "✅ Entrada de ropa registrada correctamente" };
 }
 
 // =============================
-// 📌 ROPA EXISTENTE (solo suma stock y guarda comprobante)
+// 📌 ROPA EXISTENTE
 // =============================
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
   const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
 
-  // Insertar movimiento en InventarioRopa
+  // Sumar stock en tabla principal
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .input("cantidad", sql.Int, cantidad)
+    .query(`
+      UPDATE RopaDeportiva
+      SET cantidad = cantidad + @cantidad
+      WHERE id_ropa = @id_ropa
+    `);
+
+  // Insertar movimiento
   const idInventario = generarIdInventario("IR");
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
@@ -77,7 +88,7 @@ async function registrarEntradaRopaExistente(data) {
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento, @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
     `);
 
-  return { message: "✅ Entrada de ropa existente registrada correctamente" };
+  return { success: true, message: "✅ Entrada de ropa existente registrada correctamente" };
 }
 
 // =============================
@@ -87,7 +98,6 @@ async function registrarEntradaComestible(data) {
   const pool = await getPool();
   const { id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
 
-  // Insertar o actualizar comestible
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -98,17 +108,17 @@ async function registrarEntradaComestible(data) {
     .input("precio", sql.Decimal(10, 2), precio)
     .input("ubicacion", sql.NVarChar(50), data.ubicacion || null)
     .input("imagen", sql.NVarChar(255), data.imagen || null)
+    .input("cantidad", sql.Int, cantidad)
     .query(`
       IF EXISTS (SELECT 1 FROM ProductosComestibles WHERE id_comestible = @id_comestible)
         UPDATE ProductosComestibles
-        SET nombre=@nombre, marca=@marca, sabor=@sabor, peso=@peso, litros=@litros, precio=@precio, ubicacion=@ubicacion, imagen=@imagen
+        SET nombre=@nombre, marca=@marca, sabor=@sabor, peso=@peso, litros=@litros, precio=@precio, ubicacion=@ubicacion, imagen=@imagen, cantidad=@cantidad
         WHERE id_comestible=@id_comestible
       ELSE
-        INSERT INTO ProductosComestibles (id_comestible, nombre, marca, sabor, peso, litros, precio, ubicacion, imagen)
-        VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @ubicacion, @imagen)
+        INSERT INTO ProductosComestibles (id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad, ubicacion, imagen)
+        VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
-  // Insertar movimiento
   const idInventario = generarIdInventario("IC");
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
@@ -124,7 +134,7 @@ async function registrarEntradaComestible(data) {
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento, @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
     `);
 
-  return { message: "✅ Entrada de comestible registrada correctamente" };
+  return { success: true, message: "✅ Entrada de comestible registrada correctamente" };
 }
 
 // =============================
@@ -134,7 +144,15 @@ async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
   const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
 
-  // Insertar movimiento en InventarioComestible
+  await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .input("cantidad", sql.Int, cantidad)
+    .query(`
+      UPDATE ProductosComestibles
+      SET cantidad = cantidad + @cantidad
+      WHERE id_comestible = @id_comestible
+    `);
+
   const idInventario = generarIdInventario("IC");
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
@@ -150,20 +168,20 @@ async function registrarEntradaComestibleExistente(data) {
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento, @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
     `);
 
-  return { message: "✅ Entrada de comestible existente registrada correctamente" };
+  return { success: true, message: "✅ Entrada de comestible existente registrada correctamente" };
 }
 
 // =============================
-// 📌 LISTAR PRODUCTOS CON CANTIDAD
+// 📌 LISTAR PRODUCTOS CON CANTIDAD (actualizado)
 // =============================
 
 // Ropa
 async function listarRopa() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT r.*, i.cantidad
-    FROM RopaDeportiva r
-    LEFT JOIN InventarioRopa i ON r.id_ropa = i.id_producto
+    SELECT *
+    FROM RopaDeportiva
+    ORDER BY nombre
   `);
   return result.recordset;
 }
@@ -172,9 +190,9 @@ async function listarRopa() {
 async function listarComestibles() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT c.*, i.cantidad
-    FROM ProductosComestibles c
-    LEFT JOIN InventarioComestible i ON c.id_comestible = i.id_producto
+    SELECT *
+    FROM ProductosComestibles
+    ORDER BY nombre
   `);
   return result.recordset;
 }

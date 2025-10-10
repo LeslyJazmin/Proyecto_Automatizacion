@@ -141,3 +141,22 @@ export async function eliminarRopa(id) {
   });
   return handleResponse(res);
 }
+// Registrar entrada de ropa existente
+export async function registrarEntradaRopaExistente(data) {
+  const res = await fetch(`${API_BASE}/ropa/entrada-existente`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+
+// Registrar entrada de comestible existente
+export async function registrarEntradaComestibleExistente(data) {
+  const res = await fetch(`${API_BASE}/comestibles/entrada-existente`, {
+    method: "POST",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
