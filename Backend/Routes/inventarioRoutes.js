@@ -13,6 +13,8 @@ const {
   listarMovimientosComestibleController,
   buscarRopaController,
   buscarComestibleController,
+  actualizarComestibleController,
+  actualizarRopaController,
   eliminarRopaController,
   eliminarComestibleController,
 } = require("../Controllers/inventarioController");
@@ -21,11 +23,13 @@ const {
 router.get("/ropa", listarRopaController);
 router.get("/ropa/buscar", buscarRopaController);
 router.post("/ropa/entrada", upload.single("imagen"), entradaRopa);
+router.put("/ropa/actualizar", upload.single("imagen"), actualizarRopaController);
 router.post("/ropa/entrada-existente", entradaRopaExistente); // 👈 para producto ya existente
 
 // --- COMESTIBLES ---
 router.get("/comestibles", listarComestiblesController);
 router.get("/comestibles/buscar", buscarComestibleController);
+router.put("/comestibles/actualizar", upload.single("imagen"), actualizarComestibleController);
 router.post("/comestibles/entrada", upload.single("imagen"), entradaComestible);
 router.post("/comestibles/entrada-existente", entradaComestibleExistente); // 👈 para producto ya existente
 

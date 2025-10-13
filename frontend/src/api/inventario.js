@@ -160,3 +160,49 @@ export async function registrarEntradaComestibleExistente(data) {
   });
   return handleResponse(res);
 }
+
+// Actualizar ropa
+export async function actualizarRopa(datosActualizados) {
+  const formData = new FormData();
+
+  for (const key in datosActualizados) {
+    // Si el valor es undefined, lo convertimos a cadena vacía
+    const value = datosActualizados[key] ?? "";
+    formData.append(key, value);
+  }
+
+  const res = await fetch(`${API_BASE}/ropa/actualizar`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: formData,
+  });
+
+  return handleResponse(res);
+}
+
+// Actualizar comestible
+export async function actualizarComestible(datosActualizados) {
+  const formData = new FormData();
+
+  // Normaliza los valores numéricos: si no hay, no los envía
+  if (datosActualizados.peso === "" || datosActualizados.peso === undefined)
+    delete datosActualizados.peso;
+  if (datosActualizados.litros === "" || datosActualizados.litros === undefined)
+    delete datosActualizados.litros;
+
+  for (const key in datosActualizados) {
+    // Solo añade valores definidos
+    if (datosActualizados[key] !== undefined && datosActualizados[key] !== null) {
+      formData.append(key, datosActualizados[key]);
+    }
+  }
+
+  const res = await fetch(`${API_BASE}/comestibles/actualizar`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: formData,
+  });
+
+  return handleResponse(res);
+}
+

@@ -13,11 +13,15 @@ function generarIdInventario(prefijo) {
 // ============================================================
 async function registrarEntradaRopa(data) {
   const pool = await getPool();
-  const { id_ropa, nombre, marca, talla, color, precio, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
+  const { 
+    id_ropa, nombre, marca, talla, color, precio, cantidad,
+    tipo_comprobante, numero_comprobante, tipo_venta, id_usuario,
+    ubicacion, imagen
+  } = data;
 
   const idInventario = generarIdInventario("IR");
 
-  // Registrar producto nuevo
+  // Registrar producto nuevo con ubicación e imagen
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("nombre", sql.NVarChar(20), nombre)
@@ -26,12 +30,14 @@ async function registrarEntradaRopa(data) {
     .input("color", sql.NVarChar(20), color)
     .input("precio", sql.Decimal(10, 2), precio)
     .input("cantidad", sql.Int, cantidad)
+    .input("ubicacion", sql.NVarChar(50), ubicacion)
+    .input("imagen", sql.NVarChar(255), imagen)
     .query(`
-      INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, cantidad)
-      VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad)
+      INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, cantidad, ubicacion, imagen)
+      VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento en inventario (SQL pondrá la fecha con GETDATE())
+  // Registrar movimiento en inventario (SQL pondrá GETDATE())
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_ropa)
@@ -56,7 +62,6 @@ async function registrarEntradaRopa(data) {
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
   const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
-
   const idInventario = generarIdInventario("IR");
 
   // Actualizar stock
@@ -93,11 +98,15 @@ async function registrarEntradaRopaExistente(data) {
 // ============================================================
 async function registrarEntradaComestible(data) {
   const pool = await getPool();
-  const { id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
+  const { 
+    id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad,
+    tipo_comprobante, numero_comprobante, tipo_venta, id_usuario,
+    ubicacion, imagen
+  } = data;
 
   const idInventario = generarIdInventario("IC");
 
-  // Registrar producto nuevo
+  // Registrar producto nuevo con ubicación e imagen
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -107,9 +116,12 @@ async function registrarEntradaComestible(data) {
     .input("litros", sql.Decimal(10, 2), litros)
     .input("precio", sql.Decimal(10, 2), precio)
     .input("cantidad", sql.Int, cantidad)
+    .input("ubicacion", sql.NVarChar(50), ubicacion)
+    .input("imagen", sql.NVarChar(255), imagen)
     .query(`
-      INSERT INTO ProductosComestibles (id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad)
-      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @cantidad)
+      INSERT INTO ProductosComestibles 
+      (id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad, ubicacion, imagen)
+      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
   // Registrar movimiento
@@ -137,7 +149,6 @@ async function registrarEntradaComestible(data) {
 async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
   const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
-
   const idInventario = generarIdInventario("IC");
 
   // Actualizar stock
@@ -250,6 +261,68 @@ async function buscarComestible(criterio) {
     `);
   return result.recordset;
 }
+// ============================================================
+// ✏️ ACTUALIZAR DATOS DE ROPA (marca, talla, color, ubicación, imagen)
+// ============================================================
+async function actualizarRopa(data) {
+  const pool = await getPool();
+  const { id_ropa, marca, talla, color, ubicacion, imagen } = data;
+
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .input("marca", sql.NVarChar(20), marca)
+    .input("talla", sql.NVarChar(8), talla)
+    .input("color", sql.NVarChar(20), color)
+    .input("ubicacion", sql.NVarChar(50), ubicacion)
+    .input("imagen", sql.NVarChar(255), imagen)
+    .query(`
+      UPDATE RopaDeportiva
+      SET 
+        marca = @marca,
+        talla = @talla,
+        color = @color,
+        ubicacion = @ubicacion,
+        imagen = @imagen
+      WHERE id_ropa = @id_ropa
+    `);
+
+  return { message: "✅ Datos de ropa actualizados correctamente" };
+}
+
+// ============================================================
+// ✏️ ACTUALIZAR DATOS DE PRODUCTO COMESTIBLE 
+// (marca, sabor, peso, litros, ubicación, imagen)
+// ============================================================
+async function actualizarComestible(data) {
+  const pool = await getPool();
+  let { id_comestible, marca, sabor, peso, litros, ubicacion, imagen } = data;
+
+  // Convertir a null si no es un número válido
+  peso = !isNaN(parseFloat(peso)) ? parseFloat(peso) : null;
+  litros = !isNaN(parseFloat(litros)) ? parseFloat(litros) : null;
+
+  await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .input("marca", sql.NVarChar(20), marca)
+    .input("sabor", sql.NVarChar(20), sabor)
+    .input("peso", sql.Decimal(10, 2), peso)
+    .input("litros", sql.Decimal(10, 2), litros)
+    .input("ubicacion", sql.NVarChar(50), ubicacion)
+    .input("imagen", sql.NVarChar(255), imagen)
+    .query(`
+      UPDATE ProductosComestibles
+      SET 
+        marca = @marca,
+        sabor = @sabor,
+        peso = @peso,
+        litros = @litros,
+        ubicacion = @ubicacion,
+        imagen = @imagen
+      WHERE id_comestible = @id_comestible
+    `);
+
+  return { message: "✅ Datos de producto comestible actualizados correctamente" };
+}
 
 // ============================================================
 // 🗑️ ELIMINACIONES
@@ -291,6 +364,8 @@ module.exports = {
   listarMovimientosComestible,
   buscarRopa,
   buscarComestible,
+  actualizarRopa,
+  actualizarComestible,
   eliminarRopa,
   eliminarComestible
 };

@@ -9,6 +9,8 @@ const {
   listarMovimientosComestible,
   buscarRopa,
   buscarComestible,
+  actualizarRopa,
+  actualizarComestible,
   eliminarRopa,
   eliminarComestible,
 } = require("../Models/inventario");
@@ -205,6 +207,102 @@ async function buscarComestibleController(req, res) {
     res.status(500).json({ message: "Error al buscar comestibles" });
   }
 }
+
+// --- ACTUALIZAR COMESTIBLE (solo peso o litros, no ambos) ---
+// --- ACTUALIZAR COMESTIBLE (editar peso o litros según corresponda) ---
+async function actualizarComestibleController(req, res) {
+  try {
+    const { id_comestible, marca, sabor, peso, litros, ubicacion } = req.body;
+    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
+
+    if (!id_comestible) {
+      return res.status(400).json({ message: "Falta el id_comestible" });
+    }
+
+    // Obtener el producto actual
+    const productos = await listarComestibles();
+    const productoActual = productos.find(p => p.id_comestible === id_comestible);
+
+    if (!productoActual) {
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    // Mantener consistencia: si el producto tiene litros, se actualiza litros;
+    // si tiene peso, se actualiza peso. Si no tiene ninguno, se usa lo que venga.
+    let nuevoPeso = productoActual.peso;
+    let nuevoLitros = productoActual.litros;
+
+    if (productoActual.litros !== null && productoActual.litros !== 0) {
+      // Producto trabaja con litros
+      nuevoLitros = litros ?? productoActual.litros;
+      nuevoPeso = null;
+    } else if (productoActual.peso !== null && productoActual.peso !== 0) {
+      // Producto trabaja con peso
+      nuevoPeso = peso ?? productoActual.peso;
+      nuevoLitros = null;
+    } else {
+      // Producto nuevo sin tipo definido: usar lo que venga
+      nuevoPeso = peso ?? null;
+      nuevoLitros = litros ?? null;
+    }
+
+    const data = {
+      id_comestible,
+      marca: marca ?? productoActual.marca,
+      sabor: sabor ?? productoActual.sabor,
+      peso: nuevoPeso,
+      litros: nuevoLitros,
+      ubicacion: ubicacion ?? productoActual.ubicacion,
+      imagen: imagen ?? productoActual.imagen
+    };
+
+    const resultado = await actualizarComestible(data);
+    res.json(resultado);
+
+  } catch (err) {
+    console.error("❌ Error al actualizar comestible:", err);
+    res.status(500).json({ message: "Error al actualizar comestible" });
+  }
+}
+
+// --- ACTUALIZAR ROPA DEPORTIVA ---
+async function actualizarRopaController(req, res) {
+  try {
+    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion } = req.body; // 👈 color agregado
+    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
+
+    if (!id_ropa) {
+      return res.status(400).json({ message: "Falta el id_ropa" });
+    }
+
+    // Traer el producto actual
+    const productos = await listarRopa();
+    const ropaActual = productos.find(p => p.id_ropa === id_ropa);
+
+    if (!ropaActual) {
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    const data = {
+      id_ropa,
+      nombre: nombre ?? ropaActual.nombre,
+      marca: marca ?? ropaActual.marca,
+      talla: talla ?? ropaActual.talla,
+      tipo_ropa: tipo_ropa ?? ropaActual.tipo_ropa,
+      color: color ?? ropaActual.color, // 👈 agregado correctamente
+      ubicacion: ubicacion ?? ropaActual.ubicacion,
+      imagen: imagen ?? ropaActual.imagen
+    };
+
+    const resultado = await actualizarRopa(data);
+    res.json(resultado);
+
+  } catch (err) {
+    console.error("❌ Error al actualizar ropa:", err);
+    res.status(500).json({ message: "Error al actualizar ropa" });
+  }
+}
+
 // --- ELIMINAR ROPA ---
 async function eliminarRopaController(req, res) {
   try {
@@ -240,6 +338,8 @@ module.exports = {
   listarMovimientosComestibleController,
   buscarRopaController,
   buscarComestibleController,
+  actualizarComestibleController,
+  actualizarRopaController,
   eliminarRopaController,      
   eliminarComestibleController,    
 };
