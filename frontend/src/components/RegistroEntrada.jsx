@@ -7,7 +7,7 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [generatedId, setGeneratedId] = useState("");
-  const [step, setStep] = useState("inicio"); // inicio | nuevo | existente_form
+  const [step, setStep] = useState("inicio");
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
 
@@ -23,9 +23,10 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
 
   useEffect(() => {
     if (isOpen && step === "nuevo") {
-      const id = tipo === "ropa"
-        ? "IR" + Math.floor(1000 + Math.random() * 9000)
-        : "IC" + Math.floor(1000 + Math.random() * 9000);
+      const id =
+        tipo === "ropa"
+          ? "IR" + Math.floor(1000 + Math.random() * 9000)
+          : "IC" + Math.floor(1000 + Math.random() * 9000);
       setGeneratedId(id);
       setFormData((prev) => ({
         ...prev,
@@ -51,17 +52,43 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
 
   const validate = () => {
     const newErrors = {};
-    const requiredFields = tipo === "ropa"
-      ? ["nombre", "marca", "talla", "color", "precio", "cantidad", "tipo_comprobante", "numero_comprobante", "tipo_venta"]
-      : ["nombre", "marca", "sabor", "precio", "unidad_medida", "cantidad", "tipo_comprobante", "numero_comprobante", "tipo_venta"];
+    const requiredFields =
+      tipo === "ropa"
+        ? [
+            "nombre",
+            "marca",
+            "talla",
+            "color",
+            "precio",
+            "cantidad",
+            "tipo_comprobante",
+            "numero_comprobante",
+            "metodo_pago",
+            "monto_pagado",
+          ]
+        : [
+            "nombre",
+            "marca",
+            "sabor",
+            "precio",
+            "unidad_medida",
+            "cantidad",
+            "tipo_comprobante",
+            "numero_comprobante",
+            "metodo_pago",
+            "monto_pagado",
+          ];
 
     if (tipo === "comestible") {
       if (formData.unidad_medida === "peso") requiredFields.push("peso");
       if (formData.unidad_medida === "litros") requiredFields.push("litros");
     }
 
-    requiredFields.forEach(field => {
-      if ((field === "cantidad" && !cantidadRegistrar) || (!formData[field] && formData[field] !== 0 && field !== "cantidad")) {
+    requiredFields.forEach((field) => {
+      if (
+        (field === "cantidad" && !cantidadRegistrar) ||
+        (!formData[field] && formData[field] !== 0 && field !== "cantidad")
+      ) {
         newErrors[field] = "Este campo es obligatorio";
       }
     });
@@ -78,21 +105,24 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
     handleClose();
   };
 
-  // Estilos
-  const inputClass = "w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition mb-1 text-sm";
-  const errorClass = "border-red-500 focus:ring-red-500 focus:border-red-500";
-  const errorMsgClass = "text-red-500 text-xs mb-2";
-
-  const sectionTitleClass = "mt-4 mb-2 text-sm font-medium text-gray-900";
-  const initBtnClass = "font-medium text-sm px-6 py-3 rounded-lg shadow transition w-48"; 
-  const primaryInitBtnClass = "bg-green-600 hover:bg-green-700 text-white " + initBtnClass;
-  const secondaryInitBtnClass = "bg-blue-600 hover:bg-blue-700 text-white " + initBtnClass;
-  const formBtnClass = "font-medium text-sm px-4 py-2 rounded-lg shadow transition";
-  const primaryBtnClass = "bg-green-600 hover:bg-green-700 text-white " + formBtnClass;
-  const cancelBtnClass = "bg-gray-400 hover:bg-gray-500 text-white " + formBtnClass;
+  const inputClass =
+    "w-full px-3 py-2 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 shadow-sm text-[13px] bg-white/80 backdrop-blur-sm placeholder-gray-400";
+  const errorClass = "border-red-500 ring-red-500";
+  const errorMsgClass = "text-red-500 text-xs mt-0.5";
+  const sectionTitleClass =
+    "mt-5 mb-2 text-sm font-semibold text-green-800 uppercase tracking-wide border-b border-green-200 pb-1";
+  const formBtnClass =
+    "font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm transition duration-300 focus:outline-none";
+  const primaryBtnClass =
+    "bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-green-800 text-white " +
+    formBtnClass;
+  const cancelBtnClass =
+    "bg-gray-200 hover:bg-gray-300 text-gray-800 " + formBtnClass;
 
   const requiredLabel = (text) => (
-    <>{text} <span className="text-red-500">*</span></>
+    <>
+      {text} <span className="text-red-500">*</span>
+    </>
   );
 
   const renderInput = (name, label, type = "text", optional = false, value = null, onChange = null) => (
@@ -114,36 +144,45 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   return (
     <ModalGInventario
       isOpen={isOpen}
-      onClose={handleClose}        
-      closeOnOverlayClick={false} 
+      onClose={handleClose}
       title={title}
-      maxWidth={title === "Registrar Nuevo Producto Comestible" ? "950px" : step === "inicio" ? "400px" : "880px"}
-      titleClass={title === "Registrar Nuevo Producto Comestible" ? "text-base" : "text-lg"}
+      maxWidth={step === "inicio" ? "640px" : "980px"}
     >
-      {/* Pantalla inicial */}
+      {/* Pantalla Inicial */}
       {step === "inicio" && (
-        <div className="text-center">
-          <p className="mb-4 text-gray-600 text-sm">
-            Selecciona el tipo de entrada que deseas registrar:
+        <div className="text-center animate-fadeIn">
+          <p className="mb-6 text-gray-600 text-sm px-8 leading-relaxed">
+            {tipo === "ropa"
+              ? "Registra nuevas prendas deportivas o actualiza entradas existentes en tu inventario."
+              : "Agrega nuevos productos comestibles o actualiza entradas existentes en tu inventario."}
           </p>
-          <div className="flex flex-col gap-2 items-center">
-            <button onClick={() => setStep("nuevo")} className={primaryInitBtnClass}>
-              <PlusSquare className="w-5 h-5" /> Nuevo Producto
+          <div className="flex justify-center gap-8">
+            <button
+              onClick={() => setStep("nuevo")}
+              className="flex flex-col items-center justify-center w-52 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
+            >
+              <PlusSquare className="w-9 h-9 mb-2" />
+              <span className="font-medium text-sm">Nuevo Producto</span>
             </button>
-            <button onClick={() => setStep("existente_form")} className={secondaryInitBtnClass}>
-              <Archive className="w-5 h-5" /> Producto Existente
+
+            <button
+              onClick={() => setStep("existente_form")}
+              className="flex flex-col items-center justify-center w-52 p-5 bg-gray-50 text-gray-700 rounded-2xl shadow-md hover:bg-gray-100 hover:shadow-lg hover:scale-105 transition-all"
+            >
+              <Archive className="w-9 h-9 mb-2 text-green-600" />
+              <span className="font-medium text-sm">Producto Existente</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Formulario Nuevo Producto */}
+      {/* Formulario Nuevo */}
       {step === "nuevo" && (
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="animate-slideUp">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
-              <input value={generatedId} disabled className={inputClass} />
+              <input value={generatedId} disabled className={`${inputClass} bg-gray-100`} />
             </div>
 
             {renderInput("nombre", "Nombre")}
@@ -159,7 +198,9 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
                 {renderInput("marca", "Marca")}
                 {renderInput("sabor", "Sabor")}
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{requiredLabel("Registrar por")}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {requiredLabel("Registrar por")}
+                  </label>
                   <select
                     name="unidad_medida"
                     value={formData.unidad_medida || ""}
@@ -180,46 +221,91 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
           </div>
 
           <h3 className={sectionTitleClass}>Datos de Compra</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
+            {renderInput(
+              "cantidad",
+              "Cantidad",
+              "number",
+              false,
+              cantidadRegistrar,
+              (e) => setCantidadRegistrar(Number(e.target.value))
+            )}
+
+            {/* Tipo de Comprobante */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{requiredLabel("Cantidad")}</label>
-              <input
-                name="cantidad"
-                type="number"
-                value={cantidadRegistrar}
-                onChange={(e) => setCantidadRegistrar(Number(e.target.value))}
-                className={`${inputClass} ${errors["cantidad"] ? errorClass : ""}`}
-              />
-              {errors["cantidad"] && <div className={errorMsgClass}>{errors["cantidad"]}</div>}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {requiredLabel("Tipo de Comprobante")}
+              </label>
+              <select
+                name="tipo_comprobante"
+                value={formData.tipo_comprobante || ""}
+                onChange={handleChange}
+                className={`${inputClass} ${errors["tipo_comprobante"] ? errorClass : ""}`}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="Boleta">Boleta</option>
+                <option value="Factura">Factura</option>
+              </select>
+              {errors["tipo_comprobante"] && <div className={errorMsgClass}>{errors["tipo_comprobante"]}</div>}
             </div>
-            {renderInput("tipo_comprobante", "Tipo Comprobante")}
+
+            {/* Método de Pago */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {requiredLabel("Método de Pago")}
+              </label>
+              <select
+                name="metodo_pago"
+                value={formData.metodo_pago || ""}
+                onChange={handleChange}
+                className={`${inputClass} ${errors["metodo_pago"] ? errorClass : ""}`}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Yape">Yape</option>
+              </select>
+              {errors["metodo_pago"] && <div className={errorMsgClass}>{errors["metodo_pago"]}</div>}
+            </div>
+
             {renderInput("numero_comprobante", "Número Comprobante")}
-            {renderInput("tipo_venta", "Tipo Venta")}
+            {renderInput("monto_pagado", "Monto Pagado (S/)", "number")}
           </div>
 
           <h3 className={sectionTitleClass}>Opcionales</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Imagen</label>
-              <input
-                type="file"
-                name="imagen"
-                accept="image/*"
-                onChange={handleChange}
-                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none mb-3"
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 flex flex-col gap-2">
+  <label className="block text-sm font-medium text-gray-700">
+    Imagen
+  </label>
+  <input
+    type="file"
+    name="imagen"
+    accept="image/*"
+    onChange={handleChange}
+    className="block w-full text-sm text-gray-900 border border-green-300 rounded-xl cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 p-2"
+  />
+  {formData.imagen && (
+    <span className="text-green-700 text-xs">
+      {formData.imagen.name}
+    </span>
+  )}
+</div>
+
             {renderInput("ubicacion", "Ubicación en almacén", "text", true)}
           </div>
 
-          <div className="flex justify-end mt-4 gap-2">
-            <button type="submit" className={primaryBtnClass}>Registrar</button>
-            <button type="button" onClick={handleClose} className={cancelBtnClass}>Cancelar</button>
+          <div className="flex justify-end mt-5 gap-3">
+            <button type="submit" className={primaryBtnClass}>
+              Registrar
+            </button>
+            <button type="button" onClick={handleClose} className={cancelBtnClass}>
+              Cancelar
+            </button>
           </div>
         </form>
       )}
 
-      {/* Producto existente */}
+      {/* Producto Existente */}
       {step === "existente_form" && !productoSeleccionado && (
         <ModalSeleccionProducto
           tipo={tipo}
@@ -229,45 +315,84 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
       )}
 
       {step === "existente_form" && productoSeleccionado && (
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="animate-slideUp">
+          <div className="grid grid-cols-2 gap-4">
             {(tipo === "ropa"
-              ? ["id_ropa","nombre","marca","talla","color","precio"]
-              : ["id_comestible","nombre","marca","sabor","precio"]
+              ? ["id_ropa", "nombre", "marca", "talla", "color", "precio"]
+              : ["id_comestible", "nombre", "marca", "sabor", "precio"]
             ).map((campo) => (
               <div key={campo}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{campo.toUpperCase()}</label>
-                <input value={formData[campo]} disabled className={inputClass} />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {campo.toUpperCase()}
+                </label>
+                <input value={formData[campo]} disabled className={`${inputClass} bg-gray-100`} />
               </div>
             ))}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad Actual</label>
-              <input value={formData.cantidad || 0} disabled className={inputClass} />
+              <input value={formData.cantidad || 0} disabled className={`${inputClass} bg-gray-100`} />
             </div>
           </div>
 
           <h3 className={sectionTitleClass}>Registrar Nueva Entrada</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
+            {renderInput(
+              "cantidad",
+              "Cantidad a Registrar",
+              "number",
+              false,
+              cantidadRegistrar,
+              (e) => setCantidadRegistrar(Number(e.target.value))
+            )}
+
+            {/* Tipo de Comprobante */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{requiredLabel("Cantidad a Registrar")}</label>
-              <input
-                type="number"
-                name="cantidad"
-                value={cantidadRegistrar}
-                onChange={(e) => setCantidadRegistrar(Number(e.target.value))}
-                className={`${inputClass} ${errors["cantidad"] ? errorClass : ""}`}
-              />
-              {errors["cantidad"] && <div className={errorMsgClass}>{errors["cantidad"]}</div>}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {requiredLabel("Tipo de Comprobante")}
+              </label>
+              <select
+                name="tipo_comprobante"
+                value={formData.tipo_comprobante || ""}
+                onChange={handleChange}
+                className={`${inputClass} ${errors["tipo_comprobante"] ? errorClass : ""}`}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="Boleta">Boleta</option>
+                <option value="Factura">Factura</option>
+              </select>
+              {errors["tipo_comprobante"] && <div className={errorMsgClass}>{errors["tipo_comprobante"]}</div>}
             </div>
-            {renderInput("tipo_comprobante", "Tipo Comprobante")}
+
+            {/* Método de Pago */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {requiredLabel("Método de Pago")}
+              </label>
+              <select
+                name="metodo_pago"
+                value={formData.metodo_pago || ""}
+                onChange={handleChange}
+                className={`${inputClass} ${errors["metodo_pago"] ? errorClass : ""}`}
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Yape">Yape</option>
+              </select>
+              {errors["metodo_pago"] && <div className={errorMsgClass}>{errors["metodo_pago"]}</div>}
+            </div>
+
             {renderInput("numero_comprobante", "Número Comprobante")}
-            {renderInput("tipo_venta", "Tipo Venta")}
+            {renderInput("monto_pagado", "Monto Pagado (S/)", "number")}
           </div>
 
-          <div className="flex justify-end mt-4 gap-2">
-            <button type="submit" className={primaryBtnClass}>Actualizar</button>
-            <button type="button" onClick={handleClose} className={cancelBtnClass}>Cancelar</button>
+          <div className="flex justify-end mt-5 gap-3">
+            <button type="submit" className={primaryBtnClass}>
+              Actualizar
+            </button>
+            <button type="button" onClick={handleClose} className={cancelBtnClass}>
+              Cancelar
+            </button>
           </div>
         </form>
       )}

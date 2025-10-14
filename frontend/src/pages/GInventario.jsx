@@ -6,6 +6,7 @@ import TablaInventario from "../components/TablaInventario";
 import ModalMensaje from "../components/ModalMensaje";
 import Button from "../components/ui/Button";
 import ActualizarProducto from "../components/ActualizarProducto";
+import ModalConfirmacion from "../components/ModalConfirmacion";
 
 import {
   obtenerRopa,
@@ -31,6 +32,9 @@ export default function GInventario() {
 
   const [modalComestiblesOpen, setModalComestiblesOpen] = useState(false);
   const [modalRopaOpen, setModalRopaOpen] = useState(false);
+
+  const [confirmacionOpen, setConfirmacionOpen] = useState(false);
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
 
   const [productoEditar, setProductoEditar] = useState(null);
   const [tipoEdicion, setTipoEdicion] = useState(null);
@@ -149,19 +153,32 @@ export default function GInventario() {
   };
 
   // ---------- ELIMINAR ----------
-  const handleEliminar = async (id, tipo) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este producto?")) return;
+  // Mostrar el modal de confirmación
+const handleEliminar = (id, tipo) => {
+  setProductoAEliminar({ id, tipo });
+  setConfirmacionOpen(true);
+};
 
-    try {
-      if (tipo === "ropa") await eliminarRopa(id);
-      else await eliminarComestible(id);
+// Confirmar eliminación
+const confirmarEliminacion = async () => {
+  if (!productoAEliminar) return;
 
-      await fetchDatos();
-      mostrarMensaje("exito", "🗑️ Producto eliminado correctamente.");
-    } catch (err) {
-      mostrarMensaje("error", "❌ Error al eliminar producto.");
-    }
-  };
+  const { id, tipo } = productoAEliminar;
+  setConfirmacionOpen(false);
+
+  try {
+    if (tipo === "ropa") await eliminarRopa(id);
+    else await eliminarComestible(id);
+
+    await fetchDatos();
+    mostrarMensaje("exito", "🗑️ Producto eliminado correctamente.");
+  } catch (err) {
+    mostrarMensaje("error", "❌ Error al eliminar producto.");
+  } finally {
+    setProductoAEliminar(null);
+  }
+};
+
 
   // ---------- RENDER ----------
   return (
@@ -347,7 +364,7 @@ export default function GInventario() {
               alt="Imagen del producto"
               className="w-full h-auto rounded-lg shadow-md"
             />
-          </div>
++          </div>
         </div>
       )}
 
@@ -360,6 +377,13 @@ export default function GInventario() {
           onActualizar={handleActualizarProducto}
         />
       )}
+      {/* ⚠️ MODAL CONFIRMACIÓN ELIMINAR */}
+      <ModalConfirmacion
+        isOpen={confirmacionOpen}
+        onClose={() => setConfirmacionOpen(false)}
+        onConfirm={confirmarEliminacion}
+      />
+
 
       {/* ✅ MODAL MENSAJE */}
       <ModalMensaje

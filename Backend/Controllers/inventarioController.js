@@ -208,7 +208,6 @@ async function buscarComestibleController(req, res) {
   }
 }
 
-// --- ACTUALIZAR COMESTIBLE (solo peso o litros, no ambos) ---
 // --- ACTUALIZAR COMESTIBLE (editar peso o litros según corresponda) ---
 async function actualizarComestibleController(req, res) {
   try {
@@ -289,7 +288,7 @@ async function actualizarRopaController(req, res) {
       marca: marca ?? ropaActual.marca,
       talla: talla ?? ropaActual.talla,
       tipo_ropa: tipo_ropa ?? ropaActual.tipo_ropa,
-      color: color ?? ropaActual.color, // 👈 agregado correctamente
+      color: color ?? ropaActual.color,
       ubicacion: ubicacion ?? ropaActual.ubicacion,
       imagen: imagen ?? ropaActual.imagen
     };

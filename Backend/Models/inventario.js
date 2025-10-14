@@ -15,13 +15,13 @@ async function registrarEntradaRopa(data) {
   const pool = await getPool();
   const { 
     id_ropa, nombre, marca, talla, color, precio, cantidad,
-    tipo_comprobante, numero_comprobante, tipo_venta, id_usuario,
+    tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
     ubicacion, imagen
   } = data;
 
   const idInventario = generarIdInventario("IR");
 
-  // Registrar producto nuevo con ubicación e imagen
+  // Registrar producto nuevo
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("nombre", sql.NVarChar(20), nombre)
@@ -37,7 +37,7 @@ async function registrarEntradaRopa(data) {
       VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento en inventario (SQL pondrá GETDATE())
+  // Registrar movimiento con monto_pagado
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_ropa)
@@ -45,23 +45,25 @@ async function registrarEntradaRopa(data) {
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
-    .input("tipo_venta", sql.NVarChar(20), tipo_venta)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, tipo_venta, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
     `);
 }
+
 
 // ============================================================
 // 👕 REGISTRAR ENTRADA DE ROPA EXISTENTE
 // ============================================================
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
-  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
+  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
   const idInventario = generarIdInventario("IR");
 
   // Actualizar stock
@@ -82,16 +84,18 @@ async function registrarEntradaRopaExistente(data) {
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
-    .input("tipo_venta", sql.NVarChar(20), tipo_venta)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, tipo_venta, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
     `);
 }
+
 
 // ============================================================
 // 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO
@@ -100,13 +104,13 @@ async function registrarEntradaComestible(data) {
   const pool = await getPool();
   const { 
     id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad,
-    tipo_comprobante, numero_comprobante, tipo_venta, id_usuario,
+    tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
     ubicacion, imagen
   } = data;
 
   const idInventario = generarIdInventario("IC");
 
-  // Registrar producto nuevo con ubicación e imagen
+  // Registrar producto nuevo
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -132,23 +136,25 @@ async function registrarEntradaComestible(data) {
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
-    .input("tipo_venta", sql.NVarChar(20), tipo_venta)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, tipo_venta, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
     `);
 }
+
 
 // ============================================================
 // 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE EXISTENTE
 // ============================================================
 async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
-  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, tipo_venta, id_usuario } = data;
+  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
   const idInventario = generarIdInventario("IC");
 
   // Actualizar stock
@@ -169,14 +175,15 @@ async function registrarEntradaComestibleExistente(data) {
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
-    .input("tipo_venta", sql.NVarChar(20), tipo_venta)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, tipo_venta, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @tipo_venta, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
     `);
 }
 
@@ -206,12 +213,20 @@ async function listarComestibles() {
   return result.recordset;
 }
 
-// Movimientos
+// 📋 Movimientos de Ropa
 async function listarMovimientosRopa() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT i.tipo_movimiento, i.cantidad, i.tipo_comprobante, i.numero_comprobante, 
-           i.tipo_venta, u.username AS usuario, r.nombre AS producto, i.fecha
+    SELECT 
+      i.tipo_movimiento, 
+      i.cantidad, 
+      i.tipo_comprobante, 
+      i.numero_comprobante, 
+      i.metodo_pago, 
+      i.monto_pagado,            -- ✅ Se agrega aquí
+      u.username AS usuario, 
+      r.nombre AS producto, 
+      i.fecha
     FROM InventarioRopa i
     LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
     LEFT JOIN RopaDeportiva r ON i.id_producto = r.id_ropa
@@ -220,11 +235,20 @@ async function listarMovimientosRopa() {
   return result.recordset;
 }
 
+// 📋 Movimientos de Comestibles
 async function listarMovimientosComestible() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT i.tipo_movimiento, i.cantidad, i.tipo_comprobante, i.numero_comprobante, 
-           i.tipo_venta, u.username AS usuario, c.nombre AS producto, i.fecha
+    SELECT 
+      i.tipo_movimiento, 
+      i.cantidad, 
+      i.tipo_comprobante, 
+      i.numero_comprobante, 
+      i.metodo_pago, 
+      i.monto_pagado,            -- ✅ Se agrega aquí
+      u.username AS usuario, 
+      c.nombre AS producto, 
+      i.fecha
     FROM InventarioComestible i
     LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
     LEFT JOIN ProductosComestibles c ON i.id_producto = c.id_comestible
@@ -232,6 +256,7 @@ async function listarMovimientosComestible() {
   `);
   return result.recordset;
 }
+
 
 // ============================================================
 // 🔍 BÚSQUEDAS

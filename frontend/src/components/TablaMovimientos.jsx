@@ -4,7 +4,9 @@ export default function TablaMovimientos({ datos }) {
   if (!datos || datos.length === 0) {
     return (
       <div className="flex justify-center items-center py-10 bg-white rounded-xl shadow-sm">
-        <p className="text-gray-500 text-sm italic">No hay movimientos registrados.</p>
+        <p className="text-gray-500 text-sm italic">
+          No hay movimientos registrados.
+        </p>
       </div>
     );
   }
@@ -12,7 +14,7 @@ export default function TablaMovimientos({ datos }) {
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-md bg-white">
       <table className="w-full text-sm text-left text-gray-800">
-        {/* 🔥 Encabezado con estilo premium */}
+        {/* 🔥 Encabezado */}
         <thead className="bg-gradient-to-r from-red-900 via-red-700 to-black text-white uppercase text-xs shadow-md">
           <tr>
             <th className="px-4 py-3 font-semibold tracking-wide">Producto</th>
@@ -21,12 +23,13 @@ export default function TablaMovimientos({ datos }) {
             <th className="px-4 py-3 font-semibold">Movimiento</th>
             <th className="px-4 py-3 font-semibold">Comprobante</th>
             <th className="px-4 py-3 font-semibold">N° Comprobante</th>
-            <th className="px-4 py-3 font-semibold">Tipo de venta</th>
+            <th className="px-4 py-3 font-semibold">Método de Pago</th>
+            <th className="px-4 py-3 font-semibold text-right">Monto Pagado</th>
             <th className="px-4 py-3 font-semibold">Fecha</th>
           </tr>
         </thead>
 
-        {/* Cuerpo con estilo limpio */}
+        {/* Cuerpo */}
         <tbody className="divide-y divide-gray-100">
           {datos.map((mov, index) => (
             <tr
@@ -49,11 +52,13 @@ export default function TablaMovimientos({ datos }) {
               </td>
               <td className="px-4 py-3">{mov.tipo_comprobante || "-"}</td>
               <td className="px-4 py-3">{mov.numero_comprobante || "-"}</td>
-              <td className="px-4 py-3">{mov.tipo_venta || "-"}</td>
-              <td className="px-4 py-3 text-gray-600">
-  {mov.fecha || "-"}
-</td>
-
+              <td className="px-4 py-3">{mov.metodo_pago || "-"}</td>
+              <td className="px-4 py-3 text-right font-semibold text-blue-700">
+                {mov.monto_pagado != null
+                  ? `S/ ${parseFloat(mov.monto_pagado).toFixed(2)}`
+                  : "-"}
+              </td>
+              <td className="px-4 py-3 text-gray-600">{mov.fecha || "-"}</td>
             </tr>
           ))}
         </tbody>
