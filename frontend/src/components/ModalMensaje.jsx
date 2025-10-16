@@ -1,33 +1,70 @@
 import React from "react";
-import { CheckCircle, XCircle, Info } from "lucide-react";
+import { CheckCircle, XCircle, Info, AlertTriangle } from "lucide-react";
 
-export default function ModalMensaje({ isOpen, tipo, mensaje, onClose }) {
+export default function ModalMensaje({ isOpen, tipo = "info", mensaje, onClose }) {
   if (!isOpen) return null;
 
-  const iconos = {
-    exito: <CheckCircle className="text-green-600 w-10 h-10" />,
-    error: <XCircle className="text-red-600 w-10 h-10" />,
-    info: <Info className="text-blue-600 w-10 h-10" />,
+  // 1. Tipos de Mensajes: Iconos, Colores y Títulos automáticos
+  const estilosMensaje = {
+    exito: {
+      icon: <CheckCircle className="text-green-500 w-12 h-12" />,
+      colorClasses: "border-t-green-500",
+      buttonClasses: "bg-green-600 hover:bg-green-700 focus:ring-green-500",
+      title: "Operación Exitosa",
+    },
+    error: {
+      icon: <XCircle className="text-red-500 w-12 h-12" />,
+      colorClasses: "border-t-red-500",
+      buttonClasses: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
+      title: "Error Detectado",
+    },
+    info: {
+      icon: <Info className="text-blue-500 w-12 h-12" />,
+      colorClasses: "border-t-blue-500",
+      buttonClasses: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+      title: "Información Importante",
+    },
+    alerta: { // Se añade un tipo "alerta" para mayor versatilidad
+      icon: <AlertTriangle className="text-yellow-500 w-12 h-12" />,
+      colorClasses: "border-t-yellow-500",
+      buttonClasses: "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500",
+      title: "Advertencia",
+    },
   };
 
-  const colores = {
-    exito: "border-green-500",
-    error: "border-red-500",
-    info: "border-blue-500",
-  };
+  const estiloActual = estilosMensaje[tipo] || estilosMensaje.info; // Default a 'info'
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fadeIn">
+    // 2. Fondo con opacidad más suave y mejor transición
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ease-out" onClick={onClose}>
+      
+      {/* 3. Modal central con diseño mejorado */}
       <div
-        className={`bg-white p-6 rounded-2xl shadow-lg border-t-4 ${colores[tipo]} max-w-sm w-full text-center animate-scaleIn`}
+        className={`bg-white p-8 rounded-xl shadow-2xl ${estiloActual.colorClasses} border-t-4 max-w-sm w-full text-center transform transition-all duration-300 ease-out scale-100 hover:scale-[1.01]`}
+        onClick={e => e.stopPropagation()} // Evita que el clic en el modal lo cierre
       >
-        <div className="flex justify-center mb-3">{iconos[tipo]}</div>
-        <p className="text-gray-800 font-medium text-lg mb-4">{mensaje}</p>
+        
+        {/* Ícono central */}
+        <div className="flex justify-center mb-4">
+            {estiloActual.icon}
+        </div>
+
+        {/* 4. Título automático */}
+        <h3 className="text-xl font-bold text-gray-800 mb-2 tracking-wide">
+            {estiloActual.title}
+        </h3>
+        
+        {/* Mensaje principal */}
+        <p className="text-gray-600 text-base mb-6 font-light leading-relaxed">
+            {mensaje}
+        </p>
+        
+        {/* 5. Botón de acción con estilo que coincide con el tipo de mensaje */}
         <button
           onClick={onClose}
-          className="bg-gradient-to-r from-red-700 via-red-800 to-black text-white px-6 py-2 rounded-lg font-semibold hover:from-black hover:via-red-900 hover:to-black transition-all"
+          className={`w-full text-white px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-50 ${estiloActual.buttonClasses}`}
         >
-          Cerrar
+          Entendido
         </button>
       </div>
     </div>

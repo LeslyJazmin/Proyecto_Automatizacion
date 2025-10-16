@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ModalGInventario from "../components/ui/ModalGInventario";
 import ModalSeleccionProducto from "./ModalSeleccionProducto";
-import { PlusSquare, Archive } from "lucide-react";
+import { PlusSquare, Archive, DollarSign, Tag, ListChecks, ArrowLeft, TrendingUp, Info } from "lucide-react";
 
 export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, onSuccess }) {
   const [formData, setFormData] = useState({});
@@ -11,6 +11,7 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
 
+  // --- LÓGICA DE GESTIÓN DEL MODAL Y ESTADO ---
   const handleClose = () => {
     setStep("inicio");
     setFormData({});
@@ -38,6 +39,7 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
 
   useEffect(() => {
     if (productoSeleccionado) {
+      // Al seleccionar, se cargan todos los datos del producto
       setFormData(productoSeleccionado);
       setCantidadRegistrar(0);
     }
@@ -49,47 +51,24 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
     else setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
-
+  
   const validate = () => {
     const newErrors = {};
     const requiredFields =
       tipo === "ropa"
-        ? [
-            "nombre",
-            "marca",
-            "talla",
-            "color",
-            "precio",
-            "cantidad",
-            "tipo_comprobante",
-            "numero_comprobante",
-            "metodo_pago",
-            "monto_pagado",
-          ]
-        : [
-            "nombre",
-            "marca",
-            "sabor",
-            "precio",
-            "unidad_medida",
-            "cantidad",
-            "tipo_comprobante",
-            "numero_comprobante",
-            "metodo_pago",
-            "monto_pagado",
-          ];
+        ? ["nombre", "marca", "talla", "color", "precio", "cantidad", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"]
+        // Se elimina "unidad_medida" de los campos requeridos para comestibles
+        : ["nombre", "marca", "sabor", "precio", "cantidad", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"];
 
-    if (tipo === "comestible") {
-      if (formData.unidad_medida === "peso") requiredFields.push("peso");
-      if (formData.unidad_medida === "litros") requiredFields.push("litros");
-    }
+    // Se elimina la lógica de requerir "peso" o "litros"
 
     requiredFields.forEach((field) => {
+      // Validación mejorada para "cantidad"
       if (
-        (field === "cantidad" && !cantidadRegistrar) ||
+        (field === "cantidad" && (!cantidadRegistrar || cantidadRegistrar <= 0)) ||
         (!formData[field] && formData[field] !== 0 && field !== "cantidad")
       ) {
-        newErrors[field] = "Este campo es obligatorio";
+        newErrors[field] = field === "cantidad" ? "Debe ser mayor a 0" : "Este campo es obligatorio";
       }
     });
 
@@ -100,212 +79,331 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const dataToSend = { ...formData, cantidad: cantidadRegistrar };
+    // La cantidad que se registra en el stock es `cantidadRegistrar`
+    const dataToSend = { ...formData, cantidad: cantidadRegistrar }; 
     if (onSuccess) onSuccess(dataToSend);
     handleClose();
   };
 
+  // --- ESTILOS DEFINITIVOS MEJORADOS (ENFOQUE EN LOS INPUTS) ---
+  const cardClass = "bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-6 transition-all duration-300 hover:shadow-xl";
+  
+  // Clase base mejorada para todos los inputs y selects
   const inputClass =
-    "w-full px-3 py-2 border border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 shadow-sm text-[13px] bg-white/80 backdrop-blur-sm placeholder-gray-400";
-  const errorClass = "border-red-500 ring-red-500";
-  const errorMsgClass = "text-red-500 text-xs mt-0.5";
+    "w-full px-4 py-2.5 border border-gray-300/80 rounded-xl focus:ring-3 focus:ring-emerald-500/50 focus:border-emerald-500/80 transition-all duration-300 text-sm placeholder-gray-400 shadow-sm disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed disabled:border-gray-200 hover:border-gray-400/80"; // Mejorado
+  
+  // Estilo para destacar campos requeridos (sutil)
+  const requiredInputClass = "bg-emerald-50 border-emerald-300"; // Mejorado para sutilidad y claridad
+  
+  // CLASE NUEVA: Estilo para destacar campos de especificación (Talla, Color, Sabor, etc.)
+  const specificationInputClass = "bg-blue-50/70 border-blue-300/80 hover:border-blue-400/80 focus:ring-blue-500/50 focus:border-blue-500/80";
+
+  const errorClass = "!border-red-500 !ring-red-500";
+  const errorMsgClass = "text-red-600 text-xs mt-1 font-medium";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-1"; 
+  
   const sectionTitleClass =
-    "mt-5 mb-2 text-sm font-semibold text-green-800 uppercase tracking-wide border-b border-green-200 pb-1";
+    "mt-0 mb-4 flex items-center gap-3 text-base font-extrabold text-gray-800 border-b border-emerald-500/50 pb-2";
+  
   const formBtnClass =
-    "font-medium text-sm px-4 py-2.5 rounded-xl shadow-sm transition duration-300 focus:outline-none";
+    "font-bold text-sm px-6 py-3 rounded-xl shadow-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2";
   const primaryBtnClass =
-    "bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-green-800 text-white " +
+    "bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 " +
     formBtnClass;
   const cancelBtnClass =
-    "bg-gray-200 hover:bg-gray-300 text-gray-800 " + formBtnClass;
+    "bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400 " + formBtnClass;
+  // -------------------------
 
-  const requiredLabel = (text) => (
-    <>
-      {text} <span className="text-red-500">*</span>
-    </>
+  // --- FUNCIONES DE RENDERIZADO SIMPLIFICADAS ---
+
+  // Componente de Etiqueta Requerida/Simple
+  const FieldLabel = ({ text, required = false }) => (
+    <div className={labelClass}>
+      {text} {required && <span className="text-red-500">*</span>}
+    </div>
   );
 
-  const renderInput = (name, label, type = "text", optional = false, value = null, onChange = null) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {optional ? label : requiredLabel(label)}
-      </label>
-      <input
+  // Renderiza un input (MODIFICADO para aceptar customStyle)
+  const renderInput = (name, label, type = "text", optional = false, valueOverride = null, onChangeOverride = null, disabled = false, customStyle = '') => {
+    const isCantidadField = name === "cantidad";
+    const currentValue = isCantidadField ? cantidadRegistrar : (valueOverride !== null ? valueOverride : formData[name] || "");
+    const currentOnChange = isCantidadField ? (e) => setCantidadRegistrar(Number(e.target.value)) : (onChangeOverride !== null ? onChangeOverride : handleChange);
+
+    const isRequired = !optional && !disabled;
+    // Aplicar estilo requerido solo si es obligatorio Y no está deshabilitado
+    const baseRequiredStyle = isRequired && !disabled ? requiredInputClass : '';
+    
+    // Si está deshabilitado, añadir una clase para asegurar un texto más nítido (el fondo ya lo maneja inputClass)
+    const disabledTextClass = disabled ? 'font-semibold' : '';
+
+
+    return (
+      <div className="mb-4"> {/* Añadido margin-bottom para separación vertical */}
+        <FieldLabel text={label} required={isRequired} />
+        <input
+          name={name}
+          type={type}
+          step={type === "number" ? "any" : undefined}
+          value={currentValue}
+          onChange={currentOnChange}
+          disabled={disabled}
+          // Se combinan las clases: base, estilo requerido base, ESTILO PERSONALIZADO, error, y texto deshabilitado
+          className={`${inputClass} ${baseRequiredStyle} ${customStyle} ${errors[name] ? errorClass : ''} ${disabledTextClass}`}
+        />
+        {errors[name] && <div className={errorMsgClass}>{errors[name]}</div>}
+      </div>
+    );
+  };
+
+  // Renderiza un select
+  const renderSelect = (name, label, options) => (
+    <div className="mb-4"> {/* Añadido margin-bottom para separación vertical */}
+      <FieldLabel text={label} required={true} />
+      <select
         name={name}
-        type={type}
-        value={value !== null ? value : formData[name] || ""}
-        onChange={onChange !== null ? onChange : handleChange}
-        className={`${inputClass} ${errors[name] ? errorClass : ""}`}
-      />
+        value={formData[name] || ""}
+        onChange={handleChange}
+        // Aplica el estilo requerido y la clase base mejorada
+        className={`${inputClass} appearance-none ${errors[name] ? errorClass : ""} ${requiredInputClass}`}
+      >
+        <option value="" disabled>-- Seleccionar --</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       {errors[name] && <div className={errorMsgClass}>{errors[name]}</div>}
     </div>
   );
 
+  /**
+   * Renderiza un campo de solo lectura para el formulario de producto existente.
+   * @param {string} key - La clave del dato en formData.
+   * @param {string} label - La etiqueta a mostrar.
+   * @param {string} style - Estilo Tailwind adicional (ej: specificationInputClass).
+   */
+  const renderReadOnlyField = (key, label, style = "") => (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase">
+        {label}
+      </label>
+      <input 
+        value={formData[key] || "N/A"} 
+        disabled 
+        // Aplicando el nuevo inputClass, font-semibold y el estilo personalizado
+        className={`${inputClass} font-semibold ${style}`} 
+      />
+    </div>
+  );
+
+
+  // --- ESTRUCTURA DEL MODAL ---
   return (
     <ModalGInventario
       isOpen={isOpen}
       onClose={handleClose}
       title={title}
-      maxWidth={step === "inicio" ? "640px" : "980px"}
+      maxWidth={step === "inicio" ? "520px" : "1100px"}
     >
-      {/* Pantalla Inicial */}
+      {/* ---------------------------------------------------- */}
+      {/* Pantalla Inicial (Opción de Entrada) */}
+      {/* ---------------------------------------------------- */}
       {step === "inicio" && (
-        <div className="text-center animate-fadeIn">
-          <p className="mb-6 text-gray-600 text-sm px-8 leading-relaxed">
-            {tipo === "ropa"
-              ? "Registra nuevas prendas deportivas o actualiza entradas existentes en tu inventario."
-              : "Agrega nuevos productos comestibles o actualiza entradas existentes en tu inventario."}
+        <div className="text-center py-8 animate-fadeIn">
+          <h3 className="mb-2 text-gray-800 text-2xl font-black tracking-tighter">
+            PROCESO DE INGRESO DE STOCK
+          </h3>
+          <p className="mb-12 text-gray-600 text-base px-6 leading-snug">
+            Defina el tipo de operación: Registrar un nuevo artículo en el catálogo o aumentar la cantidad de un producto ya existente.
           </p>
-          <div className="flex justify-center gap-8">
+          
+          <div className="flex justify-center gap-6">
+            
+            {/* Botón: Nuevo Producto */}
             <button
               onClick={() => setStep("nuevo")}
-              className="flex flex-col items-center justify-center w-52 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
+              className="relative flex flex-col items-center justify-center w-52 p-6 bg-emerald-50 text-emerald-800 rounded-2xl shadow-xl hover:shadow-emerald-300/60 hover:bg-emerald-100 transition-all duration-300 border-4 border-emerald-400/50 transform hover:scale-[1.03] active:scale-100"
             >
-              <PlusSquare className="w-9 h-9 mb-2" />
-              <span className="font-medium text-sm">Nuevo Producto</span>
+              <PlusSquare className="w-8 h-8 mb-2" /> 
+              <span className="font-extrabold text-base tracking-tight">Nuevo Producto</span> 
+              <span className="text-xs text-emerald-600 mt-1">Alta de Catálogo</span>
             </button>
 
+            {/* Botón: Producto Existente */}
             <button
               onClick={() => setStep("existente_form")}
-              className="flex flex-col items-center justify-center w-52 p-5 bg-gray-50 text-gray-700 rounded-2xl shadow-md hover:bg-gray-100 hover:shadow-lg hover:scale-105 transition-all"
+              className="flex flex-col items-center justify-center w-52 p-6 bg-white text-gray-800 rounded-2xl shadow-xl hover:shadow-gray-300/60 hover:ring-2 hover:ring-gray-200 transition-all duration-300 border-4 border-gray-300/50 transform hover:scale-[1.03] active:scale-100"
             >
-              <Archive className="w-9 h-9 mb-2 text-green-600" />
-              <span className="font-medium text-sm">Producto Existente</span>
+              <Archive className="w-8 h-8 mb-2 text-gray-600" /> 
+              <span className="font-extrabold text-base tracking-tight">Producto Existente</span>
+              <span className="text-xs text-gray-500 mt-1">Reabastecimiento de Stock</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Formulario Nuevo */}
+      {/* ---------------------------------------------------- */}
+      {/* Formulario Nuevo Producto */}
+      {/* ---------------------------------------------------- */}
       {step === "nuevo" && (
-        <form onSubmit={handleSubmit} className="animate-slideUp">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
-              <input value={generatedId} disabled className={`${inputClass} bg-gray-100`} />
-            </div>
-
-            {renderInput("nombre", "Nombre")}
-            {tipo === "ropa" ? (
-              <>
-                {renderInput("marca", "Marca")}
-                {renderInput("talla", "Talla")}
-                {renderInput("color", "Color")}
-                {renderInput("precio", "Precio", "number")}
-              </>
-            ) : (
-              <>
-                {renderInput("marca", "Marca")}
-                {renderInput("sabor", "Sabor")}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {requiredLabel("Registrar por")}
-                  </label>
-                  <select
-                    name="unidad_medida"
-                    value={formData.unidad_medida || ""}
-                    onChange={handleChange}
-                    className={`${inputClass} ${errors["unidad_medida"] ? errorClass : ""}`}
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    <option value="peso">Peso</option>
-                    <option value="litros">Litros</option>
-                  </select>
-                  {errors["unidad_medida"] && <div className={errorMsgClass}>{errors["unidad_medida"]}</div>}
+        <form onSubmit={handleSubmit} className="animate-slideUp bg-gray-50 p-8 -m-5 rounded-b-xl space-y-6">
+          
+          <div className="grid grid-cols-3 gap-8">
+            
+            {/* Columna 1: Producto Core (2/3 del ancho) */}
+            <div className="col-span-2 space-y-6">
+              <div className={cardClass + " h-full"}>
+                <h3 className={sectionTitleClass}>
+                  <Tag size={20} className="text-emerald-600" />
+                  Información del Nuevo Artículo
+                </h3>
+                
+                {/* GRUPO 1: ID y Nombre (Fila principal) */}
+                <div className="grid grid-cols-5 gap-4 mb-4">
+                  {/* ID (Columna 1) */}
+                  <div className="col-span-1">
+                    <FieldLabel text="ID" required={false} />
+                    <input 
+                      value={generatedId} 
+                      disabled 
+                      // Estilo personalizado para ID: fondo más fuerte, mono y negrita
+                      className={`${inputClass} font-mono font-extrabold text-emerald-700 bg-emerald-100/70 border-emerald-200`} 
+                    />
+                  </div>
+                  {/* Nombre/Descripción (Columnas 2-5) */}
+                  <div className="col-span-4">
+                    {renderInput("nombre", "Nombre/Descripción del Artículo")}
+                  </div>
                 </div>
-                {formData.unidad_medida === "peso" && renderInput("peso", "Peso (kg)", "number")}
-                {formData.unidad_medida === "litros" && renderInput("litros", "Litros", "number")}
-                {renderInput("precio", "Precio", "number")}
-              </>
-            )}
-          </div>
 
-          <h3 className={sectionTitleClass}>Datos de Compra</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {renderInput(
-              "cantidad",
-              "Cantidad",
-              "number",
-              false,
-              cantidadRegistrar,
-              (e) => setCantidadRegistrar(Number(e.target.value))
-            )}
+                {/* GRUPO 2: Marca y Precio (Fila secundaria esencial) */}
+                <div className="grid grid-cols-4 gap-4 mb-6">
+                    {/* Marca (Columnas 1-2) */}
+                    <div className="col-span-2">
+                        {renderInput("marca", "Marca")}
+                    </div>
+                    {/* Precio de Venta (Columnas 3-4) */}
+                    <div className="col-span-2">
+                        {renderInput("precio", "Precio de Venta (S/)", "number")}
+                    </div>
+                </div>
 
-            {/* Tipo de Comprobante */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {requiredLabel("Tipo de Comprobante")}
-              </label>
-              <select
-                name="tipo_comprobante"
-                value={formData.tipo_comprobante || ""}
-                onChange={handleChange}
-                className={`${inputClass} ${errors["tipo_comprobante"] ? errorClass : ""}`}
-              >
-                <option value="">-- Seleccionar --</option>
-                <option value="Boleta">Boleta</option>
-                <option value="Factura">Factura</option>
-              </select>
-              {errors["tipo_comprobante"] && <div className={errorMsgClass}>{errors["tipo_comprobante"]}</div>}
+                {/* GRUPO 3: Especificaciones por Tipo (AHORA VERTICAL) */}
+                <h4 className="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">ESPECIFICACIONES DEL PRODUCTO</h4>
+                
+                {/* Contenedor Flex para la apilación vertical */}
+                <div className="flex flex-col gap-0"> 
+                  
+                  {tipo === "ropa" ? (
+                    <>
+                      {/* Ropa: Talla, Color - UNO DEBAJO DEL OTRO */}
+                      <div className="w-full">
+                        {renderInput("talla", "Talla (S, M, L, XL, etc.)", "text", false, null, null, false, specificationInputClass)}
+                      </div>
+                      <div className="w-full">
+                        {renderInput("color", "Color Principal", "text", false, null, null, false, specificationInputClass)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* --- COMESTIBLES AHORA VERTICAL (SOLO SABOR) --- */}
+                      
+                      <div className="w-full">
+                        {renderInput("sabor", "Sabor/Tipo", "text", false, null, null, false, specificationInputClass)}
+                      </div>
+
+                      {/* ELIMINADO: Unidad de Medida y campos condicionales (peso/litros) */}
+                      
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Método de Pago */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {requiredLabel("Método de Pago")}
-              </label>
-              <select
-                name="metodo_pago"
-                value={formData.metodo_pago || ""}
-                onChange={handleChange}
-                className={`${inputClass} ${errors["metodo_pago"] ? errorClass : ""}`}
-              >
-                <option value="">-- Seleccionar --</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Yape">Yape</option>
-              </select>
-              {errors["metodo_pago"] && <div className={errorMsgClass}>{errors["metodo_pago"]}</div>}
+            {/* Columna 2: Detalles de Compra (1/3 del ancho) */}
+            <div className="col-span-1 space-y-6">
+              <div className={cardClass}>
+                <h3 className={sectionTitleClass}>
+                  <TrendingUp size={20} className="text-emerald-600" />
+                  Entrada de Stock
+                </h3>
+                {/* Eliminamos el div flex-col gap-4 ya que renderInput ya tiene mb-4 */}
+                <div className="flex flex-col gap-0">
+                  {renderInput("cantidad", "Cantidad Inicial a Ingresar", "number")}
+                  {renderInput("monto_pagado", "Costo de Compra Total (S/)", "number")}
+                </div>
+              </div>
+
+              <div className={cardClass}>
+                <h3 className={sectionTitleClass}>
+                  <DollarSign size={20} className="text-emerald-600" />
+                  Comprobante y Pago
+                </h3>
+                {/* Eliminamos el div flex-col gap-4 ya que renderInput/Select ya tiene mb-4 */}
+                <div className="flex flex-col gap-0">
+                  {renderSelect("tipo_comprobante", "Tipo de Comprobante", [
+                    { value: "Boleta", label: "Boleta" },
+                    { value: "Factura", label: "Factura" },
+                  ])}
+                  {renderInput("numero_comprobante", "N° Comprobante")}
+                  {renderSelect("metodo_pago", "Método de Pago", [
+                    { value: "Efectivo", label: "Efectivo" },
+                    { value: "Yape", label: "Yape" },
+                  ])}
+                </div>
+              </div>
             </div>
-
-            {renderInput("numero_comprobante", "Número Comprobante")}
-            {renderInput("monto_pagado", "Monto Pagado (S/)", "number")}
           </div>
-
-          <h3 className={sectionTitleClass}>Opcionales</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 flex flex-col gap-2">
-  <label className="block text-sm font-medium text-gray-700">
-    Imagen
-  </label>
-  <input
-    type="file"
-    name="imagen"
-    accept="image/*"
-    onChange={handleChange}
-    className="block w-full text-sm text-gray-900 border border-green-300 rounded-xl cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 p-2"
-  />
-  {formData.imagen && (
-    <span className="text-green-700 text-xs">
-      {formData.imagen.name}
-    </span>
-  )}
-</div>
-
-            {renderInput("ubicacion", "Ubicación en almacén", "text", true)}
-          </div>
-
-          <div className="flex justify-end mt-5 gap-3">
-            <button type="submit" className={primaryBtnClass}>
-              Registrar
-            </button>
-            <button type="button" onClick={handleClose} className={cancelBtnClass}>
-              Cancelar
-            </button>
+          
+          {/* Fila de Opcionales y Botones (Alineación con espacio) */}
+          <div className="grid grid-cols-3 gap-8">
+            <div className="col-span-2">
+              {/* Tarjeta 3: Opcionales */}
+              <div className={cardClass + " mb-0"}>
+                <h3 className={sectionTitleClass.replace("mb-4", "mb-6")}>
+                  <ListChecks size={20} className="text-emerald-600" />
+                  Información Adicional (Opcional)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    {renderInput("ubicacion", "Ubicación en almacén", "text", true)}
+                  </div>
+                  <div className="mb-4">
+                    <FieldLabel text="Imagen del Producto" required={false} />
+                    <input
+                      type="file"
+                      name="imagen"
+                      accept="image/*"
+                      onChange={handleChange}
+                      // Clase mejorada para el input de archivo
+                      className="block w-full text-sm text-gray-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition duration-150 border border-gray-300 rounded-xl cursor-pointer bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/70 p-1"
+                    />
+                    {formData.imagen && (
+                      <span className="text-emerald-600 text-xs italic block mt-1">
+                        Archivo seleccionado: {formData.imagen.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="col-span-1 flex items-end justify-end gap-4">
+              <button type="button" onClick={() => setStep("inicio")} className={cancelBtnClass + " flex items-center gap-2"}>
+                <ArrowLeft size={16} /> Volver
+              </button>
+              <button type="submit" className={primaryBtnClass}>
+                Finalizar Registro
+              </button>
+            </div>
           </div>
         </form>
       )}
 
-      {/* Producto Existente */}
+      {/* ---------------------------------------------------- */}
+      {/* Producto Existente - Selección */}
+      {/* ---------------------------------------------------- */}
       {step === "existente_form" && !productoSeleccionado && (
         <ModalSeleccionProducto
           tipo={tipo}
@@ -314,84 +412,130 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
         />
       )}
 
+      {/* ---------------------------------------------------- */}
+      {/* Producto Existente - Formulario de Recarga */}
+      {/* ---------------------------------------------------- */}
       {step === "existente_form" && productoSeleccionado && (
-        <form onSubmit={handleSubmit} className="animate-slideUp">
-          <div className="grid grid-cols-2 gap-4">
-            {(tipo === "ropa"
-              ? ["id_ropa", "nombre", "marca", "talla", "color", "precio"]
-              : ["id_comestible", "nombre", "marca", "sabor", "precio"]
-            ).map((campo) => (
-              <div key={campo}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {campo.toUpperCase()}
-                </label>
-                <input value={formData[campo]} disabled className={`${inputClass} bg-gray-100`} />
+        <form onSubmit={handleSubmit} className="animate-slideUp bg-gray-50 p-8 -m-5 rounded-b-xl space-y-6">
+
+          <div className="grid grid-cols-3 gap-8">
+            
+            {/* Columna 1 (Detalles del Producto - SOLO LECTURA) - 2/3 ancho */}
+            <div className="col-span-2">
+              <div className={cardClass + " bg-emerald-50/20 p-8 h-full"}>
+                
+                {/* Nuevo: Título y Stock en línea */}
+                <div className="flex justify-between items-start mb-6 border-b border-emerald-500/70 pb-2">
+                    <h3 className="flex items-center gap-3 text-base font-extrabold text-gray-800">
+                      <Info size={20} className="text-emerald-700" />
+                      Detalles del Producto Seleccionado
+                    </h3>
+                    <div className="text-right">
+                      <span className="text-xs font-semibold text-gray-500 uppercase block">Stock Actual</span>
+                      {/* Aquí se usa formData.cantidad porque es el stock que trae el producto de la base de datos */}
+                      <p className="text-3xl font-black text-emerald-800 leading-none">{formData.cantidad || 0}</p>
+                    </div>
+                </div>
+                
+                {/* Indicadores Clave Destacados (tamaño ajustado) */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {/* ID */}
+                  <div className="col-span-1 p-4 bg-white rounded-xl shadow-md border-l-4 border-gray-400">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">ID</span>
+                    <p className="text-lg font-bold text-gray-700 mt-1 font-mono">{formData[tipo === "ropa" ? "id_ropa" : "id_comestible"]}</p>
+                  </div>
+                  {/* Precio de Venta */}
+                  <div className="col-span-1 p-4 bg-white rounded-xl shadow-md border-l-4 border-blue-400">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">Precio de Venta</span>
+                    <p className="text-2xl font-black text-blue-700 mt-1">S/ {parseFloat(formData.precio).toFixed(2) || '0.00'}</p>
+                  </div>
+                  {/* Ubicación (Si existe) */}
+                  <div className="col-span-1 p-4 bg-white rounded-xl shadow-md border-l-4 border-yellow-500">
+                    <span className="text-sm font-semibold text-gray-500 uppercase">Ubicación</span>
+                    <p className="text-lg font-bold text-gray-700 mt-1">{formData.ubicacion || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Ficha Técnica (Otros Datos) - ORDEN MEJORADO */}
+                <h4 className="text-sm font-bold text-gray-700 mb-3 border-b border-gray-300 pb-1">FICHA TÉCNICA</h4>
+                <div className="grid grid-cols-4 gap-4">
+                  
+                  {/* Campos Fijos */}
+                  {renderReadOnlyField("nombre", "Nombre")}
+                  {renderReadOnlyField("marca", "Marca")}
+                  
+                  {/* Campos Condicionales Ropa (Talla y Color) */}
+                  {tipo === "ropa" && (
+                    <>
+                      {renderReadOnlyField("talla", "Talla", specificationInputClass)}
+                      {renderReadOnlyField("color", "Color Principal", specificationInputClass)}
+                    </>
+                  )}
+
+                  {/* Campos Condicionales Comestible (SOLO SABOR) */}
+                  {tipo === "comestible" && (
+                    <>
+                      {renderReadOnlyField("sabor", "Sabor/Tipo", specificationInputClass)}
+                      {/* Se deja un espacio de relleno ya que solo queda un campo de especificación */}
+                      <div className="col-span-1"></div>
+                      <div className="col-span-2"></div> 
+                    </>
+                  )}
+
+                </div>
+
               </div>
-            ))}
+            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad Actual</label>
-              <input value={formData.cantidad || 0} disabled className={`${inputClass} bg-gray-100`} />
+            {/* Columna 2 (Formulario de Entrada - EDITABLE) - 1/3 ancho */}
+            <div className="col-span-1 space-y-6">
+              <div className={cardClass + " p-6 h-full"}>
+                <h3 className={sectionTitleClass.replace("mb-4", "mb-6")}>
+                  <TrendingUp size={24} className="text-emerald-600" />
+                  Datos de la Nueva Entrada
+                </h3>
+                
+                {/* Eliminamos el div flex-col gap-4 ya que renderInput ya tiene mb-4 */}
+                <div className="flex flex-col gap-0">
+                  {/* Este campo usa la variable de estado 'cantidadRegistrar' */}
+                  {renderInput("cantidad", "Cantidad a Registrar", "number")} 
+                  {renderInput("monto_pagado", "Costo de Compra Total (S/)", "number")}
+                </div>
+
+                <h3 className={sectionTitleClass.replace("mt-0", "mt-8").replace("mb-4", "mb-4").replace("text-base", "text-sm")}>
+                  Detalles de Facturación
+                </h3>
+                
+                {/* Eliminamos el div flex-col gap-4 ya que renderInput/Select ya tiene mb-4 */}
+                <div className="flex flex-col gap-0">
+                  {renderSelect("tipo_comprobante", "Tipo de Comprobante", [
+                    { value: "Boleta", label: "Boleta" },
+                    { value: "Factura", label: "Factura" },
+                  ])}
+                  {renderInput("numero_comprobante", "N° Comprobante")}
+                  {renderSelect("metodo_pago", "Método de Pago", [
+                    { value: "Efectivo", label: "Efectivo" },
+                    { value: "Yape", label: "Yape" },
+                  ])}
+                </div>
+
+                {/* Botón de Confirmación Flotante */}
+                <div className="mt-8 pt-4 border-t border-gray-200">
+                  <button type="submit" className={primaryBtnClass + " w-full"}>
+                    Confirmar Recarga de Stock
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
-          <h3 className={sectionTitleClass}>Registrar Nueva Entrada</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {renderInput(
-              "cantidad",
-              "Cantidad a Registrar",
-              "number",
-              false,
-              cantidadRegistrar,
-              (e) => setCantidadRegistrar(Number(e.target.value))
-            )}
-
-            {/* Tipo de Comprobante */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {requiredLabel("Tipo de Comprobante")}
-              </label>
-              <select
-                name="tipo_comprobante"
-                value={formData.tipo_comprobante || ""}
-                onChange={handleChange}
-                className={`${inputClass} ${errors["tipo_comprobante"] ? errorClass : ""}`}
-              >
-                <option value="">-- Seleccionar --</option>
-                <option value="Boleta">Boleta</option>
-                <option value="Factura">Factura</option>
-              </select>
-              {errors["tipo_comprobante"] && <div className={errorMsgClass}>{errors["tipo_comprobante"]}</div>}
-            </div>
-
-            {/* Método de Pago */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {requiredLabel("Método de Pago")}
-              </label>
-              <select
-                name="metodo_pago"
-                value={formData.metodo_pago || ""}
-                onChange={handleChange}
-                className={`${inputClass} ${errors["metodo_pago"] ? errorClass : ""}`}
-              >
-                <option value="">-- Seleccionar --</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Yape">Yape</option>
-              </select>
-              {errors["metodo_pago"] && <div className={errorMsgClass}>{errors["metodo_pago"]}</div>}
-            </div>
-
-            {renderInput("numero_comprobante", "Número Comprobante")}
-            {renderInput("monto_pagado", "Monto Pagado (S/)", "number")}
-          </div>
-
-          <div className="flex justify-end mt-5 gap-3">
-            <button type="submit" className={primaryBtnClass}>
-              Actualizar
-            </button>
-            <button type="button" onClick={handleClose} className={cancelBtnClass}>
-              Cancelar
+          
+          {/* Botón de volver a seleccionar producto */}
+          <div className="flex justify-start mt-4 pt-4 border-t border-gray-200 gap-4">
+            <button 
+              type="button" 
+              onClick={() => { setProductoSeleccionado(null); }} 
+              className={cancelBtnClass + " flex items-center gap-2"}>
+              <ArrowLeft size={16} /> Cambiar Producto
             </button>
           </div>
         </form>

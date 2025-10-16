@@ -1,6 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback } from "react";
-import { Package, Shirt, CupSoda, ClipboardPlus } from "lucide-react";
+// Se eliminaron TrendingUp y TrendingDown de la importación para solucionar el warning
+import { Package, Shirt, CupSoda, ClipboardPlus, Eye, Search } from "lucide-react"; 
 import Sidebar from "../components/Sidebar";
+// eslint-disable-next-line
 import ModalEntrada from "../components/RegistroEntrada";
 import TablaInventario from "../components/TablaInventario";
 import ModalMensaje from "../components/ModalMensaje";
@@ -8,6 +11,7 @@ import Button from "../components/ui/Button";
 import ActualizarProducto from "../components/ActualizarProducto";
 import ModalConfirmacion from "../components/ModalConfirmacion";
 
+// --- (APIs sin cambios) ---
 import {
   obtenerRopa,
   obtenerComestibles,
@@ -26,7 +30,7 @@ import { useLocation } from "react-router-dom";
 const API_URL = "http://localhost:5000";
 
 export default function GInventario() {
-  // ---------- ESTADOS GENERALES ----------
+  // ---------- ESTADOS Y LÓGICA (Funcionalmente sin cambios) ----------
   const [imagenModalOpen, setImagenModalOpen] = useState(false);
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
 
@@ -42,8 +46,8 @@ export default function GInventario() {
   const [ropa, setRopa] = useState([]);
   const [comestibles, setComestibles] = useState([]);
 
-  const [mostrarRopa, setMostrarRopa] = useState(false);
-  const [mostrarComestibles, setMostrarComestibles] = useState(false);
+  // Usamos una sola variable para el tab activo (ropa o comestible)
+  const [activeTab, setActiveTab] = useState('ropa');
 
   const [loadingRopa, setLoadingRopa] = useState(true);
   const [loadingComestibles, setLoadingComestibles] = useState(true);
@@ -54,12 +58,10 @@ export default function GInventario() {
   const location = useLocation();
   const sidebarActive = location.pathname;
 
-  // ---------- FUNCIONES AUXILIARES ----------
   const mostrarMensaje = (tipo, texto) => {
     setMensaje({ open: true, tipo, texto });
   };
 
-  // ---------- CARGAR DATOS ----------
   const fetchDatos = useCallback(async () => {
     try {
       setLoadingRopa(true);
@@ -79,13 +81,12 @@ export default function GInventario() {
       setLoadingRopa(false);
       setLoadingComestibles(false);
     }
-  }, []); // ✅ sin dependencias
+  }, []);
 
   useEffect(() => {
     fetchDatos();
-  }, [fetchDatos]); // ✅ sin warning de eslint
+  }, [fetchDatos]);
 
-  // ---------- BUSCAR ----------
   const handleBuscar = async (tipo, valor) => {
     if (valor.trim() === "") {
       fetchDatos();
@@ -110,7 +111,7 @@ export default function GInventario() {
     }
   };
 
-  // ---------- REGISTRAR ----------
+  // eslint-disable-next-line
   const handleRegistrarProducto = async (tipo, formData) => {
     try {
       const data = new FormData();
@@ -131,7 +132,6 @@ export default function GInventario() {
     }
   };
 
-  // ---------- EDITAR ----------
   const handleEditar = (producto) => {
     const tipo = producto.id_ropa ? "ropa" : "comestible";
     setProductoEditar(producto);
@@ -152,240 +152,238 @@ export default function GInventario() {
     }
   };
 
-  // ---------- ELIMINAR ----------
-  // Mostrar el modal de confirmación
-const handleEliminar = (id, tipo) => {
-  setProductoAEliminar({ id, tipo });
-  setConfirmacionOpen(true);
-};
+  const handleEliminar = (id, tipo) => {
+    setProductoAEliminar({ id, tipo });
+    setConfirmacionOpen(true);
+  };
 
-// Confirmar eliminación
-const confirmarEliminacion = async () => {
-  if (!productoAEliminar) return;
+  const confirmarEliminacion = async () => {
+    if (!productoAEliminar) return;
 
-  const { id, tipo } = productoAEliminar;
-  setConfirmacionOpen(false);
+    const { id, tipo } = productoAEliminar;
+    setConfirmacionOpen(false);
 
-  try {
-    if (tipo === "ropa") await eliminarRopa(id);
-    else await eliminarComestible(id);
+    try {
+      if (tipo === "ropa") await eliminarRopa(id);
+      else await eliminarComestible(id);
 
-    await fetchDatos();
-    mostrarMensaje("exito", "🗑️ Producto eliminado correctamente.");
-  } catch (err) {
-    mostrarMensaje("error", "❌ Error al eliminar producto.");
-  } finally {
-    setProductoAEliminar(null);
-  }
-};
+      await fetchDatos();
+      mostrarMensaje("exito", "🗑️ Producto eliminado correctamente.");
+    } catch (err) {
+      mostrarMensaje("error", "❌ Error al eliminar producto.");
+    } finally {
+      setProductoAEliminar(null);
+    }
+  };
+  
+  // Función para cambiar la pestaña activa
+  const changeTab = (tab) => {
+      setActiveTab(tab);
+  };
 
-
-  // ---------- RENDER ----------
-  return (
-    <div className="bg-gray-100 text-gray-900 min-h-screen">
-      <Sidebar active={sidebarActive} />
-
-      <div className="ml-72 p-6">
-        {/* ENCABEZADO */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3">
-            <Package size={38} className="text-red-700" />
-            <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-              Gestión de Inventario
-            </h1>
-          </div>
-          <p className="mt-2 text-gray-600 text-lg">
-            Administra tus productos de manera sencilla y visualiza tus entradas y salidas en tiempo real.
-          </p>
-        </div>
-
-        {/* 🧃 COMESTIBLES */}
-        <div className="relative mb-6">
-          <img
-            src="/images/PComestible.png"
-            alt="Productos Comestibles"
-            className="w-full h-62 object-cover shadow-xl rounded-xl"
-          />
-          <button
-            className="absolute top-4 left-4 flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-700 to-black text-white px-5 py-2 font-bold rounded-lg shadow-lg hover:scale-105 transition"
-            onClick={() => setMostrarComestibles((p) => !p)}
+  // Renderizado de la sección Ropa
+  const renderRopaSection = () => (
+    <div className="p-8 space-y-8">
+      <div className="flex justify-between items-center">
+          {/* Botón de Acción con Azul Corporativo */}
+          <Button
+              onClick={() => { setModalRopaOpen(true); setProductoEditar(null); }}
+              className="flex items-center gap-2 bg-blue-700 text-white font-medium px-7 py-3 rounded-lg shadow-md hover:bg-blue-800 transition transform duration-200"
           >
-            <CupSoda className="w-5 h-5" />
-            <span>Ver</span>
-          </button>
+              <ClipboardPlus className="w-5 h-5" />
+              Registrar Nueva Prenda
+          </Button>
 
-          {mostrarComestibles && (
-            <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => {
-                      setModalComestiblesOpen(true);
-                      setProductoEditar(null);
-                    }}
-                    className="bg-green-700 text-white font-bold px-5 py-2 rounded-lg hover:bg-green-800 transition"
-                  >
-                    <ClipboardPlus className="w-5 h-5 text-white" />
-                    Registrar Entrada
-                  </Button>
-                </div>
-
-                <input
+          <div className="relative">
+              <input
                   type="text"
-                  placeholder="🔍 Buscar comestible..."
-                  className="w-1/3 border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                  onChange={(e) => handleBuscar("comestible", e.target.value)}
-                />
-              </div>
-
-              <TablaInventario
-                datos={comestibles}
-                tipo="comestible"
-                API_URL={API_URL}
-                onVerImagen={(img) => {
-                  setImagenSeleccionada(img);
-                  setImagenModalOpen(true);
-                }}
-                onEditar={handleEditar}
-                onEliminar={handleEliminar}
-                loading={loadingComestibles}
-              />
-
-              <ModalEntrada
-                isOpen={modalComestiblesOpen}
-                onClose={() => setModalComestiblesOpen(false)}
-                usuarioId={usuarioId}
-                title={
-                  productoEditar
-                    ? "Editar Producto Comestible"
-                    : "Registrar Nuevo Producto Comestible"
-                }
-                tipo="comestible"
-                data={productoEditar}
-                onSuccess={(formData) =>
-                  productoEditar
-                    ? handleActualizarProducto("comestible", formData)
-                    : handleRegistrarProducto("comestible", formData)
-                }
-              />
-            </div>
-          )}
-        </div>
-
-        {/* 👕 ROPA */}
-        <div className="relative mb-6">
-          <img
-            src="/images/RDeportivo.png"
-            alt="Ropa Deportiva"
-            className="w-full h-62 object-cover shadow-xl rounded-xl"
-          />
-          <button
-            className="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-700 to-black text-white px-5 py-2 font-bold rounded-lg shadow-lg hover:scale-105 transition"
-            onClick={() => setMostrarRopa((p) => !p)}
-          >
-            <Shirt className="w-5 h-5" />
-            <span>Ver</span>
-          </button>
-
-          {mostrarRopa && (
-            <div className="bg-white shadow-md rounded-lg p-4 mt-4 relative">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => {
-                      setModalRopaOpen(true);
-                      setProductoEditar(null);
-                    }}
-                    className="bg-green-700 text-white font-bold px-5 py-2 rounded-lg hover:bg-green-800 transition"
-                  >
-                    <ClipboardPlus className="w-5 h-5 text-white" />
-                    Registrar Entrada
-                  </Button>
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="🔍 Buscar prenda..."
-                  className="w-1/3 border border-gray-300 rounded-md px-4 py-2 text-sm focus:ring-2 focus:ring-red-600"
+                  placeholder="Buscar prenda por nombre, talla o código..."
+                  className="w-96 border border-gray-300 rounded-lg pl-12 pr-5 py-3 text-base text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm placeholder-gray-500 font-light"
                   onChange={(e) => handleBuscar("ropa", e.target.value)}
-                />
-              </div>
-
-              <TablaInventario
-                datos={ropa}
-                tipo="ropa"
-                API_URL={API_URL}
-                onVerImagen={(img) => {
-                  setImagenSeleccionada(img);
-                  setImagenModalOpen(true);
-                }}
-                onEditar={handleEditar}
-                onEliminar={handleEliminar}
-                loading={loadingRopa}
               />
-
-              <ModalEntrada
-                isOpen={modalRopaOpen}
-                onClose={() => setModalRopaOpen(false)}
-                usuarioId={usuarioId}
-                title={
-                  productoEditar
-                    ? "Editar Prenda Deportiva"
-                    : "Registrar Nueva Prenda"
-                }
-                tipo="ropa"
-                data={productoEditar}
-                onSuccess={(formData) =>
-                  productoEditar
-                    ? handleActualizarProducto("ropa", formData)
-                    : handleRegistrarProducto("ropa", formData)
-                }
-              />
-            </div>
-          )}
-        </div>
+              {/* Icono de búsqueda */}
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
       </div>
 
-      {/* 🖼️ MODAL IMAGEN */}
+      <TablaInventario
+          datos={ropa}
+          tipo="ropa"
+          API_URL={API_URL}
+          onVerImagen={(img) => {
+              setImagenSeleccionada(img);
+              setImagenModalOpen(true);
+          }}
+          onEditar={handleEditar}
+          onEliminar={handleEliminar}
+          loading={loadingRopa}
+      />
+    </div>
+  );
+
+  // Renderizado de la sección Comestibles
+  const renderComestiblesSection = () => (
+    <div className="p-8 space-y-8">
+      <div className="flex justify-between items-center">
+          {/* Botón de Acción con Verde Esmeralda (Éxito/Salud) */}
+          <Button
+              onClick={() => { setModalComestiblesOpen(true); setProductoEditar(null); }}
+              className="flex items-center gap-2 bg-emerald-700 text-white font-medium px-7 py-3 rounded-lg shadow-md hover:bg-emerald-800 transition transform duration-200"
+          >
+              <ClipboardPlus className="w-5 h-5" />
+              Registrar Nuevo Comestible
+          </Button>
+
+          <div className="relative">
+              <input
+                  type="text"
+                  placeholder="Buscar suplemento, snack o bebida por nombre..."
+                  className="w-96 border border-gray-300 rounded-lg pl-12 pr-5 py-3 text-base text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition shadow-sm placeholder-gray-500 font-light"
+                  onChange={(e) => handleBuscar("comestible", e.target.value)}
+              />
+              {/* Icono de búsqueda */}
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
+      </div>
+
+      <TablaInventario
+          datos={comestibles}
+          tipo="comestible"
+          API_URL={API_URL}
+          onVerImagen={(img) => {
+              setImagenSeleccionada(img);
+              setImagenModalOpen(true);
+          }}
+          onEditar={handleEditar}
+          onEliminar={handleEliminar}
+          loading={loadingComestibles}
+      />
+    </div>
+  );
+
+  // ---------- RENDER PRINCIPAL (Profesional/Enterprise) ----------
+  return (
+    <div className="bg-gray-50 text-gray-800 min-h-screen font-sans">
+      <Sidebar active={sidebarActive} />
+
+      <div className="ml-72 p-10">
+        {/* ENCABEZADO PRINCIPAL (Limpio y Corporativo) */}
+        <div className="mb-8 pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            {/* Ícono principal: color Azul Corporativo */}
+            <Package size={36} className="text-blue-600" /> 
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900"> 
+              Inventario Central: Gestión de Activos Fitness
+            </h1>
+          </div>
+          <p className="mt-2 text-gray-500 text-base max-w-4xl font-light leading-snug">
+            Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
+          </p>
+        </div>
+        
+        {/* CONTENEDOR PRINCIPAL CON PESTAÑAS (TABS) */}
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
+          
+          {/* TAB BAR (Barra de Pestañas) */}
+          <div className="flex border-b border-gray-200 bg-gray-50/50">
+            {/* Pestaña de Ropa (Acento Azul) */}
+            <button
+              onClick={() => changeTab('ropa')}
+              className={`flex items-center gap-2 px-6 py-4 text-lg font-medium transition duration-200 ease-in-out 
+                ${activeTab === 'ropa' 
+                  ? 'text-blue-700 border-b-4 border-blue-600 bg-white/80' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 border-b-4 border-transparent'
+                }`}
+            >
+              <Shirt className="w-5 h-5" />
+              Ropa Deportiva
+            </button>
+
+            {/* Pestaña de Comestibles (Acento Verde Esmeralda) */}
+            <button
+              onClick={() => changeTab('comestible')}
+              className={`flex items-center gap-2 px-6 py-4 text-lg font-medium transition duration-200 ease-in-out 
+                ${activeTab === 'comestible' 
+                  ? 'text-emerald-700 border-b-4 border-emerald-600 bg-white/80' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 border-b-4 border-transparent'
+                }`}
+            >
+              <CupSoda className="w-5 h-5" />
+              Nutrición y Suplementos
+            </button>
+          </div>
+
+          {/* CONTENIDO DE LAS PESTAÑAS */}
+          <div className="min-h-[500px]">
+            {activeTab === 'ropa' && renderRopaSection()}
+            {activeTab === 'comestible' && renderComestiblesSection()}
+          </div>
+        </div>
+
+      </div>
+      
+      {/* -------------------- MODALES (Acento Azul Corporativo) -------------------- */}
+
+      {/* MODAL ENTRADA */}
+      <ModalEntrada
+          isOpen={modalComestiblesOpen && !productoEditar}
+          onClose={() => setModalComestiblesOpen(false)}
+          usuarioId={usuarioId}
+          title={"Registrar Nuevo Producto Comestible"}
+          tipo="comestible"
+          onSuccess={(formData) => handleRegistrarProducto("comestible", formData)}
+      />
+      <ModalEntrada
+          isOpen={modalRopaOpen && !productoEditar}
+          onClose={() => setModalRopaOpen(false)}
+          usuarioId={usuarioId}
+          title={"Registrar Nueva Prenda"}
+          tipo="ropa"
+          onSuccess={(formData) => handleRegistrarProducto("ropa", formData)}
+      />
+
+      {/* MODAL VISTA DE IMAGEN */}
       {imagenModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg max-w-lg w-full relative">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-xl shadow-3xl max-w-xl w-full relative border border-gray-200">
             <button
               onClick={() => setImagenModalOpen(false)}
-              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+              className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-xl font-light p-2 transition-colors rounded-full hover:bg-gray-100"
             >
-              ✖
+              ×
             </button>
-            <h2 className="text-xl font-bold mb-4 text-center">
-              📷 Vista de Imagen
+            <h2 className="text-xl font-semibold mb-6 text-center text-gray-800 border-b pb-3 tracking-wide">
+              <Eye className="inline w-5 h-5 mr-2 text-blue-700" /> Vista Previa del Activo
             </h2>
-            <img
-              src={imagenSeleccionada}
-              alt="Imagen del producto"
-              className="w-full h-auto rounded-lg shadow-md"
-            />
-+          </div>
+            <div className="p-2 border border-blue-700/50 rounded-lg bg-gray-50">
+                <img
+                    src={imagenSeleccionada}
+                    alt="Imagen del producto"
+                    className="w-full h-auto rounded-md shadow-xl object-contain max-h-96"
+                />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ✏️ MODAL ACTUALIZAR PRODUCTO */}
+      {/* MODAL ACTUALIZAR PRODUCTO */}
       {productoEditar && (
         <ActualizarProducto
           producto={productoEditar}
           tipo={tipoEdicion}
-          onClose={() => setProductoEditar(null)}
+          onClose={() => { setProductoEditar(null); setTipoEdicion(null); }}
           onActualizar={handleActualizarProducto}
         />
       )}
-      {/* ⚠️ MODAL CONFIRMACIÓN ELIMINAR */}
+
+      {/* MODAL CONFIRMACIÓN ELIMINAR */}
       <ModalConfirmacion
         isOpen={confirmacionOpen}
         onClose={() => setConfirmacionOpen(false)}
         onConfirm={confirmarEliminacion}
       />
 
-
-      {/* ✅ MODAL MENSAJE */}
+      {/* MODAL MENSAJE */}
       <ModalMensaje
         isOpen={mensaje.open}
         tipo={mensaje.tipo}

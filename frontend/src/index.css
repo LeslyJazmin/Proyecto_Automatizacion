@@ -32,3 +32,16 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out forwards;
 }
+/* 🔒 Oculta el icono del ojo nativo de los navegadores en inputs tipo password */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}

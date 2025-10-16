@@ -1,4 +1,4 @@
-import { Package, BarChart3, LogOut, Building2, Info } from "lucide-react";
+import { Package, BarChart3, LogOut, Building2, Info, TrendingUp } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Sidebar({ onLogout, logoutOpen }) {
@@ -14,50 +14,60 @@ export default function Sidebar({ onLogout, logoutOpen }) {
   // Clases de botón según si está activo
   const getButtonClasses = (path) => {
     const active = isActiveRoute(path);
+    // Tipografía: Textos de navegación más pequeños (text-sm) pero con mejor peso (font-medium)
     const baseClasses =
-      "flex items-center space-x-4 w-full px-5 py-3 rounded-lg transition-all duration-300 transform hover:translate-x-1";
-    const activeClasses = "bg-red-800/80 text-white shadow-md";
-    const inactiveClasses = "text-gray-300 hover:text-white hover:bg-red-900/30";
+      "flex items-center space-x-4 w-full px-5 py-2.5 rounded-lg transition-all duration-300 transform hover:translate-x-0.5";
+    
+    // Tonos Borgoña/Vino para el estado activo, con un color de fondo más sólido
+    const activeClasses = "bg-red-700 text-white shadow-xl shadow-red-900/50 font-medium"; 
+    // Hover nítido: fondo sólido más oscuro
+    const inactiveClasses = "text-gray-200 hover:text-white hover:bg-red-900/60 font-medium"; 
+    
     return `${baseClasses} ${active ? activeClasses : inactiveClasses}`;
   };
 
   // Props dinámicos para iconos
   const getIconProps = (path) => ({
-    color: isActiveRoute(path) ? "#ffffff" : "#f87171",
-    className: "w-5 h-5",
+    // Íconos activos en blanco puro, inactivos en un Rojo Vino definido
+    className: `w-4 h-4 transition-colors duration-300 ${isActiveRoute(path) ? 'text-white' : 'text-red-400'}`, 
   });
 
   return (
     <div
-      className="w-72 h-screen bg-gradient-to-b from-black via-red-950 to-black shadow-[0_0_25px_#ff1a1a66] flex flex-col font-sans fixed top-0 left-0 z-50 border-r border-red-800/50"
+      // Fondo Borgoña Oscuro con buen contraste y sin borde lateral
+      className="w-72 h-screen bg-gradient-to-b from-gray-900 via-red-950 to-black shadow-2xl flex flex-col font-sans fixed top-0 left-0 z-50" 
     >
       {/* Cabecera */}
-      <div className="p-6 text-center">
-        <div className="flex items-center justify-center space-x-2">
-          <Building2 color="#ef4444" className="w-8 h-8 animate-pulse" />
-          <h2 className="text-2xl font-extrabold text-white tracking-wider drop-shadow-md">
+      <div className="p-8 text-center mb-4 pt-10">
+        <div className="flex items-center justify-center space-x-3"> {/* Espacio aumentado */}
+          {/* Título nítido y visible */}
+          <Building2 color="#dc2626" className="w-6 h-6" /> {/* Rojo más brillante para visibilidad */}
+          <h2 className="text-2xl font-semibold text-white tracking-widest drop-shadow-md">
             EMPRESA
           </h2>
         </div>
-        <p className="text-xs font-light text-gray-400 mt-1 uppercase">
-          Sistema de Gestión
+        <p className="text-xs font-normal text-red-300 mt-2 uppercase tracking-widest">
+          Panel de Administración
         </p>
-        <div className="h-px bg-red-600/40 my-4"></div>
+        
+        {/* Imagen más visible y definida (opacidad eliminada o muy alta) */}
         <img
-          src="/images/GT2.png"
+          src="/images/GT2.png" 
           alt="Logo"
-          className="mx-auto w-56 h-44 object-contain mt-4"
+          className="mx-auto w-44 h-32 object-contain mt-6" 
         />
+        {/* Línea divisoria nítida (blanco muy tenue) */}
+        <div className="h-px bg-white/10 mt-6"></div>
       </div>
 
       {/* Navegación */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="flex-1 p-6 space-y-2 overflow-y-auto">
         <button
           className={getButtonClasses("/AdminDashboard")}
           onClick={() => navigate("/AdminDashboard")}
         >
           <Info {...getIconProps("/AdminDashboard")} />
-          <span className="font-semibold text-sm tracking-wide">Información de empresa</span>
+          <span className="text-sm tracking-wide">Dashboard Principal</span>
         </button>
 
         <button
@@ -65,15 +75,15 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/GInventario")}
         >
           <Package {...getIconProps("/GInventario")} />
-          <span className="font-semibold text-sm tracking-wide">Gestión de inventario</span>
+          <span className="text-sm tracking-wide">Gestión de Inventario</span>
         </button>
 
         <button
           className={getButtonClasses("/Movimientos")}
           onClick={() => navigate("/Movimientos")}
         >
-          <Package {...getIconProps("/Movimientos")} />
-          <span className="font-semibold text-sm tracking-wide">Movimientos</span>
+          <TrendingUp {...getIconProps("/Movimientos")} />
+          <span className="text-sm tracking-wide">Transacciones y Flujo</span>
         </button>
 
         <button
@@ -81,16 +91,17 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/Reportes")}
         >
           <BarChart3 {...getIconProps("/Reportes")} />
-          <span className="font-semibold text-sm tracking-wide">Reportes</span>
+          <span className="text-sm tracking-wide">Análisis y Reportes</span>
         </button>
       </div>
 
       {/* Botón cerrar sesión */}
-      <div className="p-4 mt-8">
-        <div className="h-px bg-red-600/30 my-4"></div>
+      <div className="p-6 mt-auto"> 
+        {/* Línea divisoria nítida (blanco muy tenue) */}
+        <div className="h-px bg-white/10 mb-4"></div>
         <button onClick={onLogout} className={getButtonClasses("logout")}>
           <LogOut {...getIconProps("logout")} />
-          <span className="font-semibold text-sm tracking-wide">Cerrar Sesión</span>
+          <span className="text-sm tracking-wide">Cerrar Sesión</span>
         </button>
       </div>
     </div>
