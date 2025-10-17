@@ -223,7 +223,7 @@ async function listarMovimientosRopa() {
       i.tipo_comprobante, 
       i.numero_comprobante, 
       i.metodo_pago, 
-      i.monto_pagado,            -- ✅ Se agrega aquí
+      i.monto_pagado,            
       u.username AS usuario, 
       r.nombre AS producto, 
       i.fecha
@@ -245,7 +245,7 @@ async function listarMovimientosComestible() {
       i.tipo_comprobante, 
       i.numero_comprobante, 
       i.metodo_pago, 
-      i.monto_pagado,            -- ✅ Se agrega aquí
+      i.monto_pagado,            
       u.username AS usuario, 
       c.nombre AS producto, 
       i.fecha
