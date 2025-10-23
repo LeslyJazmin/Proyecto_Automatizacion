@@ -11,7 +11,6 @@ import Button from "../components/ui/Button";
 import ActualizarProducto from "../components/ActualizarProducto";
 import ModalConfirmacion from "../components/ModalConfirmacion";
 
-// --- (APIs sin cambios) ---
 import {
   obtenerRopa,
   obtenerComestibles,
@@ -266,7 +265,7 @@ export default function GInventario() {
     <div className="bg-gray-50 text-gray-800 min-h-screen font-sans">
       <Sidebar active={sidebarActive} />
 
-      <div className="ml-72 p-10">
+      <div className="ml-64 p-10">
         {/* ENCABEZADO PRINCIPAL (Limpio y Corporativo) */}
         <div className="mb-8 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-3">

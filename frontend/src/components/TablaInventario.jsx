@@ -10,34 +10,27 @@ export default function TablaInventario({
   loading,
 }) {
   // --- Clases de Estilo Mejoradas y Redondeadas ---
-  
-  // Contenedor principal: Redondo y con sombra
-  const tableContainerClass = "overflow-hidden rounded-xl shadow-2xl border border-gray-200";
+  const tableContainerClass =
+    "overflow-hidden rounded-xl shadow-2xl border border-gray-200";
   const tableClass = "w-full";
 
-  // Encabezado: Rojo oscuro/negro, negrita y redondeado en la parte superior
-  const headClass = "bg-gradient-to-r from-red-900 via-red-800 to-black text-white uppercase text-xs tracking-wider font-extrabold";
-  const thClass = "px-4 py-3 border-l border-r border-red-950/50 last:border-r-0 first:border-l-0";
-  // Usamos rounded-tl-xl/rounded-tr-xl en los TH para que la cabecera quede redonda
+  const headClass =
+    "bg-gradient-to-r from-red-900 via-red-800 to-black text-white uppercase text-xs tracking-wider font-extrabold";
+  const thClass =
+    "px-4 py-3 border-l border-r border-red-950/50 last:border-r-0 first:border-l-0";
 
-  // Cuerpo: Filas y celdas
-  const trClass = "bg-white border-b border-gray-100 transition duration-150 hover:bg-red-50";
-  const tdClass = "px-4 py-3 text-sm text-gray-800 font-medium whitespace-nowrap border-r border-gray-200";
+  const trClass =
+    "bg-white border-b border-gray-100 transition duration-150 hover:bg-red-50";
+  const tdClass =
+    "px-4 py-3 text-sm text-gray-800 font-medium whitespace-nowrap border-r border-gray-200";
 
-  // Estilos de botones (Redondeados al máximo: rounded-full)
-  const baseBtnClass = "p-2 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white";
-
-  // Botón: Ver Imagen (Rojo/Negro original)
+  const baseBtnClass =
+    "p-2 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white";
   const imageBtnClass = `${baseBtnClass} bg-red-700 hover:bg-black hover:shadow-red-800/50`;
-
-  // Botón: Editar (Azul original)
   const editBtnClass = `${baseBtnClass} bg-blue-600 hover:bg-blue-800 hover:shadow-blue-600/50`;
-
-  // Botón: Eliminar (Rojo/Negro original)
   const deleteBtnClass = `${baseBtnClass} bg-red-700 hover:bg-red-900 hover:shadow-red-900/50`;
 
-  // ------------------------------------
-
+  // --- Indicadores de carga o vacío ---
   if (loading)
     return (
       <div className="flex justify-center items-center py-8">
@@ -57,6 +50,7 @@ export default function TablaInventario({
       </div>
     );
 
+  // --- Tabla principal ---
   return (
     <div className={tableContainerClass}>
       <table className={tableClass}>
@@ -65,7 +59,7 @@ export default function TablaInventario({
             <th className={thClass + " rounded-tl-xl"}>ID</th>
             <th className={thClass}>Nombre</th>
             <th className={thClass}>Marca</th>
-            <th className={thClass + " text-center"}>Cantidad</th>
+            <th className={thClass + " text-center"}>Stock Actual</th>
 
             {tipo === "ropa" ? (
               <>
@@ -75,7 +69,7 @@ export default function TablaInventario({
             ) : (
               <>
                 <th className={thClass}>Sabor</th>
-                <th className={thClass}>Peso (kg)</th> 
+                <th className={thClass}>Peso (kg)</th>
                 <th className={thClass}>Litros (Lt)</th>
               </>
             )}
@@ -93,10 +87,31 @@ export default function TablaInventario({
 
             return (
               <tr key={id} className={trClass}>
-                <td className={tdClass + " font-mono text-gray-900 font-semibold"}>{id}</td>
-                <td className={tdClass + " max-w-[200px] overflow-hidden text-ellipsis"}>{p.nombre}</td>
+                <td
+                  className={
+                    tdClass + " font-mono text-gray-900 font-semibold"
+                  }
+                >
+                  {id}
+                </td>
+                <td
+                  className={
+                    tdClass + " max-w-[200px] overflow-hidden text-ellipsis"
+                  }
+                >
+                  {p.nombre}
+                </td>
                 <td className={tdClass}>{p.marca || "N/A"}</td>
-                <td className={tdClass + " text-center font-bold text-lg text-red-700"}>{p.cantidad ?? "0"}</td>
+
+                {/* ✅ CAMBIO: mostrar stock_actual en lugar de cantidad */}
+                <td
+                  className={
+                    tdClass +
+                    " text-center font-bold text-lg text-red-700"
+                  }
+                >
+                  {p.stock_actual ?? "0"}
+                </td>
 
                 {tipo === "ropa" ? (
                   <>
@@ -111,8 +126,12 @@ export default function TablaInventario({
                   </>
                 )}
 
-                <td className={tdClass + " font-bold text-green-700"}>S/ {parseFloat(p.precio).toFixed(2) || '0.00'}</td>
-                <td className={tdClass + " border-r-0"}>{p.ubicacion || "N/A"}</td> {/* Última celda sin borde a la derecha */}
+                <td className={tdClass + " font-bold text-green-700"}>
+                  S/ {parseFloat(p.precio).toFixed(2) || "0.00"}
+                </td>
+                <td className={tdClass + " border-r-0"}>
+                  {p.ubicacion || "N/A"}
+                </td>
 
                 {/* Imagen */}
                 <td className={tdClass + " text-center"}>
@@ -132,8 +151,6 @@ export default function TablaInventario({
                 {/* Botones */}
                 <td className={tdClass + " text-center border-r-0"}>
                   <div className="flex justify-center gap-2">
-                    
-                    {/* Editar */}
                     <button
                       onClick={() => onEditar(p)}
                       title="Editar producto"
@@ -142,7 +159,6 @@ export default function TablaInventario({
                       <Wand2 size={16} />
                     </button>
 
-                    {/* Eliminar */}
                     <button
                       onClick={() => onEliminar(id, tipo)}
                       title="Eliminar producto"

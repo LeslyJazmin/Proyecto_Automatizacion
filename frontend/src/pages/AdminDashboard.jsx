@@ -6,7 +6,7 @@ import UserList from "../components/UserList";
 import CreateUserModal from "../components/CreateUserModal";
 import InfoEmpresa from "../components/InfoEmpresa";
 import useUsers from "../hooks/useUsers";
-import { UserPlus } from "lucide-react"; // ✅ volvemos a usar el ícono
+import { UserPlus } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
 export default function AdminDashboard() {
@@ -74,29 +74,25 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
-      {/* Contenido principal */}
-      <main className="ml-72 p-8 w-full space-y-6 animate-fade-in">
+      {/* Contenido principal más a la izquierda */}
+      <main className="ml-64 px-5 py-6 w-full space-y-6 transition-all duration-300">
         {/* Encabezado principal */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 border border-neutral-200 hover:shadow-2xl transition-all duration-500">
-          <h1 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-rose-700 via-rose-500 to-amber-500 tracking-tight">
+        <div className="bg-white rounded-2xl shadow-lg p-5 border border-neutral-200 hover:shadow-2xl transition-all duration-500">
+          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-red-800 via-red-600 to-amber-500 tracking-tight">
             👋 Bienvenido {currentUser.username || "Administrador"}
           </h1>
-          <p className="text-gray-500 mt-2 text-lg">
-            Administra tu personal y la información de tu empresa en un solo lugar.
+          <p className="text-gray-500 mt-2 text-base">
+            Administra tu personal y la información de tu empresa fácilmente.
           </p>
         </div>
 
         {/* Info + Imagen */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch">
-          {/* InfoEmpresa ocupa la mitad */}
           <div className="flex-1">
             <InfoEmpresa />
           </div>
 
-          {/* Imagen ocupa la otra mitad pero más baja */}
-          <div className="flex-1 relative rounded-2xl overflow-hidden shadow-2xl 
-                          hover:scale-[1.02] transition-transform duration-200
-                          max-h-[328px]"> {/* ⬅️ altura máxima reducida */}
+          <div className="flex-1 relative rounded-2xl overflow-hidden shadow-lg hover:scale-[1.01] transition-transform duration-200 max-h-[300px]">
             <img
               src="/images/info.jpeg"
               alt="Gimnasio moderno"
@@ -106,38 +102,33 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-
-        {/* Personal a cargo */}
-        <div className="rounded-2xl shadow-xl border border-neutral-200 overflow-hidden transition-all">
-          {/* Encabezado degradado */}
+        {/* Personal */}
+        <div className="rounded-2xl shadow-lg border border-neutral-200 overflow-hidden">
           <div
             className="bg-gradient-to-r from-red-900 via-black to-red-950 
-           border-b border-red-700 
-           shadow-[0_0_30px_#ff1a1acc] 
-           p-5 flex justify-between items-center"
-
+                       border-b border-red-700 
+                       p-4 flex justify-between items-center"
           >
-            <h2 className="text-white text-2xl font-semibold tracking-wide">
+            <h2 className="text-white text-xl font-semibold tracking-wide">
               Personal a Cargo
             </h2>
 
             {currentUser.rol === "admin" && (
               <button
                 onClick={() => setModalOpen(true)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl 
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg 
                            bg-gradient-to-r from-red-700 to-red-900
                            hover:from-red-600 hover:to-red-800
                            transition-all duration-300
-                           text-white font-medium shadow-md hover:shadow-lg"
+                           text-white font-medium shadow-md hover:shadow-lg text-sm"
               >
-                <UserPlus className="w-5 h-5" /> {/* ✅ Ícono agregado aquí */}
+                <UserPlus className="w-4 h-4" />
                 <span>Crear Trabajador</span>
               </button>
             )}
           </div>
 
-          {/* Contenido */}
-          <div className="bg-white p-6">
+          <div className="bg-white p-5">
             <UserList
               users={users}
               loading={loading}
@@ -150,7 +141,7 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      {/* Modales (igual que antes) */}
+      {/* Modales */}
       <CreateUserModal
         modalOpen={modalOpen}
         setModalOpen={setModalOpen}

@@ -11,7 +11,6 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
 
-  // --- LÓGICA DE GESTIÓN DEL MODAL Y ESTADO ---
   const handleClose = () => {
     setStep("inicio");
     setFormData({});
@@ -33,6 +32,7 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
         ...prev,
         id_ropa: tipo === "ropa" ? id : prev.id_ropa,
         id_comestible: tipo === "comestible" ? id : prev.id_comestible,
+        stock_actual: 0, // inicializar stock_actual en nuevo producto
       }));
     }
   }, [isOpen, step, tipo]);
@@ -56,19 +56,14 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
     const newErrors = {};
     const requiredFields =
       tipo === "ropa"
-        ? ["nombre", "marca", "talla", "color", "precio", "cantidad", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"]
-        // Se elimina "unidad_medida" de los campos requeridos para comestibles
-        : ["nombre", "marca", "sabor", "precio", "cantidad", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"];
+        ? ["nombre", "marca", "talla", "color", "precio", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"]
+        : ["nombre", "marca", "sabor", "precio", "tipo_comprobante", "numero_comprobante", "metodo_pago", "monto_pagado"];
 
-    // Se elimina la lógica de requerir "peso" o "litros"
+    if (!cantidadRegistrar || cantidadRegistrar <= 0) newErrors.cantidad = "Debe ser mayor a 0";
 
     requiredFields.forEach((field) => {
-      // Validación mejorada para "cantidad"
-      if (
-        (field === "cantidad" && (!cantidadRegistrar || cantidadRegistrar <= 0)) ||
-        (!formData[field] && formData[field] !== 0 && field !== "cantidad")
-      ) {
-        newErrors[field] = field === "cantidad" ? "Debe ser mayor a 0" : "Este campo es obligatorio";
+      if (!formData[field] && formData[field] !== 0) {
+        newErrors[field] = "Este campo es obligatorio";
       }
     });
 
@@ -79,66 +74,46 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    // La cantidad que se registra en el stock es `cantidadRegistrar`
+    // Enviar cantidad a añadir al stock
     const dataToSend = { ...formData, cantidad: cantidadRegistrar }; 
     if (onSuccess) onSuccess(dataToSend);
     handleClose();
   };
 
-  // --- ESTILOS DEFINITIVOS MEJORADOS (ENFOQUE EN LOS INPUTS) ---
   const cardClass = "bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-6 transition-all duration-300 hover:shadow-xl";
-  
-  // Clase base mejorada para todos los inputs y selects
   const inputClass =
-    "w-full px-4 py-2.5 border border-gray-300/80 rounded-xl focus:ring-3 focus:ring-emerald-500/50 focus:border-emerald-500/80 transition-all duration-300 text-sm placeholder-gray-400 shadow-sm disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed disabled:border-gray-200 hover:border-gray-400/80"; // Mejorado
-  
-  // Estilo para destacar campos requeridos (sutil)
-  const requiredInputClass = "bg-emerald-50 border-emerald-300"; // Mejorado para sutilidad y claridad
-  
-  // CLASE NUEVA: Estilo para destacar campos de especificación (Talla, Color, Sabor, etc.)
+    "w-full px-4 py-2.5 border border-gray-300/80 rounded-xl focus:ring-3 focus:ring-emerald-500/50 focus:border-emerald-500/80 transition-all duration-300 text-sm placeholder-gray-400 shadow-sm disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed disabled:border-gray-200 hover:border-gray-400/80";
+  const requiredInputClass = "bg-emerald-50 border-emerald-300";
   const specificationInputClass = "bg-blue-50/70 border-blue-300/80 hover:border-blue-400/80 focus:ring-blue-500/50 focus:border-blue-500/80";
-
   const errorClass = "!border-red-500 !ring-red-500";
   const errorMsgClass = "text-red-600 text-xs mt-1 font-medium";
   const labelClass = "block text-sm font-semibold text-gray-700 mb-1"; 
-  
   const sectionTitleClass =
     "mt-0 mb-4 flex items-center gap-3 text-base font-extrabold text-gray-800 border-b border-emerald-500/50 pb-2";
-  
   const formBtnClass =
     "font-bold text-sm px-6 py-3 rounded-xl shadow-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2";
   const primaryBtnClass =
-    "bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 " +
-    formBtnClass;
+    "bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 " + formBtnClass;
   const cancelBtnClass =
     "bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-400 " + formBtnClass;
-  // -------------------------
 
-  // --- FUNCIONES DE RENDERIZADO SIMPLIFICADAS ---
-
-  // Componente de Etiqueta Requerida/Simple
   const FieldLabel = ({ text, required = false }) => (
     <div className={labelClass}>
       {text} {required && <span className="text-red-500">*</span>}
     </div>
   );
 
-  // Renderiza un input (MODIFICADO para aceptar customStyle)
   const renderInput = (name, label, type = "text", optional = false, valueOverride = null, onChangeOverride = null, disabled = false, customStyle = '') => {
     const isCantidadField = name === "cantidad";
     const currentValue = isCantidadField ? cantidadRegistrar : (valueOverride !== null ? valueOverride : formData[name] || "");
     const currentOnChange = isCantidadField ? (e) => setCantidadRegistrar(Number(e.target.value)) : (onChangeOverride !== null ? onChangeOverride : handleChange);
 
     const isRequired = !optional && !disabled;
-    // Aplicar estilo requerido solo si es obligatorio Y no está deshabilitado
     const baseRequiredStyle = isRequired && !disabled ? requiredInputClass : '';
-    
-    // Si está deshabilitado, añadir una clase para asegurar un texto más nítido (el fondo ya lo maneja inputClass)
     const disabledTextClass = disabled ? 'font-semibold' : '';
 
-
     return (
-      <div className="mb-4"> {/* Añadido margin-bottom para separación vertical */}
+      <div className="mb-4">
         <FieldLabel text={label} required={isRequired} />
         <input
           name={name}
@@ -147,7 +122,6 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
           value={currentValue}
           onChange={currentOnChange}
           disabled={disabled}
-          // Se combinan las clases: base, estilo requerido base, ESTILO PERSONALIZADO, error, y texto deshabilitado
           className={`${inputClass} ${baseRequiredStyle} ${customStyle} ${errors[name] ? errorClass : ''} ${disabledTextClass}`}
         />
         {errors[name] && <div className={errorMsgClass}>{errors[name]}</div>}
@@ -155,15 +129,13 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
     );
   };
 
-  // Renderiza un select
   const renderSelect = (name, label, options) => (
-    <div className="mb-4"> {/* Añadido margin-bottom para separación vertical */}
+    <div className="mb-4">
       <FieldLabel text={label} required={true} />
       <select
         name={name}
         value={formData[name] || ""}
         onChange={handleChange}
-        // Aplica el estilo requerido y la clase base mejorada
         className={`${inputClass} appearance-none ${errors[name] ? errorClass : ""} ${requiredInputClass}`}
       >
         <option value="" disabled>-- Seleccionar --</option>
@@ -177,12 +149,6 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
     </div>
   );
 
-  /**
-   * Renderiza un campo de solo lectura para el formulario de producto existente.
-   * @param {string} key - La clave del dato en formData.
-   * @param {string} label - La etiqueta a mostrar.
-   * @param {string} style - Estilo Tailwind adicional (ej: specificationInputClass).
-   */
   const renderReadOnlyField = (key, label, style = "") => (
     <div>
       <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase">
@@ -191,14 +157,11 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
       <input 
         value={formData[key] || "N/A"} 
         disabled 
-        // Aplicando el nuevo inputClass, font-semibold y el estilo personalizado
         className={`${inputClass} font-semibold ${style}`} 
       />
     </div>
   );
 
-
-  // --- ESTRUCTURA DEL MODAL ---
   return (
     <ModalGInventario
       isOpen={isOpen}
@@ -206,9 +169,7 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
       title={title}
       maxWidth={step === "inicio" ? "520px" : "1100px"}
     >
-      {/* ---------------------------------------------------- */}
-      {/* Pantalla Inicial (Opción de Entrada) */}
-      {/* ---------------------------------------------------- */}
+      {/* Pantalla Inicial */}
       {step === "inicio" && (
         <div className="text-center py-8 animate-fadeIn">
           <h3 className="mb-2 text-gray-800 text-2xl font-black tracking-tighter">
@@ -217,24 +178,13 @@ export default function ModalEntrada({ isOpen, onClose, tipo, usuarioId, title, 
           <p className="mb-12 text-gray-600 text-base px-6 leading-snug">
             Defina el tipo de operación: Registrar un nuevo artículo en el catálogo o aumentar la cantidad de un producto ya existente.
           </p>
-          
           <div className="flex justify-center gap-6">
-            
-            {/* Botón: Nuevo Producto */}
-            <button
-              onClick={() => setStep("nuevo")}
-              className="relative flex flex-col items-center justify-center w-52 p-6 bg-emerald-50 text-emerald-800 rounded-2xl shadow-xl hover:shadow-emerald-300/60 hover:bg-emerald-100 transition-all duration-300 border-4 border-emerald-400/50 transform hover:scale-[1.03] active:scale-100"
-            >
+            <button onClick={() => setStep("nuevo")} className="relative flex flex-col items-center justify-center w-52 p-6 bg-emerald-50 text-emerald-800 rounded-2xl shadow-xl hover:shadow-emerald-300/60 hover:bg-emerald-100 transition-all duration-300 border-4 border-emerald-400/50 transform hover:scale-[1.03] active:scale-100">
               <PlusSquare className="w-8 h-8 mb-2" /> 
               <span className="font-extrabold text-base tracking-tight">Nuevo Producto</span> 
               <span className="text-xs text-emerald-600 mt-1">Alta de Catálogo</span>
             </button>
-
-            {/* Botón: Producto Existente */}
-            <button
-              onClick={() => setStep("existente_form")}
-              className="flex flex-col items-center justify-center w-52 p-6 bg-white text-gray-800 rounded-2xl shadow-xl hover:shadow-gray-300/60 hover:ring-2 hover:ring-gray-200 transition-all duration-300 border-4 border-gray-300/50 transform hover:scale-[1.03] active:scale-100"
-            >
+            <button onClick={() => setStep("existente_form")} className="flex flex-col items-center justify-center w-52 p-6 bg-white text-gray-800 rounded-2xl shadow-xl hover:shadow-gray-300/60 hover:ring-2 hover:ring-gray-200 transition-all duration-300 border-4 border-gray-300/50 transform hover:scale-[1.03] active:scale-100">
               <Archive className="w-8 h-8 mb-2 text-gray-600" /> 
               <span className="font-extrabold text-base tracking-tight">Producto Existente</span>
               <span className="text-xs text-gray-500 mt-1">Reabastecimiento de Stock</span>

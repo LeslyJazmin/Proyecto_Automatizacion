@@ -42,7 +42,7 @@ export default function Movimientos() {
   // Contenedor principal con fondo suave
   const mainContainerClass = "bg-gray-100 min-h-screen";
   // Área de contenido principal: Limpio y con margen adecuado
-  const contentAreaClass = "ml-72 p-10"; 
+  const contentAreaClass = "ml-64 p-10"; 
 
   // Tarjeta contenedora para el contenido: Fondo blanco, redondeado y flotante
   const cardContainerClass = "bg-white p-8 rounded-2xl shadow-2xl space-y-8 border border-gray-100";

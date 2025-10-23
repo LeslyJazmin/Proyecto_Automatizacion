@@ -211,7 +211,7 @@ async function buscarComestibleController(req, res) {
 // --- ACTUALIZAR COMESTIBLE (editar peso o litros según corresponda) ---
 async function actualizarComestibleController(req, res) {
   try {
-    const { id_comestible, marca, sabor, peso, litros, ubicacion } = req.body;
+    const { id_comestible, marca, sabor, peso, litros, ubicacion, precio } = req.body;
     const imagen = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (!id_comestible) {
@@ -226,21 +226,16 @@ async function actualizarComestibleController(req, res) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
 
-    // Mantener consistencia: si el producto tiene litros, se actualiza litros;
-    // si tiene peso, se actualiza peso. Si no tiene ninguno, se usa lo que venga.
     let nuevoPeso = productoActual.peso;
     let nuevoLitros = productoActual.litros;
 
     if (productoActual.litros !== null && productoActual.litros !== 0) {
-      // Producto trabaja con litros
       nuevoLitros = litros ?? productoActual.litros;
       nuevoPeso = null;
     } else if (productoActual.peso !== null && productoActual.peso !== 0) {
-      // Producto trabaja con peso
       nuevoPeso = peso ?? productoActual.peso;
       nuevoLitros = null;
     } else {
-      // Producto nuevo sin tipo definido: usar lo que venga
       nuevoPeso = peso ?? null;
       nuevoLitros = litros ?? null;
     }
@@ -252,7 +247,8 @@ async function actualizarComestibleController(req, res) {
       peso: nuevoPeso,
       litros: nuevoLitros,
       ubicacion: ubicacion ?? productoActual.ubicacion,
-      imagen: imagen ?? productoActual.imagen
+      imagen: imagen ?? productoActual.imagen,
+      precio: precio ?? productoActual.precio // 👈 añadido
     };
 
     const resultado = await actualizarComestible(data);
@@ -267,7 +263,7 @@ async function actualizarComestibleController(req, res) {
 // --- ACTUALIZAR ROPA DEPORTIVA ---
 async function actualizarRopaController(req, res) {
   try {
-    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion } = req.body; // 👈 color agregado
+    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion, precio } = req.body; 
     const imagen = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (!id_ropa) {
@@ -290,7 +286,8 @@ async function actualizarRopaController(req, res) {
       tipo_ropa: tipo_ropa ?? ropaActual.tipo_ropa,
       color: color ?? ropaActual.color,
       ubicacion: ubicacion ?? ropaActual.ubicacion,
-      imagen: imagen ?? ropaActual.imagen
+      imagen: imagen ?? ropaActual.imagen,
+      precio: precio ?? ropaActual.precio // 👈 se agrega aquí
     };
 
     const resultado = await actualizarRopa(data);
@@ -301,6 +298,7 @@ async function actualizarRopaController(req, res) {
     res.status(500).json({ message: "Error al actualizar ropa" });
   }
 }
+
 
 // --- ELIMINAR ROPA ---
 async function eliminarRopaController(req, res) {

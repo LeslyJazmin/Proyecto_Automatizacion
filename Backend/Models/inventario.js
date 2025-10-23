@@ -33,47 +33,8 @@ async function registrarEntradaRopa(data) {
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
-      INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, cantidad, ubicacion, imagen)
+      INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, stock_actual, ubicacion, imagen)
       VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad, @ubicacion, @imagen)
-    `);
-
-  // Registrar movimiento con monto_pagado
-  await pool.request()
-    .input("id_inventario", sql.NVarChar(7), idInventario)
-    .input("id_producto", sql.NVarChar(7), id_ropa)
-    .input("cantidad", sql.Int, cantidad)
-    .input("tipo_movimiento", sql.NVarChar(20), "entrada")
-    .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
-    .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
-    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
-    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
-    .input("id_usuario", sql.NVarChar(7), id_usuario)
-    .query(`
-      INSERT INTO InventarioRopa
-      (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
-      VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
-    `);
-}
-
-
-// ============================================================
-// 👕 REGISTRAR ENTRADA DE ROPA EXISTENTE
-// ============================================================
-async function registrarEntradaRopaExistente(data) {
-  const pool = await getPool();
-  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
-  const idInventario = generarIdInventario("IR");
-
-  // Actualizar stock
-  await pool.request()
-    .input("id_ropa", sql.NVarChar(7), id_ropa)
-    .input("cantidad", sql.Int, cantidad)
-    .query(`
-      UPDATE RopaDeportiva
-      SET cantidad = cantidad + @cantidad
-      WHERE id_ropa = @id_ropa
     `);
 
   // Registrar movimiento
@@ -96,6 +57,43 @@ async function registrarEntradaRopaExistente(data) {
     `);
 }
 
+// ============================================================
+// 👕 REGISTRAR ENTRADA DE ROPA EXISTENTE
+// ============================================================
+async function registrarEntradaRopaExistente(data) {
+  const pool = await getPool();
+  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const idInventario = generarIdInventario("IR");
+
+  // Actualizar stock
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .input("cantidad", sql.Int, cantidad)
+    .query(`
+      UPDATE RopaDeportiva
+      SET stock_actual = stock_actual + @cantidad
+      WHERE id_ropa = @id_ropa
+    `);
+
+  // Registrar movimiento
+  await pool.request()
+    .input("id_inventario", sql.NVarChar(7), idInventario)
+    .input("id_producto", sql.NVarChar(7), id_ropa)
+    .input("cantidad", sql.Int, cantidad)
+    .input("tipo_movimiento", sql.NVarChar(20), "entrada")
+    .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
+    .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
+    .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .query(`
+      INSERT INTO InventarioRopa
+      (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+      VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+    `);
+}
 
 // ============================================================
 // 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO
@@ -124,7 +122,7 @@ async function registrarEntradaComestible(data) {
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
       INSERT INTO ProductosComestibles 
-      (id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad, ubicacion, imagen)
+      (id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual, ubicacion, imagen)
       VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @cantidad, @ubicacion, @imagen)
     `);
 
@@ -148,7 +146,6 @@ async function registrarEntradaComestible(data) {
     `);
 }
 
-
 // ============================================================
 // 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE EXISTENTE
 // ============================================================
@@ -163,7 +160,7 @@ async function registrarEntradaComestibleExistente(data) {
     .input("cantidad", sql.Int, cantidad)
     .query(`
       UPDATE ProductosComestibles
-      SET cantidad = cantidad + @cantidad
+      SET stock_actual = stock_actual + @cantidad
       WHERE id_comestible = @id_comestible
     `);
 
@@ -190,8 +187,6 @@ async function registrarEntradaComestibleExistente(data) {
 // ============================================================
 // 📋 LISTADOS
 // ============================================================
-
-// Ropa
 async function listarRopa() {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -202,7 +197,6 @@ async function listarRopa() {
   return result.recordset;
 }
 
-// Comestibles
 async function listarComestibles() {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -213,7 +207,6 @@ async function listarComestibles() {
   return result.recordset;
 }
 
-// 📋 Movimientos de Ropa
 async function listarMovimientosRopa() {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -235,7 +228,6 @@ async function listarMovimientosRopa() {
   return result.recordset;
 }
 
-// 📋 Movimientos de Comestibles
 async function listarMovimientosComestible() {
   const pool = await getPool();
   const result = await pool.request().query(`
@@ -256,7 +248,6 @@ async function listarMovimientosComestible() {
   `);
   return result.recordset;
 }
-
 
 // ============================================================
 // 🔍 BÚSQUEDAS
@@ -286,12 +277,13 @@ async function buscarComestible(criterio) {
     `);
   return result.recordset;
 }
+
 // ============================================================
-// ✏️ ACTUALIZAR DATOS DE ROPA (marca, talla, color, ubicación, imagen)
+// ✏️ ACTUALIZAR DATOS DE ROPA
 // ============================================================
 async function actualizarRopa(data) {
   const pool = await getPool();
-  const { id_ropa, marca, talla, color, ubicacion, imagen } = data;
+  const { id_ropa, marca, talla, color, ubicacion, imagen, precio } = data;
 
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
@@ -300,6 +292,7 @@ async function actualizarRopa(data) {
     .input("color", sql.NVarChar(20), color)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
+    .input("precio", sql.Decimal(10, 2), precio)
     .query(`
       UPDATE RopaDeportiva
       SET 
@@ -307,22 +300,21 @@ async function actualizarRopa(data) {
         talla = @talla,
         color = @color,
         ubicacion = @ubicacion,
-        imagen = @imagen
+        imagen = @imagen,
+        precio = @precio
       WHERE id_ropa = @id_ropa
     `);
 
-  return { message: "✅ Datos de ropa actualizados correctamente" };
+  return { message: "✅ Datos de ropa actualizados correctamente (incluido el precio)" };
 }
 
 // ============================================================
-// ✏️ ACTUALIZAR DATOS DE PRODUCTO COMESTIBLE 
-// (marca, sabor, peso, litros, ubicación, imagen)
+// ✏️ ACTUALIZAR DATOS DE PRODUCTO COMESTIBLE
 // ============================================================
 async function actualizarComestible(data) {
   const pool = await getPool();
-  let { id_comestible, marca, sabor, peso, litros, ubicacion, imagen } = data;
+  let { id_comestible, marca, sabor, peso, litros, ubicacion, imagen, precio } = data;
 
-  // Convertir a null si no es un número válido
   peso = !isNaN(parseFloat(peso)) ? parseFloat(peso) : null;
   litros = !isNaN(parseFloat(litros)) ? parseFloat(litros) : null;
 
@@ -334,6 +326,7 @@ async function actualizarComestible(data) {
     .input("litros", sql.Decimal(10, 2), litros)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
+    .input("precio", sql.Decimal(10, 2), precio)
     .query(`
       UPDATE ProductosComestibles
       SET 
@@ -342,11 +335,12 @@ async function actualizarComestible(data) {
         peso = @peso,
         litros = @litros,
         ubicacion = @ubicacion,
-        imagen = @imagen
+        imagen = @imagen,
+        precio = @precio
       WHERE id_comestible = @id_comestible
     `);
 
-  return { message: "✅ Datos de producto comestible actualizados correctamente" };
+  return { message: "✅ Datos de producto comestible actualizados correctamente (incluido el precio)" };
 }
 
 // ============================================================
