@@ -17,6 +17,8 @@ const {
   actualizarRopaController,
   eliminarRopaController,
   eliminarComestibleController,
+  salidaRopaController,
+  salidaComestibleController,
 } = require("../Controllers/inventarioController");
 
 // --- ROPA ---
@@ -39,6 +41,10 @@ router.delete("/comestible/:id", eliminarComestibleController);
 // routes/inventario.js
 router.get("/movimientos/ropa", listarMovimientosRopaController);
 router.get("/movimientos/comestibles", listarMovimientosComestibleController);
+
+// SALIDAS
+router.post("/salida-ropa", salidaRopaController);
+router.post("/salida-comestible", salidaComestibleController);
 
 
 module.exports = router;

@@ -36,12 +36,12 @@ export async function registrarEntradaRopa(data) {
 
 // Registrar salida de ropa
 export async function registrarSalidaRopa(data) {
-  const res = await fetch(`${API_BASE}/ropa/salida`, {
+  const res = await fetch(`${API_BASE}/salida-ropa`, {
     method: "POST",
-    headers: getHeaders(true),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return handleResponse(res);
+  return res.json();
 }
 
 // Listar ropa
@@ -68,12 +68,12 @@ export async function registrarEntradaComestible(data) {
 
 // Registrar salida de comestible
 export async function registrarSalidaComestible(data) {
-  const res = await fetch(`${API_BASE}/comestibles/salida`, {
+  const res = await fetch(`${API_BASE}/salida-comestible`, {
     method: "POST",
-    headers: getHeaders(true),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  return handleResponse(res);
+  return res.json();
 }
 
 // Listar comestibles

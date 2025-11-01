@@ -14,7 +14,7 @@ function generarIdInventario(prefijo) {
 async function registrarEntradaRopa(data) {
   const pool = await getPool();
   const { 
-    id_ropa, nombre, marca, talla, color, precio, cantidad,
+    id_ropa, nombre, marca, talla, color, precio, stock_actual,
     tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
     ubicacion, imagen
   } = data;
@@ -29,19 +29,19 @@ async function registrarEntradaRopa(data) {
     .input("talla", sql.NVarChar(8), talla)
     .input("color", sql.NVarChar(20), color)
     .input("precio", sql.Decimal(10, 2), precio)
-    .input("cantidad", sql.Int, cantidad)
+    .input("stock_actual", sql.Int, stock_actual)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
       INSERT INTO RopaDeportiva (id_ropa, nombre, marca, talla, color, precio, stock_actual, ubicacion, imagen)
-      VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @cantidad, @ubicacion, @imagen)
+      VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @stock_actual, @ubicacion, @imagen)
     `);
 
   // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_ropa)
-    .input("cantidad", sql.Int, cantidad)
+    .input("cantidad", sql.Int, stock_actual)
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
@@ -101,9 +101,9 @@ async function registrarEntradaRopaExistente(data) {
 async function registrarEntradaComestible(data) {
   const pool = await getPool();
   const { 
-    id_comestible, nombre, marca, sabor, peso, litros, precio, cantidad,
+    id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual,
     tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
-    ubicacion, imagen
+    ubicacion, imagen, fecha_vencimiento
   } = data;
 
   const idInventario = generarIdInventario("IC");
@@ -117,20 +117,21 @@ async function registrarEntradaComestible(data) {
     .input("peso", sql.Decimal(10, 2), peso)
     .input("litros", sql.Decimal(10, 2), litros)
     .input("precio", sql.Decimal(10, 2), precio)
-    .input("cantidad", sql.Int, cantidad)
+    .input("stock_actual", sql.Int, stock_actual)
+    .input("fecha_vencimiento", sql.Date, fecha_vencimiento)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
       INSERT INTO ProductosComestibles 
-      (id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual, ubicacion, imagen)
-      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @cantidad, @ubicacion, @imagen)
+      (id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual, fecha_vencimiento, ubicacion, imagen)
+      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @stock_actual, @fecha_vencimiento, @ubicacion, @imagen)
     `);
 
   // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
-    .input("cantidad", sql.Int, cantidad)
+    .input("cantidad", sql.Int, stock_actual)
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
     .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
@@ -257,22 +258,43 @@ async function buscarRopa(criterio) {
   const result = await pool.request()
     .input("criterio", sql.NVarChar(50), `%${criterio}%`)
     .query(`
-      SELECT r.*, i.cantidad
+      SELECT 
+        r.id_ropa, 
+        r.nombre, 
+        r.marca, 
+        r.talla, 
+        r.color, 
+        r.precio, 
+        r.stock_actual, 
+        r.ubicacion, 
+        r.imagen, 
+        r.fecha_creacion
       FROM RopaDeportiva r
-      LEFT JOIN InventarioRopa i ON r.id_ropa = i.id_producto
       WHERE r.id_ropa LIKE @criterio OR r.nombre LIKE @criterio
     `);
   return result.recordset;
 }
 
+// Buscar comestible
 async function buscarComestible(criterio) {
   const pool = await getPool();
   const result = await pool.request()
     .input("criterio", sql.NVarChar(50), `%${criterio}%`)
     .query(`
-      SELECT c.*, i.cantidad
+      SELECT 
+        c.id_comestible, 
+        c.nombre, 
+        c.marca, 
+        c.sabor, 
+        c.peso, 
+        c.litros, 
+        c.precio, 
+        c.stock_actual, 
+        c.fecha_vencimiento, 
+        c.ubicacion, 
+        c.imagen, 
+        c.fecha_creacion
       FROM ProductosComestibles c
-      LEFT JOIN InventarioComestible i ON c.id_comestible = i.id_producto
       WHERE c.id_comestible LIKE @criterio OR c.nombre LIKE @criterio
     `);
   return result.recordset;
@@ -371,12 +393,109 @@ async function eliminarComestible(id_comestible) {
 
   return { message: "🗑️ Producto comestible y sus registros eliminados correctamente" };
 }
+// ============================================================
+// 👕 REGISTRAR SALIDA DE ROPA 
+// ============================================================
+async function registrarSalidaRopa(data) {
+  const pool = await getPool();
+  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const idInventario = generarIdInventario("SR");
+
+  // Verificar que haya suficiente stock
+  const stockResult = await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .query(`SELECT stock_actual FROM RopaDeportiva WHERE id_ropa = @id_ropa`);
+  const stockActual = stockResult.recordset[0]?.stock_actual || 0;
+
+  if (cantidad > stockActual) {
+    throw new Error("❌ No hay suficiente stock para realizar la salida");
+  }
+
+  // Restar stock
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .input("cantidad", sql.Int, cantidad)
+    .query(`
+      UPDATE RopaDeportiva
+      SET stock_actual = stock_actual - @cantidad
+      WHERE id_ropa = @id_ropa
+    `);
+
+  // Registrar movimiento
+  await pool.request()
+    .input("id_inventario", sql.NVarChar(7), idInventario)
+    .input("id_producto", sql.NVarChar(7), id_ropa)
+    .input("cantidad", sql.Int, cantidad)
+    .input("tipo_movimiento", sql.NVarChar(20), "salida")
+    .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
+    .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
+    .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .query(`
+      INSERT INTO InventarioRopa
+      (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+      VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+    `);
+}
+
+// ============================================================
+// 🍪 REGISTRAR SALIDA DE PRODUCTO COMESTIBLE 
+// ============================================================
+async function registrarSalidaComestible(data) {
+  const pool = await getPool();
+  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const idInventario = generarIdInventario("SC");
+
+  // Verificar que haya suficiente stock
+  const stockResult = await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .query(`SELECT stock_actual FROM ProductosComestibles WHERE id_comestible = @id_comestible`);
+  const stockActual = stockResult.recordset[0]?.stock_actual || 0;
+
+  if (cantidad > stockActual) {
+    throw new Error("❌ No hay suficiente stock para realizar la salida");
+  }
+
+  // Restar stock
+  await pool.request()
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .input("cantidad", sql.Int, cantidad)
+    .query(`
+      UPDATE ProductosComestibles
+      SET stock_actual = stock_actual - @cantidad
+      WHERE id_comestible = @id_comestible
+    `);
+
+  // Registrar movimiento
+  await pool.request()
+    .input("id_inventario", sql.NVarChar(7), idInventario)
+    .input("id_producto", sql.NVarChar(7), id_comestible)
+    .input("cantidad", sql.Int, cantidad)
+    .input("tipo_movimiento", sql.NVarChar(20), "salida")
+    .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
+    .input("numero_comprobante", sql.NVarChar(20), numero_comprobante)
+    .input("metodo_pago", sql.NVarChar(20), metodo_pago)
+    .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
+    .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .query(`
+      INSERT INTO InventarioComestible
+      (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+      VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+    `);
+}
 
 module.exports = {
   registrarEntradaRopa,
   registrarEntradaComestible,
   registrarEntradaRopaExistente,
   registrarEntradaComestibleExistente,
+  registrarSalidaRopa,
+  registrarSalidaComestible,
   listarRopa,
   listarComestibles,
   listarMovimientosRopa,

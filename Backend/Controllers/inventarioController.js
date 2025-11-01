@@ -3,6 +3,8 @@ const {
   registrarEntradaComestible,
   registrarEntradaRopaExistente,
   registrarEntradaComestibleExistente,
+  registrarSalidaRopa,
+  registrarSalidaComestible,
   listarRopa,
   listarComestibles,
   listarMovimientosRopa,
@@ -323,12 +325,37 @@ async function eliminarComestibleController(req, res) {
     res.status(500).json({ message: "Error al eliminar comestible" });
   }
 }
+// --- SALIDA DE ROPA ---
+async function salidaRopaController(req, res) {
+  try {
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    const registro = await registrarSalidaRopa(data);
+    res.json({ message: "✅ Salida de ropa registrada correctamente", registro });
+  } catch (err) {
+    console.error("❌ Error al registrar salida de ropa:", err);
+    res.status(500).json({ message: err.message || "Error al registrar salida de ropa" });
+  }
+}
+
+// --- SALIDA DE COMESTIBLE ---
+async function salidaComestibleController(req, res) {
+  try {
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    const registro = await registrarSalidaComestible(data);
+    res.json({ message: "✅ Salida de comestible registrada correctamente", registro });
+  } catch (err) {
+    console.error("❌ Error al registrar salida de comestible:", err);
+    res.status(500).json({ message: err.message || "Error al registrar salida de comestible" });
+  }
+}
 
 module.exports = {
   entradaRopa,
   entradaRopaExistente,
   entradaComestible,
   entradaComestibleExistente,
+  salidaRopaController,
+  salidaComestibleController,
   listarRopaController,
   listarComestiblesController,
   listarMovimientosRopaController,
