@@ -9,6 +9,7 @@ import ActualizarProducto from "../components/ActualizarProducto";
 import ModalConfirmacion from "../components/ModalConfirmacion";
 import ModalExistenteProducto from "../components/ModalExistenteProducto";
 import ModalSalidaProducto from "../components/ModalSalidaProducto";
+import { generarPDFInventario } from "../utils/pdfGenerator";
 
 import {
   obtenerRopa,
@@ -160,7 +161,7 @@ export default function GInventario() {
           className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
         >
           <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span>Registrar Nueva Prenda</span>
+          <span>Registrar entrada</span>
         </Button>
 
         {/* 🩶 Producto existente */}
@@ -169,7 +170,7 @@ export default function GInventario() {
           className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
         >
           <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
-          <span>Entrada Existente</span>
+          <span> Recargar Stock </span>
         </Button>
 
         {/* 🟥 Registrar salida */}
@@ -215,7 +216,7 @@ export default function GInventario() {
           className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
         >
           <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span>Registrar Nuevo producto</span>
+          <span> Registrar entrada</span>
         </Button>
 
         {/* 🩶 Producto existente */}
@@ -224,7 +225,7 @@ export default function GInventario() {
           className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
         >
           <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
-          <span>Entrada Existente</span>
+          <span> Recargar Stock </span>
         </Button>
 
         {/* 🟥 Registrar salida */}
@@ -267,15 +268,39 @@ export default function GInventario() {
 
       <div className="ml-64 p-10">
         {/* ENCABEZADO */}
-        <div className="mb-8 pb-4 border-b border-gray-200">
+       <div className="mb-8 pb-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          {/* Título e ícono */}
           <div className="flex items-center gap-3">
             <Package size={36} className="text-blue-600" />
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Inventario Central: Gestión de Activos Fitness</h1>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+                Inventario Central: Gestión de Activos Fitness
+              </h1>
+              <p className="mt-1 text-gray-500 text-base max-w-3xl font-light leading-snug">
+                Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
+              </p>
+            </div>
           </div>
-          <p className="mt-2 text-gray-500 text-base max-w-4xl font-light leading-snug">
-            Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
-          </p>
+
+          {/* Botón de descarga */}
+          <Button
+            onClick={() =>
+              generarPDFInventario(ropa, comestibles, {
+                filename: "Inventario_Stock_Actual.pdf",
+                meta: {
+                  title: "Inventario Stock Actual",
+                  subtitle: `Generado: ${new Date().toLocaleString("es-PE")}`,
+                },
+              })
+            }
+            className="flex items-center gap-2 bg-gradient-to-r from-[#4b0000] to-black hover:from-[#5c0000] hover:to-[#1a1a1a] text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.05] active:scale-95"
+          >
+            <Package className="w-5 h-5 text-white" />
+            <span>Descargar Inventario en PDF</span>
+          </Button>
         </div>
+      </div>
 
         {/* TABS */}
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">

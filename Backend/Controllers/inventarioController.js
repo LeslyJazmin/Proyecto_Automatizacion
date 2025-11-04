@@ -46,7 +46,12 @@ async function entradaRopaExistente(req, res) {
 async function entradaComestible(req, res) {
   try {
     const imagen = req.file ? `/uploads/${req.file.filename}` : null;
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen };
+    const data = { 
+      ...req.body, 
+      id_usuario: req.user?.id || "ADM2235", 
+      imagen,
+      fecha_vencimiento: req.body.fecha_vencimiento // ✅ agregado
+    };
     const registro = await registrarEntradaComestible(data);
     res.json(registro);
   } catch (err) {
@@ -210,17 +215,27 @@ async function buscarComestibleController(req, res) {
   }
 }
 
-// --- ACTUALIZAR COMESTIBLE (editar peso o litros según corresponda) ---
+// --- ACTUALIZAR COMESTIBLE (editar peso, litros o fecha de vencimiento según corresponda) ---
 async function actualizarComestibleController(req, res) {
   try {
-    const { id_comestible, marca, sabor, peso, litros, ubicacion, precio } = req.body;
+    const { 
+      id_comestible, 
+      marca, 
+      sabor, 
+      peso, 
+      litros, 
+      ubicacion, 
+      precio, 
+      fecha_vencimiento
+    } = req.body;
+
     const imagen = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (!id_comestible) {
       return res.status(400).json({ message: "Falta el id_comestible" });
     }
 
-    // Obtener el producto actual
+    // 🔍 Obtener producto actual
     const productos = await listarComestibles();
     const productoActual = productos.find(p => p.id_comestible === id_comestible);
 
@@ -228,6 +243,7 @@ async function actualizarComestibleController(req, res) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
 
+    // ⚖️ Determinar si el producto usa peso o litros
     let nuevoPeso = productoActual.peso;
     let nuevoLitros = productoActual.litros;
 
@@ -242,6 +258,7 @@ async function actualizarComestibleController(req, res) {
       nuevoLitros = litros ?? null;
     }
 
+    // 🧾 Preparar datos para actualizar
     const data = {
       id_comestible,
       marca: marca ?? productoActual.marca,
@@ -250,7 +267,8 @@ async function actualizarComestibleController(req, res) {
       litros: nuevoLitros,
       ubicacion: ubicacion ?? productoActual.ubicacion,
       imagen: imagen ?? productoActual.imagen,
-      precio: precio ?? productoActual.precio // 👈 añadido
+      precio: precio ?? productoActual.precio,
+      fecha_vencimiento: fecha_vencimiento ?? productoActual.fecha_vencimiento // ✅ añadido
     };
 
     const resultado = await actualizarComestible(data);

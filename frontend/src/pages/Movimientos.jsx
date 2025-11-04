@@ -3,7 +3,9 @@ import Sidebar from "../components/Sidebar";
 import { useLocation } from "react-router-dom";
 import TablaMovimientos from "../components/TablaMovimientos";
 import { obtenerMovimientosRopa, obtenerMovimientosComestibles } from "../api/inventario";
-import { Loader2, Zap, Shirt, Pizza } from "lucide-react"; // Iconos actualizados
+import { generarPDFMovimientos } from "../utils/pdfMovimientos";
+import Button from "../components/ui/Button";
+import { Loader2, Zap, Shirt, Pizza, FileDown } from "lucide-react"; // Iconos actualizados
 
 export default function Movimientos() {
   const location = useLocation();
@@ -47,9 +49,6 @@ export default function Movimientos() {
   // Tarjeta contenedora para el contenido: Fondo blanco, redondeado y flotante
   const cardContainerClass = "bg-white p-8 rounded-2xl shadow-2xl space-y-8 border border-gray-100";
 
-  // Título principal con estilo prominente
-  const mainTitleClass = "flex items-center gap-3 text-3xl font-black text-gray-900 tracking-tighter border-b border-red-700/50 pb-3";
-
   // Subtítulos para cada sección (con color rojo y borde sutil)
   const subTitleClass = "flex items-center gap-2 text-2xl font-extrabold text-red-800 pt-6 mt-6 border-t border-gray-100";
 
@@ -68,11 +67,22 @@ export default function Movimientos() {
       <div className={contentAreaClass}>
         <div className={cardContainerClass}>
             
-            {/* TÍTULO PRINCIPAL */}
-            <h1 className={mainTitleClass}>
-                <Zap size={30} className="text-red-700 fill-red-200/50"/>
+            {/* 🔥 TÍTULO PRINCIPAL + BOTÓN DESCARGAR */}
+            <div className="flex items-center justify-between border-b border-red-700/50 pb-3">
+              <h1 className="flex items-center gap-3 text-3xl font-black text-gray-900 tracking-tighter">
+                <Zap size={30} className="text-red-700 fill-red-200/50" />
                 HISTORIAL DE MOVIMIENTOS
-            </h1>
+              </h1>
+
+              <Button
+                onClick={() => generarPDFMovimientos(movRopa, movComestibles)}
+                className="flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-4 py-2 rounded-xl shadow-md transition-all duration-200"
+              >
+                <FileDown size={18} />
+                Descargar PDF
+              </Button>
+            </div>
+
 
             {loading ? (
                 <div className={loadingClass}>

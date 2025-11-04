@@ -7,20 +7,38 @@ import {
 } from "../api/inventario";
 import { Search, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
-export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
+export default function ModalSeleccionProducto({ tipo, modo, onClose, onSelect }) {
+  // ✅ 'modo' puede ser: "salida", "existente" o "entrada"
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ⚙️ Estilos centralizados y REDUCIDOS
+  // 🎨 Colores dinámicos según modo
+  const colores = {
+    salida: {
+      encabezado: "bg-red-700",
+      boton: "bg-red-600 hover:bg-red-700",
+    },
+    existente: {
+      encabezado: "bg-gray-700",
+      boton: "bg-gray-600 hover:bg-gray-700",
+    },
+    entrada: {
+      encabezado: "bg-emerald-700",
+      boton: "bg-emerald-600 hover:bg-emerald-700",
+    },
+  };
+
+  const colorActual = colores[modo] || colores.entrada;
+
+  // ⚙️ Estilos centralizados
   const inputClass =
     "w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs transition-all duration-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-inner";
-  const headerClass =
-    "sticky top-0 bg-emerald-700 text-white font-semibold uppercase text-xxs tracking-wider"; // Más pequeño
-  const rowClass = "border-b border-gray-100 hover:bg-emerald-50/50 transition duration-150 cursor-pointer";
-  const cellClass = "px-3 py-2 align-middle text-gray-700"; // Menos padding
-  const buttonClass =
-    "inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xxs font-semibold px-2 py-1 rounded-md shadow-sm transition duration-200 active:scale-[0.98]"; // Botón más pequeño
+  const headerClass = `${colorActual.encabezado} text-white font-semibold uppercase text-xxs tracking-wider`;
+  const rowClass =
+    "border-b border-gray-100 hover:bg-emerald-50/50 transition duration-150 cursor-pointer";
+  const cellClass = "px-3 py-2 align-middle text-gray-700";
+  const buttonClass = `${colorActual.boton} text-white text-xxs font-semibold px-2 py-1 rounded-md shadow-sm transition duration-200 active:scale-[0.98] flex items-center justify-center`;
 
   // 🔹 Cargar lista inicial
   useEffect(() => {
@@ -39,7 +57,7 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
     fetchData();
   }, [tipo]);
 
-  // 🔍 Buscar productos (exacto por ID o nombre)
+  // 🔍 Buscar productos
   useEffect(() => {
     const fetchBusqueda = async () => {
       if (busqueda.trim() === "") {
@@ -64,16 +82,15 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
       }
     };
 
-    const timeout = setTimeout(fetchBusqueda, 400); // pequeño delay
+    const timeout = setTimeout(fetchBusqueda, 400);
     return () => clearTimeout(timeout);
   }, [busqueda, tipo]);
 
-  // 🚨 El componente ahora solo devuelve el CONTENIDO, no el modal completo.
   return (
-    <div className="p-3"> {/* Padding reducido */}
-      {/* 🔎 Barra de búsqueda MEJORADA */}
-      <div className="relative mb-4"> {/* Margen reducido */}
-        <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" /> {/* Icono más pequeño */}
+    <div className="p-3">
+      {/* 🔎 Barra de búsqueda */}
+      <div className="relative mb-4">
+        <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
         <input
           type="text"
           placeholder="Buscar producto por ID o Nombre..."
@@ -83,15 +100,15 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
         />
       </div>
 
-      {/* 📦 Contenedor de la Tabla */}
-      <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg shadow-md bg-white"> {/* Altura reducida y sombra más sutil */}
+      {/* 📦 Tabla */}
+      <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg shadow-md bg-white">
         {loading ? (
-          <div className="text-center py-6 text-emerald-600 font-semibold text-sm flex flex-col items-center justify-center"> {/* Padding y texto reducido */}
-            <Loader2 className="w-5 h-5 animate-spin mb-2" /> {/* Icono más pequeño */}
+          <div className="text-center py-6 text-emerald-600 font-semibold text-sm flex flex-col items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin mb-2" />
             Cargando productos...
           </div>
         ) : productos.length > 0 ? (
-          <table className="w-full text-xs table-auto"> {/* Fuente más pequeña en la tabla */}
+          <table className="w-full text-xs table-auto">
             <thead>
               <tr>
                 <th className={`${headerClass} text-left rounded-tl-lg w-1/5 ${cellClass}`}>ID</th>
@@ -105,7 +122,7 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
                 <tr
                   key={tipo === "ropa" ? p.id_ropa : p.id_comestible}
                   className={rowClass}
-                  onClick={() => onSelect(p)} 
+                  onClick={() => onSelect(p)}
                 >
                   <td className={`${cellClass} font-mono font-semibold text-xxs`}>
                     {tipo === "ropa" ? p.id_ropa : p.id_comestible}
@@ -114,10 +131,13 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
                   <td className={`${cellClass} text-xxs`}>{p.marca || "-"}</td>
                   <td className={`${cellClass} text-center`}>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onSelect(p); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(p);
+                      }}
                       className={buttonClass}
                     >
-                      <CheckCircle className="w-2.5 h-2.5 mr-1" /> {/* Icono más pequeño */}
+                      <CheckCircle className="w-2.5 h-2.5 mr-1" />
                       Seleccionar
                     </button>
                   </td>
@@ -129,23 +149,21 @@ export default function ModalSeleccionProducto({ tipo, onClose, onSelect }) {
           <div className="text-center py-6 text-gray-500 text-sm flex flex-col items-center justify-center">
             <AlertCircle className="w-5 h-5 mb-2 text-red-500" />
             <p className="font-medium text-sm">
-              {busqueda.trim() ? 
-                "La búsqueda no arrojó resultados." : 
-                `No hay productos de ${tipo === "ropa" ? "ropa" : "comestibles"} disponibles.`
-              }
+              {busqueda.trim()
+                ? "La búsqueda no arrojó resultados."
+                : `No hay productos de ${tipo === "ropa" ? "ropa" : "comestibles"} disponibles.`}
             </p>
             <p className="text-xxs mt-1">
-              {busqueda.trim() ? 
-              "Intenta con otro nombre o ID." : 
-              "Debes ingresar un nuevo producto si no aparece."
-              }
+              {busqueda.trim()
+                ? "Intenta con otro nombre o ID."
+                : "Debes ingresar un nuevo producto si no aparece."}
             </p>
           </div>
         )}
       </div>
 
-      {/* Botón de cierre más visible fuera de la tabla (usando onClose del padre) */}
-      <div className="mt-4 flex justify-end"> {/* Margen reducido */}
+      {/* Botón de cierre */}
+      <div className="mt-4 flex justify-end">
         <button
           onClick={onClose}
           className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-1.5 text-xs rounded-lg transition duration-200"

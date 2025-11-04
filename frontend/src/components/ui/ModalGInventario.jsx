@@ -42,8 +42,7 @@ export default function ModalGInventario({
   const style = colorConfig[tipo] || colorConfig.default;
 
   return (
-    <div
-      className="fixed inset-0 bg-gray-900/70 backdrop-blur-md flex items-center justify-center z-50 animate-fadeIn p-4"
+   <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div

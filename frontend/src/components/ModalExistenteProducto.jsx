@@ -201,16 +201,17 @@ export default function ModalProductoExistente({
         headerIcon={TrendingUp}
       >
         {!productoSeleccionado ? (
-          <ModalSeleccionProducto
+        <ModalSeleccionProducto
             tipo={tipo}
+            modo="existente"  // ⚫ plomo
             onClose={handleClose}
             onSelect={setProductoSeleccionado}
           />
         ) : (
           <form
-            onSubmit={handleSubmit}
-            className="animate-slideUp bg-gray-50 p-3 -m-3 rounded-b-lg space-y-3"
-          >
+              onSubmit={handleSubmit}
+              className="animate-slideUp bg-white p-3 -m-3 rounded-b-lg space-y-3 shadow-inner"
+            >
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               {/* 🟩 Columna Izquierda */}
               <div className="col-span-3">

@@ -152,16 +152,18 @@ async function registrarEntradaComestible(data) {
 // ============================================================
 async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
-  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, fecha_vencimiento } = data;
   const idInventario = generarIdInventario("IC");
 
   // Actualizar stock
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("cantidad", sql.Int, cantidad)
+    .input("fecha_vencimiento", sql.Date, fecha_vencimiento)
     .query(`
       UPDATE ProductosComestibles
-      SET stock_actual = stock_actual + @cantidad
+      SET stock_actual = stock_actual + @cantidad,
+      fecha_vencimiento = @fecha_vencimiento
       WHERE id_comestible = @id_comestible
     `);
 
@@ -327,7 +329,7 @@ async function actualizarRopa(data) {
       WHERE id_ropa = @id_ropa
     `);
 
-  return { message: "✅ Datos de ropa actualizados correctamente (incluido el precio)" };
+  return { message: " Datos de ropa actualizados correctamente" };
 }
 
 // ============================================================
@@ -335,7 +337,7 @@ async function actualizarRopa(data) {
 // ============================================================
 async function actualizarComestible(data) {
   const pool = await getPool();
-  let { id_comestible, marca, sabor, peso, litros, ubicacion, imagen, precio } = data;
+  let { id_comestible, marca, sabor, peso, litros, ubicacion, imagen, precio,fecha_vencimiento } = data;
 
   peso = !isNaN(parseFloat(peso)) ? parseFloat(peso) : null;
   litros = !isNaN(parseFloat(litros)) ? parseFloat(litros) : null;
@@ -349,6 +351,7 @@ async function actualizarComestible(data) {
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .input("precio", sql.Decimal(10, 2), precio)
+    .input("fecha_vencimiento", sql.Date, fecha_vencimiento) 
     .query(`
       UPDATE ProductosComestibles
       SET 
@@ -358,7 +361,8 @@ async function actualizarComestible(data) {
         litros = @litros,
         ubicacion = @ubicacion,
         imagen = @imagen,
-        precio = @precio
+        precio = @precio,
+        fecha_vencimiento = @fecha_vencimiento
       WHERE id_comestible = @id_comestible
     `);
 

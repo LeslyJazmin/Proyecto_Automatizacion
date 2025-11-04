@@ -59,7 +59,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
     const newErrors = {};
     const requiredFields = tipo === "ropa"
       ? ["nombre","marca","talla","color","precio","stock_actual","tipo_comprobante","numero_comprobante","metodo_pago","monto_pagado"]
-      : ["nombre","marca","sabor","precio","stock_actual","unidad_medida","tipo_comprobante","numero_comprobante","metodo_pago","monto_pagado"];
+      : ["nombre","marca","sabor","precio","stock_actual","unidad_medida","tipo_comprobante","numero_comprobante","metodo_pago","monto_pagado","fecha_vencimiento"];
 
     requiredFields.forEach(field => {
       if ((field === "stock_actual" && (!cantidadRegistrar || cantidadRegistrar <= 0)) ||
@@ -74,6 +74,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
       if (formData.unidad_medida && formData.unidad_medida === "litro" && (!formData.litros || formData.litros <= 0))
         newErrors.litros = "Debe indicar el volumen del producto (L)";
       if (!formData.unidad_medida) newErrors.unidad_medida = "Este campo es obligatorio";
+      if (!formData.fecha_vencimiento) newErrors.fecha_vencimiento = "Debe indicar la fecha de vencimiento";
     }
 
     if (nombreExiste) newErrors.nombre = "Este producto ya existe en el sistema";
@@ -94,46 +95,45 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
     </div>
   );
 
-const renderInput = (name, label, type="text", optional=false, valueOverride=null, disabled=false, customStyle="") => {
-  const currentValue = name === "stock_actual" ? cantidadRegistrar : (valueOverride ?? formData[name] ?? "");
-  const currentOnChange = name === "stock_actual" 
-    ? (e) => setCantidadRegistrar(Number(e.target.value)) 
-    : handleChange;
-  
-  const isImportantNumber = (name === "stock_actual" || name === "monto_pagado" || name === "precio");
+  const renderInput = (name, label, type="text", optional=false, valueOverride=null, disabled=false, customStyle="") => {
+    const currentValue = name === "stock_actual" ? cantidadRegistrar : (valueOverride ?? formData[name] ?? "");
+    const currentOnChange = name === "stock_actual" 
+      ? (e) => setCantidadRegistrar(Number(e.target.value)) 
+      : handleChange;
+    
+    const isImportantNumber = (name === "stock_actual" || name === "monto_pagado" || name === "precio");
 
-  return (
-    <div className="mb-2 w-full">
-      <FieldLabel text={label} required={!optional && !disabled} />
-      <input
-        name={name}
-        type={type}
-        step={name === "stock_actual" ? "1" : type === "number" ? "any" : undefined}
-        min={isImportantNumber ? 0 : undefined}
-        inputMode={name === "stock_actual" ? "numeric" : undefined}
-        pattern={name === "stock_actual" ? "[0-9]*" : undefined}
-        onKeyDown={(e) => {
-          if (name === "stock_actual" && (e.key === '.' || e.key === '-' || e.key === 'e')) e.preventDefault();
-          if (isImportantNumber && e.key === '-') e.preventDefault();
-        }}
-        value={currentValue}
-        onChange={currentOnChange}
-        disabled={disabled}
-        className={`
-          w-full px-2.5 py-1.5 border rounded-md text-sm placeholder-gray-400 
-          shadow-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 
-          transition duration-150 ease-in-out
-          ${customStyle} 
-          ${isImportantNumber ? 'font-bold text-base text-emerald-800' : 'text-sm'} 
-          ${errors[name] ? "border-red-500 ring-red-500" : "border-gray-300"}
-          ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
-        `}
-      />
-      {errors[name] && <div className="text-red-600 text-xs mt-0.5 font-medium">{errors[name]}</div>}
-    </div>
-  );
-};
-
+    return (
+      <div className="mb-2 w-full">
+        <FieldLabel text={label} required={!optional && !disabled} />
+        <input
+          name={name}
+          type={type}
+          step={name === "stock_actual" ? "1" : type === "number" ? "any" : undefined}
+          min={isImportantNumber ? 0 : undefined}
+          inputMode={name === "stock_actual" ? "numeric" : undefined}
+          pattern={name === "stock_actual" ? "[0-9]*" : undefined}
+          onKeyDown={(e) => {
+            if (name === "stock_actual" && (e.key === '.' || e.key === '-' || e.key === 'e')) e.preventDefault();
+            if (isImportantNumber && e.key === '-') e.preventDefault();
+          }}
+          value={currentValue}
+          onChange={currentOnChange}
+          disabled={disabled}
+          className={`
+            w-full px-2.5 py-1.5 border rounded-md text-sm placeholder-gray-400 
+            shadow-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 
+            transition duration-150 ease-in-out
+            ${customStyle} 
+            ${isImportantNumber ? 'font-bold text-base text-emerald-800' : 'text-sm'} 
+            ${errors[name] ? "border-red-500 ring-red-500" : "border-gray-300"}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+          `}
+        />
+        {errors[name] && <div className="text-red-600 text-xs mt-0.5 font-medium">{errors[name]}</div>}
+      </div>
+    );
+  };
 
   const renderSelect = (name, label, options) => (
     <div className="mb-2 w-full"> 
@@ -160,15 +160,13 @@ const renderInput = (name, label, type="text", optional=false, valueOverride=nul
   return (
     <ModalGInventario
       isOpen={isOpen}
-      onClose={handleClose} title={title}
-      tipo="entrada" // 🟢 header verde
+      onClose={handleClose}
+      title={title}
+      tipo="entrada"
       headerIcon={TrendingUp}
     >
-
       <form onSubmit={handleSubmit} className="bg-gray-100 p-4 rounded-lg shadow-inner space-y-4"> 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4"> 
-
-          {/* Columna 1: Identificación y Características */}
           <div className="lg:col-span-2 space-y-4"> 
             <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200"> 
               <h3 className="flex items-center gap-2 font-extrabold text-base text-emerald-700 mb-3 border-b border-emerald-100 pb-2"> 
@@ -204,12 +202,19 @@ const renderInput = (name, label, type="text", optional=false, valueOverride=nul
                   <>
                     {renderInput("sabor", "Sabor/Tipo", "text", false, null, false, "bg-blue-50")}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
-                      {renderSelect("unidad_medida", "Unidad de Medida", [{ value: "peso", label: "Peso (Kg)" }, { value: "litro", label: "Litro (L)" }])}
+                      {renderSelect("unidad_medida", "Unidad de Medida", [
+                        { value: "peso", label: "Peso (Kg)" },
+                        { value: "litro", label: "Litro (L)" },
+                      ])}
                       {formData.unidad_medida && (
                         formData.unidad_medida === "peso"
                           ? renderInput("peso", "Peso (Kg)", "number", false, null, false, "bg-blue-50")
                           : renderInput("litros", "Volumen (L)", "number", false, null, false, "bg-blue-50")
                       )}
+                    </div>
+                    {/* ✅ Nuevo campo de fecha de vencimiento */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                      {renderInput("fecha_vencimiento", "Fecha de Vencimiento", "date", false, null, false, "bg-yellow-50")}
                     </div>
                   </>
                 )}
@@ -242,7 +247,7 @@ const renderInput = (name, label, type="text", optional=false, valueOverride=nul
             </div>
           </div>
 
-          {/* Columna 2: Stock y Pago */}
+          {/* Stock y pago */}
           <div className="lg:col-span-1 space-y-4"> 
             <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 h-fit"> 
               <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
@@ -256,9 +261,15 @@ const renderInput = (name, label, type="text", optional=false, valueOverride=nul
               <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
                 <DollarSign size={18} className="text-emerald-500" /> Detalles de la Transacción
               </h3>
-              {renderSelect("tipo_comprobante", "Tipo Comprobante", [{ value: "Boleta", label: "Boleta" }, { value: "Factura", label: "Factura" }])}
+              {renderSelect("tipo_comprobante", "Tipo Comprobante", [
+                { value: "Boleta", label: "Boleta" },
+                { value: "Factura", label: "Factura" },
+              ])}
               {renderInput("numero_comprobante", "N° Comprobante")}
-              {renderSelect("metodo_pago", "Método de Pago", [{ value: "Efectivo", label: "Efectivo" }, { value: "Yape", label: "Yape" }])}
+              {renderSelect("metodo_pago", "Método de Pago", [
+                { value: "Efectivo", label: "Efectivo" },
+                { value: "Yape", label: "Yape" },
+              ])}
             </div>
           </div>
         </div>

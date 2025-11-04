@@ -67,6 +67,8 @@ export default function TablaInventario({
                   <th className={thClass}>Sabor</th>
                   <th className={thClass}>Peso</th>
                   <th className={thClass}>Litros</th>
+                  {/* ✅ Nueva columna de fecha de vencimiento */}
+                  <th className={thClass}>Vencimiento</th>
                 </>
               )}
               <th className={thClass}>Precio</th>
@@ -85,9 +87,24 @@ export default function TablaInventario({
                   ? "text-red-700 font-bold"
                   : "text-green-700 font-bold";
 
+              // ✅ Dar formato a la fecha de vencimiento
+              const fechaVenc =
+                p.fecha_vencimiento &&
+                new Date(p.fecha_vencimiento).toLocaleDateString("es-PE", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                });
+
               return (
                 <tr key={id} className={trClass}>
-                  <td className={tdClass + " font-mono text-gray-900 font-semibold"}>{id}</td>
+                  <td
+                    className={
+                      tdClass + " font-mono text-gray-900 font-semibold"
+                    }
+                  >
+                    {id}
+                  </td>
                   <td className={tdClass}>{p.nombre}</td>
                   <td className={tdClass}>{p.marca || "N/A"}</td>
                   <td className={`${tdClass} text-center ${stockColor}`}>
@@ -104,6 +121,10 @@ export default function TablaInventario({
                       <td className={tdClass}>{p.sabor || "N/A"}</td>
                       <td className={tdClass}>{p.peso || "-"}</td>
                       <td className={tdClass}>{p.litros || "-"}</td>
+                      {/* ✅ Mostrar fecha de vencimiento */}
+                      <td className={tdClass + " text-center"}>
+                        {fechaVenc || "—"}
+                      </td>
                     </>
                   )}
 
@@ -111,7 +132,7 @@ export default function TablaInventario({
                     S/ {parseFloat(p.precio).toFixed(2) || "0.00"}
                   </td>
                   <td className={tdClass}>{p.ubicacion || "N/A"}</td>
-                  
+
                   {/* --- Ícono de imagen centrado y resaltado --- */}
                   <td className={`${tdClass} text-center font-bold`}>
                     <div className="flex justify-center items-center">
@@ -131,7 +152,11 @@ export default function TablaInventario({
 
                   <td className={tdClass + " text-center"}>
                     <div className="flex justify-center gap-1.5">
-                      <button onClick={() => onEditar(p)} className={editBtn} title="Editar">
+                      <button
+                        onClick={() => onEditar(p)}
+                        className={editBtn}
+                        title="Editar"
+                      >
                         <Wand2 size={14} />
                       </button>
                       <button
