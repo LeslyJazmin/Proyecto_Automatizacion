@@ -100,7 +100,7 @@ export default function ModalSalidaProducto({
       numero_comprobante: formData.numero_comprobante,
       metodo_pago: formData.metodo_pago,
       monto_pagado: Number(formData.monto_pagado) || 0,
-      id_usuario: localStorage.getItem("id_usuario") || "US0001",
+      id_usuario: sessionStorage.getItem("id_usuario") || "US0001",
       ...(tipo === "ropa"
         ? { id_ropa: productoSeleccionado.id_ropa }
         : { id_comestible: productoSeleccionado.id_comestible }),

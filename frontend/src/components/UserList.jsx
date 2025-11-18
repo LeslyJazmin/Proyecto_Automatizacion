@@ -1,17 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import Modal from "./ui/Modal";
+import { listUsers, updateUser, deleteUser } from "../api/users";
 
-export default function UserList({ users, loading, error, currentUser, onEdit, onDelete }) {
+export default function UserList({ currentUser }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editUser, setEditUser] = useState(null);
   const [updating, setUpdating] = useState(false);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await listUsers();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleEdit = async (updatedUser) => {
+    try {
+      await updateUser(updatedUser.id_usuario, updatedUser);
+      const refreshed = await listUsers();
+      setUsers(refreshed);
+    } catch (err) {
+      alert("Error al actualizar: " + err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
+    try {
+      await deleteUser(id);
+      const refreshed = await listUsers();
+      setUsers(refreshed);
+    } catch (err) {
+      alert("Error al eliminar: " + err.message);
+    }
+  };
+
   if (loading)
     return <p className="text-gray-700 text-center py-8">Cargando usuarios...</p>;
-
   if (error)
     return <p className="text-red-600 text-center py-8">Error: {error}</p>;
-
   if (!users || users.length === 0)
     return <p className="text-gray-700 text-center py-8">No hay usuarios registrados.</p>;
 
@@ -21,39 +58,45 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
         <div
           key={user.id_usuario}
           className={`bg-white border border-gray-200 rounded-xl p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${
-            currentUser?.id_usuario === user.id_usuario
-              ? "ring-2 ring-red-600"
-              : ""
+            currentUser?.id_usuario === user.id_usuario ? "ring-2 ring-red-600" : ""
           }`}
         >
-          {/* Cabecera del usuario */}
+          {/* Cabecera */}
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {user.username}
-            </h3>
-            <span
-              className={`text-xs font-bold px-3 py-1 rounded-full shadow-sm ${
-                user.rol === "admin"
-                  ? "bg-gradient-to-r from-red-600 to-red-800 text-white"
-                  : "bg-gray-800 text-white"
-              }`}
-            >
-              {user.rol === "admin" ? "Administrador" : "Trabajador"}
-            </span>
+            <h3 className="text-lg font-semibold text-gray-900">{user.username}</h3>
+            <div className="flex items-center gap-2">
+              {/* Rol */}
+              <span
+                className={`text-xs font-bold px-3 py-1 rounded-full shadow-sm ${
+                  user.rol === "admin"
+                    ? "bg-gradient-to-r from-red-600 to-red-800 text-white"
+                    : "bg-gray-800 text-white"
+                }`}
+              >
+                {user.rol === "admin" ? "Administrador" : "Trabajador"}
+              </span>
+
+              {/* Estado activo */}
+              <span
+                className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm ${
+                  user.activo ? "bg-green-500 text-white" : "bg-gray-400 text-white"
+                }`}
+              >
+                {user.activo ? "Activo" : "Inactivo"}
+              </span>
+            </div>
           </div>
 
-          {/* Datos del usuario */}
+          {/* Datos */}
           <div className="space-y-1 text-sm text-gray-700">
             <p>
-              <span className="font-semibold text-gray-800">Email:</span>{" "}
-              {user.email}
+              <span className="font-semibold">Email:</span> {user.email}
             </p>
             <p>
-              <span className="font-semibold text-gray-800">Celular:</span>{" "}
-              {user.celular || "—"}
+              <span className="font-semibold">Celular:</span> {user.celular || "—"}
             </p>
             <p>
-              <span className="font-semibold text-gray-800">Contraseña:</span>{" "}
+              <span className="font-semibold">Contraseña:</span>{" "}
               <span className="select-none text-gray-800">••••••••</span>
             </p>
           </div>
@@ -68,9 +111,10 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
               <Pencil className="w-4 h-4" />
             </button>
 
-            {currentUser?.id_usuario !== user.id_usuario && (
+            {/* Solo mostrar eliminar si no es admin y no es el usuario actual */}
+            {currentUser?.id_usuario !== user.id_usuario && user.rol !== "admin" && (
               <button
-                onClick={() => onDelete(user.id_usuario)}
+                onClick={() => handleDelete(user.id_usuario)}
                 className="p-2 rounded-full bg-gray-800 hover:bg-gray-900 text-white transition"
                 title="Eliminar usuario"
               >
@@ -89,7 +133,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
               e.preventDefault();
               setUpdating(true);
               try {
-                await onEdit(editUser);
+                await handleEdit(editUser);
                 setEditUser(null);
               } finally {
                 setUpdating(false);
@@ -97,6 +141,7 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
             }}
             className="space-y-4"
           >
+            {/* Campos de info */}
             {["username", "email", "celular"].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-gray-700 capitalize">
@@ -112,6 +157,28 @@ export default function UserList({ users, loading, error, currentUser, onEdit, o
                 />
               </div>
             ))}
+
+            {/* 🔹 Switch de activo SOLO para Admin y NO admin */}
+            {currentUser?.rol === "admin" && editUser.rol !== "admin" && (
+              <div className="flex items-center mt-2">
+                <label htmlFor="activo" className="mr-3 text-sm font-medium text-gray-700">
+                  Usuario activo
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setEditUser({ ...editUser, activo: !editUser.activo })}
+                  className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+                    editUser.activo ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                      editUser.activo ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
 
             <button
               type="submit"

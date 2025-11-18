@@ -11,6 +11,7 @@ export default function Login({ setUser, setToken }) {
   const { email, setEmail, password, setPassword, loading, error, handleSubmit } =
     useLogin(setUser, setToken);
 
+  // Cambio de fondo
   useEffect(() => {
     const interval = setInterval(() => {
       setBgIndex((prev) => (prev + 1) % images.length);
@@ -28,23 +29,19 @@ export default function Login({ setUser, setToken }) {
         transition: "background-image 1s ease-in-out",
       }}
     >
-      {/* Fondo oscuro sobre la imagen */}
+      {/* Fondo oscuro */}
       <div className="absolute inset-0 bg-black/70"></div>
 
-      {/* Card principal */}
+      {/* Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
         className="relative w-full max-w-md mx-4 p-8 rounded-3xl bg-white shadow-2xl flex flex-col items-center"
       >
-        {/* Imagen superior en lugar del ícono */}
+        {/* Logo */}
         <div className="absolute -top-16 w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
-          <img
-            src="/images/GT1.png"
-            alt="Logo"
-            className="w-full h-full object-cover"
-          />
+          <img src="/images/GT1.png" alt="Logo" className="w-full h-full object-cover" />
         </div>
 
         <h2 className="text-2xl font-bold text-gray-800 mt-16 mb-6">Iniciar Sesión</h2>
@@ -55,8 +52,8 @@ export default function Login({ setUser, setToken }) {
           </div>
         )}
 
+        {/* Formulario */}
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
-          {/* Email */}
           <Input
             type="email"
             value={email}
@@ -66,7 +63,6 @@ export default function Login({ setUser, setToken }) {
             className="p-3 rounded-full bg-gray-100 border border-gray-300 focus:border-red-700 focus:ring-2 focus:ring-red-400 text-gray-700"
           />
 
-          {/* Password */}
           <Input
             type="password"
             value={password}
@@ -76,7 +72,6 @@ export default function Login({ setUser, setToken }) {
             className="p-3 rounded-full bg-gray-100 border border-gray-300 focus:border-red-700 focus:ring-2 focus:ring-red-400 text-gray-700"
           />
 
-          {/* Botón */}
           <Button
             type="submit"
             disabled={loading}

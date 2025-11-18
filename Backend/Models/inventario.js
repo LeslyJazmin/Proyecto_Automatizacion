@@ -96,19 +96,19 @@ async function registrarEntradaRopaExistente(data) {
 }
 
 // ============================================================
-// 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO
+// 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO (con LOTE)
 // ============================================================
 async function registrarEntradaComestible(data) {
   const pool = await getPool();
   const { 
     id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual,
     tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
-    ubicacion, imagen, fecha_vencimiento
+    ubicacion, imagen, fecha_vencimiento, lote // ✅ añadimos lote aquí
   } = data;
 
   const idInventario = generarIdInventario("IC");
 
-  // Registrar producto nuevo
+  // ✅ Registrar producto nuevo con campo lote
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -119,15 +119,16 @@ async function registrarEntradaComestible(data) {
     .input("precio", sql.Decimal(10, 2), precio)
     .input("stock_actual", sql.Int, stock_actual)
     .input("fecha_vencimiento", sql.Date, fecha_vencimiento)
+    .input("lote", sql.NVarChar(30), lote) // ✅ nuevo input
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
       INSERT INTO ProductosComestibles 
-      (id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual, fecha_vencimiento, ubicacion, imagen)
-      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @stock_actual, @fecha_vencimiento, @ubicacion, @imagen)
+      (id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual, fecha_vencimiento, lote, ubicacion, imagen)
+      VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @stock_actual, @fecha_vencimiento, @lote, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento
+  // Registrar movimiento (sin lote, solo pertenece al producto)
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
@@ -203,7 +204,20 @@ async function listarRopa() {
 async function listarComestibles() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT *
+    SELECT 
+      id_comestible,
+      nombre,
+      marca,
+      sabor,
+      peso,
+      litros,
+      precio,
+      stock_actual,
+      fecha_vencimiento,
+      lote, -- ✅ agregamos explícitamente
+      fecha_creacion,
+      ubicacion,
+      imagen
     FROM ProductosComestibles
     ORDER BY nombre
   `);

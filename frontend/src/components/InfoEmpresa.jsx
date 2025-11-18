@@ -12,18 +12,24 @@ import {
 } from "lucide-react";
 import Modal from "./ui/Modal";
 
-function InfoRow({ label, value, icon, onEdit }) {
+function InfoRow({ label, value, icon, onEdit, readOnly }) {
   return (
     <div className="flex justify-between items-center bg-white p-2 rounded-md border border-neutral-200 hover:bg-red-50/40 transition-all duration-200">
       <div className="flex items-center space-x-2">
+
+        {/* 🔵 Ahora los iconos SIEMPRE se muestran */}
         <div className="flex items-center justify-center w-6 h-6 rounded-md bg-red-100 text-red-700">
           {icon}
         </div>
-        {label && <span className="font-medium text-gray-700 text-sm">{label}:</span>}
+
+        {label && (
+          <span className="font-medium text-gray-700 text-sm">{label}:</span>
+        )}
         <span className="text-gray-900 text-sm">{value}</span>
       </div>
 
-      {onEdit && (
+      {/* 🔴 SOLO oculta el lápiz si readOnly === true */}
+      {!readOnly && onEdit && (
         <button
           onClick={onEdit}
           className="p-1 bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
@@ -36,7 +42,16 @@ function InfoRow({ label, value, icon, onEdit }) {
   );
 }
 
-function EditFieldModal({ isOpen, onClose, title, value, onChange, onSave, saving, charLimit }) {
+function EditFieldModal({
+  isOpen,
+  onClose,
+  title,
+  value,
+  onChange,
+  onSave,
+  saving,
+  charLimit,
+}) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} disabled={saving}>
       <input
@@ -67,7 +82,7 @@ function EditFieldModal({ isOpen, onClose, title, value, onChange, onSave, savin
   );
 }
 
-export default function InfoEmpresa() {
+export default function InfoEmpresa({ readOnly = false }) {
   const [empresa, setEmpresa] = useState(null);
   const [error, setError] = useState(null);
   const [editingModal, setEditingModal] = useState({
@@ -92,6 +107,8 @@ export default function InfoEmpresa() {
   }, []);
 
   function handleEdit(field) {
+    if (readOnly) return;
+
     const limits = { direccion: 30, telefono: 9, email: 50 };
     setEditingModal({
       isOpen: true,
@@ -102,6 +119,8 @@ export default function InfoEmpresa() {
   }
 
   async function handleSave() {
+    if (readOnly) return;
+
     try {
       setSaving(true);
       const updated = await updateInfoEmpresa({
@@ -127,18 +146,19 @@ export default function InfoEmpresa() {
       </div>
     );
 
-  if (!empresa) return <div className="text-gray-600 text-sm">Cargando información...</div>;
+  if (!empresa)
+    return <div className="text-gray-600 text-sm">Cargando información...</div>;
 
   return (
     <div className="relative rounded-xl shadow-md border border-neutral-200 overflow-hidden transition-all">
-      {successMessage && (
+      {successMessage && !readOnly && (
         <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-down">
           <CheckCircle className="w-4 h-4" />
           <span className="text-sm">{successMessage}</span>
         </div>
       )}
 
-      {/* Cabecera con degradado */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-red-900 via-black to-red-950 border-b border-red-700 shadow-[0_0_15px_#ff1a1a44] px-4 py-3 flex items-center gap-2">
         <Building2 className="w-5 h-5 text-white/90" />
         <h2 className="text-white text-lg font-semibold tracking-wide">
@@ -148,38 +168,58 @@ export default function InfoEmpresa() {
 
       {/* Contenido */}
       <div className="bg-white p-4 space-y-2">
-        <InfoRow icon={<Building2 className="w-4 h-4" />} label="Nombre" value={empresa.nombre} />
-        <InfoRow icon={<Hash className="w-4 h-4" />} label="RUC" value={empresa.ruc} />
+        <InfoRow
+          icon={<Building2 className="w-4 h-4" />}
+          label="Nombre"
+          value={empresa.nombre}
+          readOnly={readOnly}
+        />
+        <InfoRow
+          icon={<Hash className="w-4 h-4" />}
+          label="RUC"
+          value={empresa.ruc}
+          readOnly={readOnly}
+        />
         <InfoRow
           icon={<MapPin className="w-4 h-4" />}
           label="Dirección"
           value={empresa.direccion}
           onEdit={() => handleEdit("direccion")}
+          readOnly={readOnly}
         />
         <InfoRow
           icon={<Phone className="w-4 h-4" />}
           label="Teléfono"
           value={empresa.telefono}
           onEdit={() => handleEdit("telefono")}
+          readOnly={readOnly}
         />
         <InfoRow
           icon={<Mail className="w-4 h-4" />}
           label="Email"
           value={empresa.email}
           onEdit={() => handleEdit("email")}
+          readOnly={readOnly}
         />
       </div>
 
-      <EditFieldModal
-        isOpen={editingModal.isOpen}
-        onClose={() => setEditingModal({ ...editingModal, isOpen: false })}
-        title={`✏ Editar ${editingModal.field}`}
-        value={editingModal.value}
-        onChange={(e) => setEditingModal({ ...editingModal, value: e.target.value })}
-        onSave={handleSave}
-        saving={saving}
-        charLimit={editingModal.charLimit}
-      />
+      {/* Modal solo si pueden editar */}
+      {!readOnly && (
+        <EditFieldModal
+          isOpen={editingModal.isOpen}
+          onClose={() =>
+            setEditingModal({ ...editingModal, isOpen: false })
+          }
+          title={`✏ Editar ${editingModal.field}`}
+          value={editingModal.value}
+          onChange={(e) =>
+            setEditingModal({ ...editingModal, value: e.target.value })
+          }
+          onSave={handleSave}
+          saving={saving}
+          charLimit={editingModal.charLimit}
+        />
+      )}
     </div>
   );
 }

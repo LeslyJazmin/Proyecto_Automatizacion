@@ -2,7 +2,7 @@
 const API_URL = "http://localhost:5000/api/empresa";
 
 function getToken() {
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 }
 
 function getHeaders() {

@@ -15,7 +15,6 @@ export default function AdminDashboard() {
     users,
     loading,
     error,
-    currentUser,
     modalOpen,
     setModalOpen,
     newUser,
@@ -29,12 +28,19 @@ export default function AdminDashboard() {
   } = useUsers();
 
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const [deleteUserModal, setDeleteUserModal] = useState({ open: false, userId: null });
+  const [deleteUserModal, setDeleteUserModal] = useState({
+    open: false,
+    userId: null,
+  });
   const [tokenExpiring, setTokenExpiring] = useState(false);
 
+  // Nombre y rol del usuario actual
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const [currentUserRole, setCurrentUserRole] = useState("");
+
+  // Logout
   function handleLogoutConfirm() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
     window.location.href = "/login";
   }
 
@@ -48,12 +54,18 @@ export default function AdminDashboard() {
     setDeleteUserModal({ open: false, userId: null });
   }
 
+  // Leer token
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) return;
 
     try {
       const decoded = jwtDecode(token);
+
+      setNombreUsuario(decoded.username || decoded.name || "Administrador");
+      setCurrentUserRole(decoded.rol || "");
+
+      // Expiración
       const currentTime = Math.floor(Date.now() / 1000);
       const timeLeft = decoded.exp - currentTime;
 
@@ -61,6 +73,7 @@ export default function AdminDashboard() {
 
       const timer = setTimeout(() => setTokenExpiring(true), (timeLeft - 180) * 1000);
       return () => clearTimeout(timer);
+
     } catch (err) {
       console.error("Token inválido:", err);
       handleLogoutConfirm();
@@ -74,38 +87,42 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
-      {/* Contenido principal más a la izquierda */}
+      {/* Contenido principal */}
       <main className="ml-64 px-5 py-6 w-full space-y-6 transition-all duration-300">
-        {/* Encabezado principal */}
+
+        {/* Encabezado */}
         <div className="bg-white rounded-2xl shadow-lg p-5 border border-neutral-200 hover:shadow-2xl transition-all duration-500">
-          <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-red-800 via-red-600 to-amber-500 tracking-tight">
-            👋 Bienvenido {currentUser.username || "Administrador"}
+          <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
+            👋 Bienvenido {nombreUsuario}
+
+            {/* Badge bonito del rol */}
+            <span
+              className="px-3 py-1 rounded-full text-sm font-semibold 
+                         bg-red-100 text-red-700 border border-red-300 shadow-sm"
+            >
+              {currentUserRole === "admin" ? "Administrador" : "Trabajador"}
+            </span>
           </h1>
+
           <p className="text-gray-500 mt-2 text-base">
             Administra tu personal y la información de tu empresa fácilmente.
           </p>
         </div>
 
-        {/* Info + Imagen */}
+        {/* Info empresa + imagen */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch">
           <div className="flex-1">
             <InfoEmpresa />
           </div>
-
           <div className="flex-1 relative rounded-2xl overflow-hidden shadow-lg hover:scale-[1.01] transition-transform duration-200 max-h-[300px]">
-            <img
-              src="/images/info.jpeg"
-              alt="Gimnasio moderno"
-              className="w-full h-full object-cover"
-            />
+            <img src="/images/info.jpeg" alt="Gimnasio moderno" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
           </div>
         </div>
 
-        {/* Personal */}
+        {/* Tabla users */}
         <div className="rounded-2xl shadow-lg border border-neutral-200 overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-red-900 via-black to-red-950 
+          <div className="bg-gradient-to-r from-red-900 via-black to-red-950 
                        border-b border-red-700 
                        p-4 flex justify-between items-center"
           >
@@ -113,7 +130,8 @@ export default function AdminDashboard() {
               Personal a Cargo
             </h2>
 
-            {currentUser.rol === "admin" && (
+            {/* Solo admin */}
+            {currentUserRole === "admin" && (
               <button
                 onClick={() => setModalOpen(true)}
                 className="flex items-center space-x-2 px-3 py-2 rounded-lg 
@@ -133,7 +151,7 @@ export default function AdminDashboard() {
               users={users}
               loading={loading}
               error={error}
-              currentUser={currentUser}
+              currentUser={{ username: nombreUsuario, rol: currentUserRole }}
               onEdit={updateUserData}
               onDelete={(id) => setDeleteUserModal({ open: true, userId: id })}
             />
@@ -152,72 +170,34 @@ export default function AdminDashboard() {
       />
 
       <Modal isOpen={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} title="¿Cerrar sesión?">
-        <p className="text-gray-700 text-center mb-6">
-          ¿Estás seguro que deseas salir de tu cuenta?
-        </p>
+        <p className="text-gray-700 text-center mb-6">¿Estás seguro que deseas salir?</p>
         <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => setLogoutModalOpen(false)}
-            className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 transition"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleLogoutConfirm}
-            className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
-          >
-            Cerrar Sesión
-          </button>
+          <button onClick={() => setLogoutModalOpen(false)} className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800">Cancelar</button>
+          <button onClick={handleLogoutConfirm} className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg">Cerrar Sesión</button>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={deleteUserModal.open}
-        onClose={() => setDeleteUserModal({ open: false, userId: null })}
-        title="¿Eliminar usuario?"
-      >
-        <p className="text-gray-700 text-center mb-6">
-          ¿Seguro que deseas eliminar este usuario?
-        </p>
+      <Modal isOpen={deleteUserModal.open} onClose={() => setDeleteUserModal({ open: false, userId: null })} title="¿Eliminar usuario?">
+        <p className="text-gray-700 text-center mb-6">¿Seguro que deseas eliminar este usuario?</p>
         <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => setDeleteUserModal({ open: false, userId: null })}
-            className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 transition"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleDeleteUserConfirm}
-            className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
-          >
-            Eliminar
-          </button>
+          <button onClick={() => setDeleteUserModal({ open: false, userId: null })} className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancelar</button>
+          <button onClick={handleDeleteUserConfirm} className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg">Eliminar</button>
         </div>
       </Modal>
 
       <Modal isOpen={showEmailUpdatedModal} onClose={handleEmailUpdatedConfirm} title="Correo actualizado">
-        <p className="text-gray-700 text-center mb-6">
-          Tu correo fue actualizado. Debes volver a iniciar sesión.
-        </p>
+        <p className="text-gray-700 text-center mb-6">Tu correo fue actualizado. Debes volver a iniciar sesión.</p>
         <div className="flex justify-center">
-          <button
-            onClick={handleEmailUpdatedConfirm}
-            className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
-          >
+          <button onClick={handleEmailUpdatedConfirm} className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg">
             Volver a iniciar sesión
           </button>
         </div>
       </Modal>
 
       <Modal isOpen={tokenExpiring} onClose={handleLogoutConfirm} title="Sesión a punto de expirar">
-        <p className="text-gray-700 text-center mb-4">
-          Tu sesión está a punto de expirar. Por seguridad, debes iniciar sesión nuevamente.
-        </p>
+        <p className="text-gray-700 text-center mb-4">Tu sesión está a punto de expirar. Inicia nuevamente.</p>
         <div className="flex justify-center">
-          <button
-            onClick={handleLogoutConfirm}
-            className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-lg"
-          >
+          <button onClick={handleLogoutConfirm} className="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg">
             Iniciar Sesión Nuevamente
           </button>
         </div>

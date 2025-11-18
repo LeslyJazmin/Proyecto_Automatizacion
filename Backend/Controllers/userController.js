@@ -116,10 +116,15 @@ async function getUser(req, res) {
 // Actualizar usuario
 async function updateUserData(req, res) {
   const { id } = req.params;
-  const { username, celular, email } = req.body; // 👈 solo los que se pueden editar
+  const { username, celular, email, activo } = req.body;
 
   try {
-    await updateUser(id, { username, celular, email });
+    // 🔹 Solo Admin puede cambiar activo
+    if (activo !== undefined && req.user.rol !== "admin") {
+      return res.status(403).json({ message: "Solo admin puede cambiar el estado activo" });
+    }
+
+    await updateUser(id, { username, celular, email, activo });
     res.json({ message: "Usuario actualizado correctamente" });
   } catch (err) {
     console.error("❌ Error en updateUserData:", err.message);

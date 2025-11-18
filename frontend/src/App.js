@@ -2,52 +2,71 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
+import TrabajadorDashboard from "./pages/TrabajadorDashboard";
 import GInventario from "./pages/GInventario";
 import Movimientos from "./pages/Movimientos";
 import Reportes from "./pages/Reportes";
+import { jwtDecode } from "jwt-decode";
 
 function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Recuperar token y usuario guardado al cargar la app
+  // Cargar SOLO el token desde sessionStorage
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-    if (savedToken) setToken(savedToken);
-    if (savedUser) setUser(JSON.parse(savedUser));
+    const savedToken = sessionStorage.getItem("token");
+
+    if (savedToken) {
+      setToken(savedToken);
+
+      try {
+        const decoded = jwtDecode(savedToken);
+        setUser({
+          id_usuario: decoded.id_usuario,
+          username: decoded.username,
+          rol: decoded.rol,
+        });
+      } catch (error) {
+        console.error("Token inválido:", error);
+      }
+    }
+
+    setLoading(false);
   }, []);
 
-  // Si no hay token, mostrar login
+  // ⛔ YA NO GUARDAMOS USER EN SESSIONSTORAGE
+  // ❌ useEffect eliminado
+
+  if (loading) return <div className="text-center mt-10">Cargando...</div>;
+
   if (!token) return <Login setToken={setToken} setUser={setUser} />;
 
   return (
     <Routes>
+      {/* RUTAS ADMIN */}
       {user?.rol === "admin" && (
         <>
           <Route
             path="/AdminDashboard"
-            element={
-              <AdminDashboard
-                user={user}
-                setUser={setUser}
-                setToken={setToken} // 🔹 Importante para manejar logout desde Dashboard
-              />
-            }
+            element={<AdminDashboard user={user} setUser={setUser} setToken={setToken} />}
           />
           <Route path="/GInventario" element={<GInventario />} />
           <Route path="/Movimientos" element={<Movimientos />} />
           <Route path="/Reportes" element={<Reportes />} />
-          {/* Redirigir cualquier ruta desconocida al dashboard */}
           <Route path="*" element={<Navigate to="/AdminDashboard" replace />} />
         </>
       )}
 
-      {user?.rol === "user" && (
-        <Route
-          path="*"
-          element={<div>Bienvenido {user.username}, esta es la vista de trabajador</div>}
-        />
+      {/* RUTAS TRABAJADOR */}
+      {(user?.rol === "trabajador" || user?.rol === "user") && (
+        <>
+          <Route
+            path="/TrabajadorDashboard"
+            element={<TrabajadorDashboard user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route path="*" element={<Navigate to="/TrabajadorDashboard" replace />} />
+        </>
       )}
     </Routes>
   );

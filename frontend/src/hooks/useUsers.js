@@ -11,7 +11,7 @@ export default function useUsers() {
 
   const [showEmailUpdatedModal, setShowEmailUpdatedModal] = useState(false); // 👈 nuevo estado
 
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   useEffect(() => {
     if (!currentUser.id_usuario) return;

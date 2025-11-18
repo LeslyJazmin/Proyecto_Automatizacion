@@ -50,11 +50,9 @@ async function getUserById(id) {
     return result.recordset[0];
 }
 
-// Actualizar usuario (sin modificar rol ni activo)
+// Actualizar usuario (ahora con activo)
 async function updateUser(id, data) {
     const pool = db.getPool();
-
-    // Construir SET dinámico solo para los campos editables
     const fields = [];
     const request = pool.request();
     request.input("id_usuario", sql.NVarChar(7), id);
@@ -72,6 +70,12 @@ async function updateUser(id, data) {
         request.input("email", sql.VarChar(50), data.email);
     }
 
+    // 🔹 Nuevo: permitir actualizar activo
+    if (data.activo !== undefined) {
+        fields.push("activo = @activo");
+        request.input("activo", sql.Bit, data.activo);
+    }
+
     if (fields.length === 0) {
         throw new Error("No hay campos válidos para actualizar");
     }
@@ -81,9 +85,8 @@ async function updateUser(id, data) {
         SET ${fields.join(", ")}
         WHERE id_usuario = @id_usuario
     `;
-
     const result = await request.query(query);
-    return result.rowsAffected[0]; // Devuelve la cantidad de filas afectadas
+    return result.rowsAffected[0];
 }
 
 // Eliminar usuario (devuelve filas afectadas)

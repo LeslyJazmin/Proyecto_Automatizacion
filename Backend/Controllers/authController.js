@@ -25,13 +25,18 @@ async function login(req, res) {
         if (!isMatch) {
             return res.status(401).json({ message: "Contraseña incorrecta" });
         }
-
+        
         // Generar token
         const token = jwt.sign(
-            { id: user.id_usuario, email: user.email, rol: user.rol },
+            { 
+                id: user.id_usuario, 
+                email: user.email, 
+                rol: user.rol,
+                username: user.username   // <-- AGREGA ESTO
+            },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
-        );
+        );      
 
         // Responder con datos esenciales
         res.json({

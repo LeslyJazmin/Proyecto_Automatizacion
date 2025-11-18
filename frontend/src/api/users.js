@@ -2,7 +2,7 @@ const API_URL = "http://localhost:5000/api/users";
 
 // Obtener token de forma segura
 function getToken() {
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 }
 
 // Función auxiliar para crear headers con token

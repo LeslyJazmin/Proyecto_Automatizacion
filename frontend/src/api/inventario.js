@@ -1,10 +1,11 @@
 const API_BASE = "http://localhost:5000/api/inventario";
 
-// Función auxiliar para headers con token
+// 🔐 Obtener token desde sessionStorage
 function getToken() {
-  return localStorage.getItem("token");
+  return sessionStorage.getItem("token");
 }
 
+// 🧾 Encabezados con o sin JSON
 function getHeaders(isJson = true) {
   const headers = {};
   if (isJson) headers["Content-Type"] = "application/json";
@@ -13,7 +14,7 @@ function getHeaders(isJson = true) {
   return headers;
 }
 
-// Manejo de respuesta
+// ⚙️ Manejo de respuesta estándar
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.message || `Error ${res.status}`);
@@ -25,10 +26,9 @@ async function handleResponse(res) {
 // Registrar entrada de ropa
 export async function registrarEntradaRopa(data) {
   const isFormData = data instanceof FormData;
-
   const res = await fetch(`${API_BASE}/ropa/entrada`, {
     method: "POST",
-    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
     body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
@@ -57,10 +57,9 @@ export async function obtenerRopa() {
 // Registrar entrada de comestible
 export async function registrarEntradaComestible(data) {
   const isFormData = data instanceof FormData;
-
   const res = await fetch(`${API_BASE}/comestibles/entrada`, {
     method: "POST",
-    headers: isFormData ? getHeaders(false) : getHeaders(true), 
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
     body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
@@ -84,6 +83,7 @@ export async function obtenerComestibles() {
   return handleResponse(res);
 }
 
+/* ---------------- MOVIMIENTOS ---------------- */
 
 // ✅ LISTAR MOVIMIENTOS DE ROPA
 export async function obtenerMovimientosRopa() {
@@ -91,13 +91,11 @@ export async function obtenerMovimientosRopa() {
     method: "GET",
     headers: getHeaders(),
   });
-
   if (!res.ok) {
     const errText = await res.text();
     console.error("Error al obtener movimientos de ropa:", errText);
     throw new Error("No se pudieron obtener los movimientos de ropa");
   }
-
   return await res.json();
 }
 
@@ -107,15 +105,16 @@ export async function obtenerMovimientosComestibles() {
     method: "GET",
     headers: getHeaders(),
   });
-
   if (!res.ok) {
     const errText = await res.text();
     console.error("Error al obtener movimientos de comestibles:", errText);
     throw new Error("No se pudieron obtener los movimientos de comestibles");
   }
-
   return await res.json();
 }
+
+/* ---------------- BÚSQUEDAS ---------------- */
+
 export async function buscarRopa(query) {
   const res = await fetch(`${API_BASE}/ropa/buscar?q=${encodeURIComponent(query)}`);
   return await res.json();
@@ -125,14 +124,18 @@ export async function buscarComestibles(query) {
   const res = await fetch(`${API_BASE}/comestibles/buscar?q=${encodeURIComponent(query)}`);
   return await res.json();
 }
+
+/* ---------------- ELIMINAR ---------------- */
+
 export async function eliminarComestible(id) {
-  const cleanId = String(id).trim(); // <-- importante
+  const cleanId = String(id).trim();
   const res = await fetch(`${API_BASE}/comestible/${cleanId}`, {
     method: "DELETE",
     headers: getHeaders(),
   });
   return handleResponse(res);
 }
+
 export async function eliminarRopa(id) {
   const cleanId = String(id).trim();
   const res = await fetch(`${API_BASE}/ropa/${cleanId}`, {
@@ -141,6 +144,9 @@ export async function eliminarRopa(id) {
   });
   return handleResponse(res);
 }
+
+/* ---------------- ACTUALIZACIONES ---------------- */
+
 // Registrar entrada de ropa existente
 export async function registrarEntradaRopaExistente(data) {
   const res = await fetch(`${API_BASE}/ropa/entrada-existente`, {
@@ -164,34 +170,27 @@ export async function registrarEntradaComestibleExistente(data) {
 // Actualizar ropa
 export async function actualizarRopa(datosActualizados) {
   const formData = new FormData();
-
   for (const key in datosActualizados) {
-    // Si el valor es undefined, lo convertimos a cadena vacía
     const value = datosActualizados[key] ?? "";
     formData.append(key, value);
   }
-
   const res = await fetch(`${API_BASE}/ropa/actualizar`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${getToken()}` },
     body: formData,
   });
-
   return handleResponse(res);
 }
 
 // Actualizar comestible
 export async function actualizarComestible(datosActualizados) {
   const formData = new FormData();
-
-  // Normaliza los valores numéricos: si no hay, no los envía
   if (datosActualizados.peso === "" || datosActualizados.peso === undefined)
     delete datosActualizados.peso;
   if (datosActualizados.litros === "" || datosActualizados.litros === undefined)
     delete datosActualizados.litros;
 
   for (const key in datosActualizados) {
-    // Solo añade valores definidos
     if (datosActualizados[key] !== undefined && datosActualizados[key] !== null) {
       formData.append(key, datosActualizados[key]);
     }
@@ -202,7 +201,5 @@ export async function actualizarComestible(datosActualizados) {
     headers: { Authorization: `Bearer ${getToken()}` },
     body: formData,
   });
-
   return handleResponse(res);
 }
-

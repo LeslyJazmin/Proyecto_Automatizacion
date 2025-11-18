@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
@@ -8,7 +9,6 @@ export default function useLogin(setUser, setToken) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,43 +22,44 @@ export default function useLogin(setUser, setToken) {
 
     setLoading(true);
     try {
-      // Login
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
 
+      const data = await res.json();
       if (!res.ok) {
         setError(data?.message || "Error en el login");
         setLoading(false);
         return;
       }
 
-      localStorage.setItem("token", data.token);
+      // 🔥 LIMPIAMOS COMPLETAMENTE SESSIONSTORAGE
+      sessionStorage.clear();
 
-      // Verificar usuario
-      const userRes = await fetch(`${API_BASE}/api/users/${data.user.id_usuario}`, {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      if (!userRes.ok) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setError("El usuario ya no existe");
-        setLoading(false);
-        return;
-      }
-
-      const userData = await userRes.json();
-      localStorage.setItem("user", JSON.stringify(userData));
+      // Guardamos SOLO token
+      sessionStorage.setItem("token", data.token);
       setToken(data.token);
+
+      // Decodificamos token
+      const decoded = jwtDecode(data.token);
+
+      const userData = {
+        id_usuario: decoded.id_usuario,
+        username: decoded.username,
+        rol: decoded.rol,
+      };
+
+      // Guardamos SOLO el rol
+      sessionStorage.setItem("rol", decoded.rol);
+
+      // Guardamos info de usuario SOLO en memoria del estado
       setUser(userData);
 
-      // Redirigir según rol
-      if (userData.rol === "admin") navigate("/admin-dashboard");
-      else if (userData.rol === "user") navigate("/trabajador-dashboard");
-      else navigate("/dashboard");
+      // Redirección por rol
+      if (userData.rol === "admin") navigate("/AdminDashboard");
+      else navigate("/TrabajadorDashboard");
 
     } catch (err) {
       console.error("Login error:", err);
@@ -69,9 +70,12 @@ export default function useLogin(setUser, setToken) {
   };
 
   return {
-    email, setEmail,
-    password, setPassword,
-    loading, error,
-    handleSubmit
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    error,
+    handleSubmit,
   };
 }

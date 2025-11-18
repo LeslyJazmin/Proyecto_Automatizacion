@@ -54,6 +54,8 @@ export default function TablaInventario({
           <thead className={headClass}>
             <tr>
               <th className={thClass}>ID</th>
+              {/* 🆕 Nueva columna Lote (solo para comestibles) */}
+              {tipo === "comestibles" && <th className={thClass}>Lote</th>}
               <th className={thClass}>Nombre</th>
               <th className={thClass}>Marca</th>
               <th className={thClass + " text-center"}>Stock</th>
@@ -105,6 +107,12 @@ export default function TablaInventario({
                   >
                     {id}
                   </td>
+
+                  {/* 🆕 Mostrar lote al costado del ID solo para comestibles */}
+                  {tipo === "comestibles" && (
+                    <td className={tdClass}>{p.lote || "—"}</td>
+                  )}
+
                   <td className={tdClass}>{p.nombre}</td>
                   <td className={tdClass}>{p.marca || "N/A"}</td>
                   <td className={`${tdClass} text-center ${stockColor}`}>
