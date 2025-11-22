@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ModalGInventario from "./ui/ModalGInventario";
 import { Tag, TrendingUp, DollarSign, ArrowLeft, Image, Package, CheckSquare } from "lucide-react"; 
-import { buscarRopa, buscarComestibles } from "../api/inventario";
+import { buscarRopa, verificarComestibleNombreLote } from "../api/inventario.js";
 
 export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuccess }) {
   const [formData, setFormData] = useState({});
@@ -9,6 +9,12 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
   const [generatedId, setGeneratedId] = useState("");
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
   const [nombreExiste, setNombreExiste] = useState(false);
+
+  // Determinar visibilidad de campos según método de pago
+  const metodoPago = formData?.metodo_pago;
+  const mostrarTipoComprobante = metodoPago === "Tarjeta de Crédito";
+  const mostrarNumeroComprobante = metodoPago === "Tarjeta de Crédito";
+  const mostrarOperacion = metodoPago === "Yape" || metodoPago === "Plin";
 
   const handleClose = () => {
     setFormData({});
@@ -34,20 +40,42 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
   }, [isOpen, tipo]);
 
   useEffect(() => {
-    const checkNombre = async () => {
-      if (!formData.nombre) return setNombreExiste(false);
-      try {
-        const results = tipo === "ropa"
-          ? await buscarRopa(formData.nombre)
-          : await buscarComestibles(formData.nombre);
+  const checkDuplicado = async () => {
+    if (!formData.nombre) return setNombreExiste(false);
+
+    try {
+      // ROPA → valida solo nombre
+      if (tipo === "ropa") {
+        const results = await buscarRopa(formData.nombre);
         setNombreExiste(results.length > 0);
-      } catch {
-        setNombreExiste(false);
+        return;
       }
-    };
-    const timer = setTimeout(checkNombre, 500);
-    return () => clearTimeout(timer);
-  }, [formData.nombre, tipo]);
+
+      // COMESTIBLE → validar por nombre + lote
+      if (tipo === "comestible") {
+        if (!formData.lote) {
+          setNombreExiste(false);
+          return;
+        }
+
+        // 🟢 AQUÍ USAMOS LA RUTA CORRECTA
+        const resp = await verificarComestibleNombreLote(
+          formData.nombre,
+          formData.lote
+        );
+
+        // El backend debe devolver {existe: true/false}
+        setNombreExiste(resp.existe === true);
+      }
+    } catch {
+      setNombreExiste(false);
+    }
+  };
+
+  const timer = setTimeout(checkDuplicado, 500);
+  return () => clearTimeout(timer);
+}, [formData.nombre, formData.lote, tipo]);
+
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -56,36 +84,74 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
   };
 
   const validate = () => {
-    const newErrors = {};
-    const requiredFields = tipo === "ropa"
-      ? ["nombre","marca","talla","color","precio","stock_actual","tipo_comprobante","numero_comprobante","metodo_pago","monto_pagado"]
-      : ["nombre","marca","sabor","precio","stock_actual","unidad_medida","tipo_comprobante","numero_comprobante","metodo_pago","monto_pagado","fecha_vencimiento"];
+  const newErrors = {};
 
-    requiredFields.forEach(field => {
-      if ((field === "stock_actual" && (!cantidadRegistrar || cantidadRegistrar <= 0)) ||
-          (!formData[field] && formData[field] !== 0 && field !== "stock_actual")) {
-        newErrors[field] = field === "stock_actual" ? "Debe ser mayor a 0" : "Este campo es obligatorio";
-      }
-    });
+  // Reglas básicas según tipo
+  const requiredFieldsBase =
+    tipo === "ropa"
+      ? ["nombre", "marca", "talla", "color", "precio", "stock_actual", "metodo_pago", "monto_pagado"]
+      : ["nombre", "marca", "sabor", "lote", "precio", "stock_actual", "unidad_medida", "metodo_pago", "monto_pagado", "fecha_vencimiento"];
 
-    if (tipo === "comestible") {
-      if (formData.unidad_medida && formData.unidad_medida === "peso" && (!formData.peso || formData.peso <= 0))
-        newErrors.peso = "Debe indicar el peso del producto (Kg)";
-      if (formData.unidad_medida && formData.unidad_medida === "litro" && (!formData.litros || formData.litros <= 0))
-        newErrors.litros = "Debe indicar el volumen del producto (L)";
-      if (!formData.unidad_medida) newErrors.unidad_medida = "Este campo es obligatorio";
-      if (!formData.fecha_vencimiento) newErrors.fecha_vencimiento = "Debe indicar la fecha de vencimiento";
+  // Todos los métodos de pago deben incluir tipo y número de comprobante
+  requiredFieldsBase.push("tipo_comprobante");
+  requiredFieldsBase.push("numero_comprobante");
+
+  // EFECTIVO → No pide nada adicional
+  // No agregar comprobantes en este caso
+
+  // Validar campos requeridos
+  requiredFieldsBase.forEach((field) => {
+    const isStockActual = field === "stock_actual";
+    if (isStockActual && (!cantidadRegistrar || cantidadRegistrar <= 0)) {
+      newErrors[field] = "Debe ser mayor a 0";
+      return;
     }
 
-    if (nombreExiste) newErrors.nombre = "Este producto ya existe en el sistema";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (!isStockActual && !formData[field]) {
+      newErrors[field] = "Este campo es obligatorio";
+    }
+  });
+
+  // Validaciones específicas de comestibles
+  if (tipo === "comestible") {
+    if (formData.unidad_medida === "peso" && (!formData.peso || formData.peso <= 0))
+      newErrors.peso = "Debe indicar el peso del producto (Kg)";
+
+    if (formData.unidad_medida === "litro" && (!formData.litros || formData.litros <= 0))
+      newErrors.litros = "Debe indicar el volumen del producto (L)";
+  }
+
+  // Validación de duplicados
+  if (nombreExiste) newErrors.nombre = "Este producto ya existe en el sistema";
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    onSuccess({ ...formData, stock_actual: cantidadRegistrar });
+
+    // Si hay archivos, usar FormData
+    let dataToSend;
+    const hasFile = formData.imagen || formData.img_comp;
+    // Asegurar que los campos de comprobante existan (no enviar NULL)
+    const payload = { ...formData, stock_actual: cantidadRegistrar };
+    payload.tipo_comprobante = payload.tipo_comprobante ?? "";
+    payload.numero_comprobante = payload.numero_comprobante ?? "";
+
+    if (hasFile) {
+      dataToSend = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          dataToSend.append(key, value);
+        }
+      });
+    } else {
+      dataToSend = payload;
+    }
+    onSuccess(dataToSend);
     handleClose();
   };
 
@@ -96,44 +162,64 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
   );
 
   const renderInput = (name, label, type="text", optional=false, valueOverride=null, disabled=false, customStyle="") => {
-    const currentValue = name === "stock_actual" ? cantidadRegistrar : (valueOverride ?? formData[name] ?? "");
-    const currentOnChange = name === "stock_actual" 
-      ? (e) => setCantidadRegistrar(Number(e.target.value)) 
-      : handleChange;
-    
-    const isImportantNumber = (name === "stock_actual" || name === "monto_pagado" || name === "precio");
+  const currentValue = name === "stock_actual" ? cantidadRegistrar : (valueOverride ?? formData[name] ?? "");
+  const currentOnChange = name === "stock_actual" 
+    ? (e) => setCantidadRegistrar(Number(e.target.value)) 
+    : handleChange;
+  
+  const isImportantNumber = (name === "stock_actual" || name === "monto_pagado" || name === "precio");
 
-    return (
-      <div className="mb-2 w-full">
-        <FieldLabel text={label} required={!optional && !disabled} />
-        <input
-          name={name}
-          type={type}
-          step={name === "stock_actual" ? "1" : type === "number" ? "any" : undefined}
-          min={isImportantNumber ? 0 : undefined}
-          inputMode={name === "stock_actual" ? "numeric" : undefined}
-          pattern={name === "stock_actual" ? "[0-9]*" : undefined}
-          onKeyDown={(e) => {
-            if (name === "stock_actual" && (e.key === '.' || e.key === '-' || e.key === 'e')) e.preventDefault();
-            if (isImportantNumber && e.key === '-') e.preventDefault();
-          }}
-          value={currentValue}
-          onChange={currentOnChange}
-          disabled={disabled}
-          className={`
-            w-full px-2.5 py-1.5 border rounded-md text-sm placeholder-gray-400 
-            shadow-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 
-            transition duration-150 ease-in-out
-            ${customStyle} 
-            ${isImportantNumber ? 'font-bold text-base text-emerald-800' : 'text-sm'} 
-            ${errors[name] ? "border-red-500 ring-red-500" : "border-gray-300"}
-            ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
-          `}
-        />
-        {errors[name] && <div className="text-red-600 text-xs mt-0.5 font-medium">{errors[name]}</div>}
-      </div>
-    );
-  };
+  // 🔥 MARCAR LOTE EN ROJO SI YA EXISTE (solo comestibles)
+  const loteConflict =
+    tipo === "comestible" &&
+    name === "lote" &&
+    nombreExiste;
+
+  return (
+    <div className="mb-2 w-full">
+      <FieldLabel text={label} required={!optional && !disabled} />
+      <input
+        name={name}
+        type={type}
+        step={name === "stock_actual" ? "1" : type === "number" ? "any" : undefined}
+        min={isImportantNumber ? 0 : undefined}
+        inputMode={name === "stock_actual" ? "numeric" : undefined}
+        pattern={name === "stock_actual" ? "[0-9]*" : undefined}
+        onKeyDown={(e) => {
+          if (name === "stock_actual" && (e.key === '.' || e.key === '-' || e.key === 'e')) e.preventDefault();
+          if (isImportantNumber && e.key === '-') e.preventDefault();
+        }}
+        value={currentValue}
+        onChange={currentOnChange}
+        disabled={disabled}
+        className={`
+          w-full px-2.5 py-1.5 border rounded-md text-sm placeholder-gray-400 
+          shadow-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 
+          transition duration-150 ease-in-out
+          ${customStyle} 
+          ${isImportantNumber ? 'font-bold text-base text-emerald-800' : 'text-sm'} 
+          ${errors[name] ? "border-red-500 ring-red-500" : "border-gray-300"}
+          ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+          ${loteConflict ? "border-red-500 ring-red-500 bg-red-50" : ""}
+        `}
+      />
+
+      {/* Errores normales */}
+      {errors[name] && (
+        <div className="text-red-600 text-xs mt-0.5 font-medium">
+          {errors[name]}
+        </div>
+      )}
+
+      {/* 🔥 Mensaje especial debajo del campo LOTE cuando nombre+lote ya existen */}
+      {loteConflict && (
+        <div className="text-red-600 text-xs mt-0.5 font-medium bg-red-100 p-1 rounded-sm">
+          ⚠️ Ya existe un producto con este lote.
+        </div>
+      )}
+    </div>
+  );
+};
 
   const renderSelect = (name, label, options) => (
     <div className="mb-2 w-full"> 
@@ -168,29 +254,68 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
       <form onSubmit={handleSubmit} className="bg-gray-100 p-4 rounded-lg shadow-inner space-y-4"> 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4"> 
           <div className="lg:col-span-2 space-y-4"> 
+           {/* Información principal */}
             <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200"> 
               <h3 className="flex items-center gap-2 font-extrabold text-base text-emerald-700 mb-3 border-b border-emerald-100 pb-2"> 
                 <Tag size={18} className="text-emerald-500" /> Información Principal del Producto
               </h3>
 
+              {/* ID y Nombre */}
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3 items-end"> 
                 <div className="col-span-1">
                   <FieldLabel text="ID Generado" />
-                  <input value={generatedId} disabled className="w-full px-2 py-1.5 text-xs font-mono font-extrabold text-white bg-emerald-600 rounded-md border-emerald-700 text-center shadow-inner" /> 
+                  <input 
+                    value={generatedId} 
+                    disabled 
+                    className="w-full px-2 py-1.5 text-xs font-mono font-extrabold text-white bg-emerald-600 rounded-md border-emerald-700 text-center shadow-inner" 
+                  /> 
                 </div>
+
                 <div className="col-span-4">
                   {renderInput("nombre", "Nombre/Descripción", "text", false, null, false, "bg-emerald-50/50")}
-                  {nombreExiste && <div className="flex items-center text-xs font-medium text-red-600 bg-red-100 p-1 rounded-sm mt-0.5">⚠️ Este producto ya existe en el sistema.</div>} 
+                  {nombreExiste && (
+                    <div className="flex items-center text-xs font-medium text-red-600 bg-red-100 p-1 rounded-sm mt-0.5">
+                      {tipo === "comestible"
+                        ? "⚠️ Este nombre de producto ya está registrado con este lote."
+                        : "⚠️ Este nombre de producto ya está registrado."}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
-                {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
-                {renderInput("precio", "Precio Unitario de Venta (S/)", "number", false, null, false, "bg-blue-50")}
-              </div>
+              {/* --------------------------------------------
+                MARCA + LOTES + PRECIO SEGÚN EL TIPO
+                -------------------------------------------- */}
+              {tipo === "comestible" ? (
+                <>
+                  {/* Marca y Lote lado a lado */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
+                    {renderInput("lote", "Lote", "text", false, null, false, "bg-blue-50")}
+                  </div>
 
+                  {/* Precio debajo (ancho completo) */}
+                  <div className="mt-3">
+                    {renderInput("precio", "Precio Unitario de Venta (S/)", "number", false, null, false, "bg-blue-50")}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Si NO es comestible (es ropa u otro) → Marca + Precio juntos */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
+                    {renderInput("precio", "Precio Unitario de Venta (S/)", "number", false, null, false, "bg-blue-50")}
+                  </div>
+                </>
+              )}
+
+              {/* Especificaciones */}
               <div className="mt-3 border-t border-gray-200 pt-3"> 
-                <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-1.5"><CheckSquare size={14} className="text-gray-500"/> Especificaciones:</h4> 
+                <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-1.5">
+                  <CheckSquare size={14} className="text-gray-500"/> Especificaciones:
+                </h4>
+
+                {/* Ropa */}
                 {tipo === "ropa" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
                     {renderInput("talla", "Talla", "text", false, null, false, "bg-blue-50")}
@@ -198,21 +323,24 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
                   </div>
                 )}
 
+                {/* Comestibles */}
                 {tipo === "comestible" && (
                   <>
                     {renderInput("sabor", "Sabor/Tipo", "text", false, null, false, "bg-blue-50")}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
                       {renderSelect("unidad_medida", "Unidad de Medida", [
                         { value: "peso", label: "Peso (Kg)" },
                         { value: "litro", label: "Litro (L)" },
                       ])}
-                      {formData.unidad_medida && (
-                        formData.unidad_medida === "peso"
+
+                      {formData.unidad_medida &&
+                        (formData.unidad_medida === "peso"
                           ? renderInput("peso", "Peso (Kg)", "number", false, null, false, "bg-blue-50")
-                          : renderInput("litros", "Volumen (L)", "number", false, null, false, "bg-blue-50")
-                      )}
+                          : renderInput("litros", "Volumen (L)", "number", false, null, false, "bg-blue-50"))
+                      }
                     </div>
-                    {/* ✅ Nuevo campo de fecha de vencimiento */}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                       {renderInput("fecha_vencimiento", "Fecha de Vencimiento", "date", false, null, false, "bg-yellow-50")}
                     </div>
@@ -221,6 +349,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               </div>
             </div>
 
+            {/* Información adicional */}
             <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200"> 
               <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
                 <Image size={18} className="text-emerald-500" /> Información Adicional y Archivos
@@ -261,15 +390,32 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
                 <DollarSign size={18} className="text-emerald-500" /> Detalles de la Transacción
               </h3>
+              {renderSelect("metodo_pago", "Método de Pago", [
+                { value: "Efectivo", label: "Efectivo" },
+                { value: "Yape", label: "Yape" },
+                { value: "Tarjeta de Crédito", label: "Tarjeta de Crédito" },
+                { value: "Plin", label: "Plin" },
+              ])}
+
+              {/* Mostrar siempre tipo y número de comprobante (requerido por la lógica de negocio) */}
               {renderSelect("tipo_comprobante", "Tipo Comprobante", [
                 { value: "Boleta", label: "Boleta" },
                 { value: "Factura", label: "Factura" },
               ])}
-              {renderInput("numero_comprobante", "N° Comprobante")}
-              {renderSelect("metodo_pago", "Método de Pago", [
-                { value: "Efectivo", label: "Efectivo" },
-                { value: "Yape", label: "Yape" },
-              ])}
+              {renderInput("numero_comprobante", "N° de comprobante")}
+
+              {/* Campo para subir imagen de comprobante */}
+              <div className="mt-2">
+                <FieldLabel text="Imagen de Comprobante (Opcional)" />
+                <input
+                  type="file"
+                  name="img_comp"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="block w-full text-sm text-gray-700 file:mr-1.5 file:py-1.5 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition duration-150 border border-gray-300 rounded-md cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500/70"
+                />
+                {formData.img_comp && <span className="text-emerald-600 text-xs italic block mt-0.5">Archivo: {formData.img_comp.name}</span>}
+              </div>
             </div>
           </div>
         </div>
@@ -282,6 +428,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
           >
             <ArrowLeft size={16} /> Cancelar
           </button>
+
           <button 
             type="submit" 
             disabled={nombreExiste} 

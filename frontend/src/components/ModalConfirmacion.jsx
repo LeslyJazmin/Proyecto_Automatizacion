@@ -1,7 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 
-export default function ModalConfirmacion({ isOpen, onClose, onConfirm }) {
+export default function ModalConfirmacion({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "¿Seguro que deseas eliminar este producto?",
+  description = "Esta acción no se puede deshacer.",
+  confirmText = "Sí, eliminar",
+  cancelText = "Cancelar",
+  Icon = AlertTriangle,
+}) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -20,14 +29,14 @@ export default function ModalConfirmacion({ isOpen, onClose, onConfirm }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center mb-4">
-              <AlertTriangle className="w-12 h-12 text-yellow-500" />
+              <Icon className="w-12 h-12 text-yellow-500" />
             </div>
 
             <h2 className="text-lg font-semibold text-gray-900 mb-3">
-              ¿Seguro que deseas eliminar este producto?
+              {title}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
-              Esta acción no se puede deshacer.
+              {description}
             </p>
 
             <div className="flex justify-center gap-4">
@@ -35,13 +44,13 @@ export default function ModalConfirmacion({ isOpen, onClose, onConfirm }) {
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold text-gray-800 transition"
               >
-                Cancelar
+                {cancelText}
               </button>
               <button
                 onClick={onConfirm}
                 className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow-md transition"
               >
-                Sí, eliminar
+                {confirmText}
               </button>
             </div>
           </motion.div>

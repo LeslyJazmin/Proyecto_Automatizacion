@@ -16,7 +16,7 @@ async function registrarEntradaRopa(data) {
   const { 
     id_ropa, nombre, marca, talla, color, precio, stock_actual,
     tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
-    ubicacion, imagen
+    ubicacion, imagen, img_comp
   } = data;
 
   const idInventario = generarIdInventario("IR");
@@ -48,12 +48,13 @@ async function registrarEntradaRopa(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(255), img_comp)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 
@@ -62,7 +63,7 @@ async function registrarEntradaRopa(data) {
 // ============================================================
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
-  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IR");
 
   // Actualizar stock
@@ -86,12 +87,13 @@ async function registrarEntradaRopaExistente(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(255), img_comp)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 
@@ -99,16 +101,31 @@ async function registrarEntradaRopaExistente(data) {
 // 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO (con LOTE)
 // ============================================================
 async function registrarEntradaComestible(data) {
-  const pool = await getPool();
+  const pool = await getPool(); // <-- ❗ NECESARIO
+
   const { 
     id_comestible, nombre, marca, sabor, peso, litros, precio, stock_actual,
     tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario,
-    ubicacion, imagen, fecha_vencimiento, lote // ✅ añadimos lote aquí
+    ubicacion, imagen, fecha_vencimiento, lote, img_comp
   } = data;
+
+  // 🔍 VALIDACIÓN FIFO: verificar si ya existe el mismo nombre + lote
+  const existe = await pool.request()
+    .input("nombre", sql.NVarChar(50), nombre)
+    .input("lote", sql.NVarChar(30), lote)
+    .query(`
+        SELECT id_comestible 
+        FROM ProductosComestibles
+        WHERE nombre = @nombre AND lote = @lote
+    `);
+
+  if (existe.recordset.length > 0) {
+    throw new Error("❌ Ya existe un producto con el mismo nombre y el mismo lote. En FIFO el lote debe ser único.");
+  }
 
   const idInventario = generarIdInventario("IC");
 
-  // ✅ Registrar producto nuevo con campo lote
+  // Registrar producto nuevo
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -119,7 +136,7 @@ async function registrarEntradaComestible(data) {
     .input("precio", sql.Decimal(10, 2), precio)
     .input("stock_actual", sql.Int, stock_actual)
     .input("fecha_vencimiento", sql.Date, fecha_vencimiento)
-    .input("lote", sql.NVarChar(30), lote) // ✅ nuevo input
+    .input("lote", sql.NVarChar(30), lote)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
     .input("imagen", sql.NVarChar(255), imagen)
     .query(`
@@ -128,7 +145,7 @@ async function registrarEntradaComestible(data) {
       VALUES (@id_comestible, @nombre, @marca, @sabor, @peso, @litros, @precio, @stock_actual, @fecha_vencimiento, @lote, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento (sin lote, solo pertenece al producto)
+  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
@@ -139,12 +156,13 @@ async function registrarEntradaComestible(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(255), img_comp)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 
@@ -153,7 +171,7 @@ async function registrarEntradaComestible(data) {
 // ============================================================
 async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
-  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, fecha_vencimiento } = data;
+  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, fecha_vencimiento, img_comp } = data;
   const idInventario = generarIdInventario("IC");
 
   // Actualizar stock
@@ -179,12 +197,13 @@ async function registrarEntradaComestibleExistente(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(255), img_comp)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 
@@ -380,7 +399,7 @@ async function actualizarComestible(data) {
       WHERE id_comestible = @id_comestible
     `);
 
-  return { message: "✅ Datos de producto comestible actualizados correctamente (incluido el precio)" };
+  return { message: "✅ Datos de producto comestible actualizados correctamente" };
 }
 
 // ============================================================
@@ -506,6 +525,27 @@ async function registrarSalidaComestible(data) {
        @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
     `);
 }
+// --- BUSCAR COMESTIBLE POR NOMBRE + LOTE ---
+async function buscarComestiblePorNombreYLote(nombre, lote) {
+  try {
+    const pool = await sql.connect(config);
+
+    const result = await pool.request()
+      .input("nombre", sql.NVarChar(200), nombre)
+      .input("lote", sql.NVarChar(100), lote)
+      .query(`
+        SELECT *
+        FROM ProductosComestibles
+        WHERE nombre = @nombre AND lote = @lote
+      `);
+
+    return result.recordset;
+
+  } catch (err) {
+    console.error("❌ Error en buscarComestiblePorNombreYLote:", err);
+    return [];
+  }
+}
 
 module.exports = {
   registrarEntradaRopa,
@@ -520,6 +560,7 @@ module.exports = {
   listarMovimientosComestible,
   buscarRopa,
   buscarComestible,
+  buscarComestiblePorNombreYLote,
   actualizarRopa,
   actualizarComestible,
   eliminarRopa,

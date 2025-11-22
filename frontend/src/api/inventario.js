@@ -203,3 +203,21 @@ export async function actualizarComestible(datosActualizados) {
   });
   return handleResponse(res);
 }
+
+// ❗ Buscar si ya existe un comestible con NOMBRE + LOTE
+export const verificarComestibleNombreLote = async (nombre, lote) => {
+  try {
+    const response = await fetch(
+      `${API_BASE}/comestibles/buscar-lote?nombre=${encodeURIComponent(nombre)}&lote=${encodeURIComponent(lote)}`
+    );
+
+    if (!response.ok) return { existe: false };
+
+    const data = await response.json();
+    const existe = Array.isArray(data) ? data.length > 0 : Boolean(data && data.existe === true);
+    const producto = Array.isArray(data) ? (data[0] ?? null) : (data.producto ?? null);
+    return { existe, producto };
+  } catch (error) {
+    return { existe: false };
+  }
+};

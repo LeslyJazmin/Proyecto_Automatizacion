@@ -13,6 +13,7 @@ const {
   listarMovimientosComestibleController,
   buscarRopaController,
   buscarComestibleController,
+  buscarComestiblePorNombreYLoteController,
   actualizarComestibleController,
   actualizarRopaController,
   eliminarRopaController,
@@ -24,16 +25,21 @@ const {
 // --- ROPA ---
 router.get("/ropa", listarRopaController);
 router.get("/ropa/buscar", buscarRopaController);
-router.post("/ropa/entrada", upload.single("imagen"), entradaRopa);
-router.put("/ropa/actualizar", upload.single("imagen"), actualizarRopaController);
+// Aceptar tanto 'imagen' como 'img_comp' (comprobante)
+router.post("/ropa/entrada", upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaRopa);
+router.put("/ropa/actualizar", upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarRopaController);
 router.post("/ropa/entrada-existente", entradaRopaExistente); // 👈 para producto ya existente
 
 // --- COMESTIBLES ---
 router.get("/comestibles", listarComestiblesController);
 router.get("/comestibles/buscar", buscarComestibleController);
-router.put("/comestibles/actualizar", upload.single("imagen"), actualizarComestibleController);
-router.post("/comestibles/entrada", upload.single("imagen"), entradaComestible);
-router.post("/comestibles/entrada-existente", entradaComestibleExistente); // 👈 para producto ya existente
+router.put("/comestibles/actualizar", upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarComestibleController);
+router.post("/comestibles/entrada", upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaComestible);
+router.post("/comestibles/entrada-existente", upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaComestibleExistente); // 👈 para producto ya existente
+router.get(
+  "/comestibles/buscar-lote",
+  buscarComestiblePorNombreYLoteController
+);
 
 router.delete("/ropa/:id", eliminarRopaController);
 router.delete("/comestible/:id", eliminarComestibleController);

@@ -1,10 +1,20 @@
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 // Configuración de multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../uploads")); // guarda en /uploads
+    // Guardar comprobantes en carpeta específica y el resto en uploads
+    const baseUploads = path.join(__dirname, "../uploads");
+    const comprobanteDir = path.join(baseUploads, "comprobante");
+    const dest = file.fieldname === "img_comp" ? comprobanteDir : baseUploads;
+    try {
+      fs.mkdirSync(dest, { recursive: true });
+    } catch (e) {
+      // ignore
+    }
+    cb(null, dest);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);

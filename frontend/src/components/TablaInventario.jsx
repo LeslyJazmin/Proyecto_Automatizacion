@@ -10,7 +10,9 @@ export default function TablaInventario({
   loading,
 }) {
   const tableContainerClass =
-    "mx-auto my-4 w-[95%] overflow-hidden shadow-2xl border border-gray-200";
+    tipo === "comestible"
+      ? "mx-auto my-4 w-[95%] overflow-auto shadow-2xl border border-gray-200 max-h-[60vh]"
+      : "mx-auto my-4 w-[95%] overflow-hidden shadow-2xl border border-gray-200";
 
   const tableClass = "w-full";
   const headClass =
@@ -25,8 +27,21 @@ export default function TablaInventario({
   const baseBtn =
     "p-1.5 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white font-bold";
   const imgBtn = `${baseBtn} bg-red-700 hover:bg-black hover:shadow-red-800/50`;
-  const editBtn = `${baseBtn} bg-blue-600 hover:bg-blue-800 hover:shadow-blue-600/50`;
-  const delBtn = `${baseBtn} bg-red-700 hover:bg-red-900 hover:shadow-red-900/50`;
+  const editBtn = `${baseBtn} bg-blue-600 hover:bg-blue-800 hover:shadow-blue-600/50 z-10`;
+  const delBtn = `${baseBtn} bg-red-700 hover:bg-red-900 hover:shadow-red-900/50 z-10`;
+
+  // clases condicionales solo para comestibles (mejor espacio)
+  const nameCellClass = tipo === "comestible" ? `${tdClass} max-w-[220px] truncate` : tdClass;
+  const marcaCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
+  const loteCellClass = tipo === "comestible" ? `${tdClass} whitespace-nowrap` : tdClass;
+  const saborCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
+  const pesoCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
+  const litrosCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
+
+  const thumbWrapperClass = tipo === "comestible" ? "relative w-10 h-8" : "relative w-14 h-12";
+  const thumbImgClass = tipo === "comestible" ? "w-10 h-8 object-contain rounded-md border border-gray-200 shadow-sm" : "w-14 h-12 object-contain rounded-md border border-gray-200 shadow-sm";
+
+  
 
   if (loading)
     return (
@@ -54,8 +69,7 @@ export default function TablaInventario({
           <thead className={headClass}>
             <tr>
               <th className={thClass}>ID</th>
-              {/* 🆕 Nueva columna Lote (solo para comestibles) */}
-              {tipo === "comestibles" && <th className={thClass}>Lote</th>}
+              {tipo === "comestible" && <th className={thClass}>Lote</th>}
               <th className={thClass}>Nombre</th>
               <th className={thClass}>Marca</th>
               <th className={thClass + " text-center"}>Stock</th>
@@ -69,13 +83,13 @@ export default function TablaInventario({
                   <th className={thClass}>Sabor</th>
                   <th className={thClass}>Peso</th>
                   <th className={thClass}>Litros</th>
-                  {/* ✅ Nueva columna de fecha de vencimiento */}
                   <th className={thClass}>Vencimiento</th>
                 </>
               )}
               <th className={thClass}>Precio</th>
               <th className={thClass}>Ubicación</th>
               <th className={thClass + " text-center"}>Img</th>
+              <th className={thClass + " text-center"}>Comprobante</th>
               <th className={thClass + " text-center"}>Acción</th>
             </tr>
           </thead>
@@ -109,12 +123,12 @@ export default function TablaInventario({
                   </td>
 
                   {/* 🆕 Mostrar lote al costado del ID solo para comestibles */}
-                  {tipo === "comestibles" && (
-                    <td className={tdClass}>{p.lote || "—"}</td>
+                  {tipo === "comestible" && (
+                    <td className={loteCellClass}>{p.lote || "—"}</td>
                   )}
 
-                  <td className={tdClass}>{p.nombre}</td>
-                  <td className={tdClass}>{p.marca || "N/A"}</td>
+                  <td className={nameCellClass} title={p.nombre}>{p.nombre}</td>
+                  <td className={marcaCellClass} title={p.marca}>{p.marca || "N/A"}</td>
                   <td className={`${tdClass} text-center ${stockColor}`}>
                     {stock}
                   </td>
@@ -126,9 +140,9 @@ export default function TablaInventario({
                     </>
                   ) : (
                     <>
-                      <td className={tdClass}>{p.sabor || "N/A"}</td>
-                      <td className={tdClass}>{p.peso || "-"}</td>
-                      <td className={tdClass}>{p.litros || "-"}</td>
+                      <td className={saborCellClass} title={p.sabor}>{p.sabor || "N/A"}</td>
+                      <td className={pesoCellClass}>{p.peso ? `${p.peso} kg` : "-"}</td>
+                      <td className={litrosCellClass}>{p.litros ? `${p.litros} L` : "-"}</td>
                       {/* ✅ Mostrar fecha de vencimiento */}
                       <td className={tdClass + " text-center"}>
                         {fechaVenc || "—"}
@@ -141,17 +155,49 @@ export default function TablaInventario({
                   </td>
                   <td className={tdClass}>{p.ubicacion || "N/A"}</td>
 
+
                   {/* --- Ícono de imagen centrado y resaltado --- */}
                   <td className={`${tdClass} text-center font-bold`}>
                     <div className="flex justify-center items-center">
                       {p.imagen ? (
-                        <button
-                          onClick={() => onVerImagen(`${API_URL}${p.imagen}`)}
-                          className={imgBtn}
-                          title="Ver imagen"
-                        >
-                          <ImageIcon size={16} />
-                        </button>
+                        <div className={thumbWrapperClass}>
+                          <img
+                            src={`${API_URL}${p.imagen}`}
+                            alt={`Imagen ${id}`}
+                            className={thumbImgClass}
+                          />
+                          <button
+                            onClick={() => onVerImagen(`${API_URL}${p.imagen}`)}
+                            className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/75"
+                            title="Ver imagen"
+                          >
+                            <ImageIcon size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 font-bold">-</span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* --- Ícono de comprobante centrado y resaltado --- */}
+                  <td className={`${tdClass} text-center font-bold`}>
+                    <div className="flex justify-center items-center">
+                      {p.img_comp ? (
+                        <div className={thumbWrapperClass}>
+                          <img
+                            src={`${API_URL}${p.img_comp}`}
+                            alt={`Comprobante ${id}`}
+                            className={thumbImgClass}
+                          />
+                          <button
+                            onClick={() => onVerImagen(`${API_URL}${p.img_comp}`)}
+                            className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/75"
+                            title="Ver comprobante"
+                          >
+                            <ImageIcon size={14} />
+                          </button>
+                        </div>
                       ) : (
                         <span className="text-gray-400 font-bold">-</span>
                       )}

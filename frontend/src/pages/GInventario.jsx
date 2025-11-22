@@ -98,8 +98,12 @@ export default function GInventario() {
 
   const handleRegistrarProducto = async (tipo, formData) => {
     try {
-      const data = new FormData();
-      for (const key in formData) data.append(key, formData[key]);
+      let data = formData;
+      // Si no es FormData, lo convertimos
+      if (!(formData instanceof FormData)) {
+        data = new FormData();
+        for (const key in formData) data.append(key, formData[key]);
+      }
       if (tipo === "ropa") await registrarEntradaRopa(data);
       else await registrarEntradaComestible(data);
 
@@ -403,6 +407,10 @@ export default function GInventario() {
         isOpen={confirmacionOpen}
         onClose={() => setConfirmacionOpen(false)}
         onConfirm={confirmarEliminacion}
+        title={"¿Seguro que deseas eliminar este producto?"}
+        description={"Esta acción no se puede deshacer."}
+        cancelText={"Cancelar"}
+        confirmText={"Sí, eliminar"}
       />
 
       <ModalMensaje

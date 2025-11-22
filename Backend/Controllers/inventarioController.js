@@ -11,6 +11,7 @@ const {
   listarMovimientosComestible,
   buscarRopa,
   buscarComestible,
+  buscarComestiblePorNombreYLote,
   actualizarRopa,
   actualizarComestible,
   eliminarRopa,
@@ -20,8 +21,14 @@ const {
 // --- ROPA NUEVA ---
 async function entradaRopa(req, res) {
   try {
-    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen };
+    const imagen = req.file ? `/uploads/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/${req.files.imagen[0].filename}` : null);
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
+    } else if (req.body.img_comp) {
+      img_comp = req.body.img_comp;
+    }
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen, img_comp };
     const registro = await registrarEntradaRopa(data);
     res.json(registro);
   } catch (err) {
@@ -33,7 +40,13 @@ async function entradaRopa(req, res) {
 // --- ROPA EXISTENTE ---
 async function entradaRopaExistente(req, res) {
   try {
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
+    } else if (req.body.img_comp) {
+      img_comp = req.body.img_comp;
+    }
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
     const registro = await registrarEntradaRopaExistente(data);
     res.json(registro);
   } catch (err) {
@@ -45,17 +58,34 @@ async function entradaRopaExistente(req, res) {
 // --- COMESTIBLE NUEVO ---
 async function entradaComestible(req, res) {
   try {
-    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
+    const imagen = req.file ? `/uploads/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/${req.files.imagen[0].filename}` : null);
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
+    } else if (req.body.img_comp) {
+      img_comp = req.body.img_comp;
+    }
+
     const data = { 
-      ...req.body, 
+      ...req.body,
+      lote: req.body.lote, // ⬅ NECESARIO
       id_usuario: req.user?.id || "ADM2235", 
       imagen,
-      fecha_vencimiento: req.body.fecha_vencimiento // ✅ agregado
+      fecha_vencimiento: req.body.fecha_vencimiento,
+      img_comp
     };
+
     const registro = await registrarEntradaComestible(data);
+
     res.json(registro);
+
   } catch (err) {
     console.error("❌ Error al registrar entrada de comestibles:", err);
+
+    if (err.message.includes("lote")) {
+      return res.status(400).json({ message: err.message });
+    }
+
     res.status(500).json({ message: "Error al registrar entrada de comestibles" });
   }
 }
@@ -63,7 +93,13 @@ async function entradaComestible(req, res) {
 // --- COMESTIBLE EXISTENTE ---
 async function entradaComestibleExistente(req, res) {
   try {
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
+    } else if (req.body.img_comp) {
+      img_comp = req.body.img_comp;
+    }
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
     const registro = await registrarEntradaComestibleExistente(data);
     res.json(registro);
   } catch (err) {
@@ -212,6 +248,30 @@ async function buscarComestibleController(req, res) {
   } catch (err) {
     console.error("❌ Error al buscar comestibles:", err);
     res.status(500).json({ message: "Error al buscar comestibles" });
+  }
+}
+
+// --- BUSCAR COMESTIBLE POR NOMBRE + LOTE ---
+async function buscarComestiblePorNombreYLoteController(req, res) {
+  try {
+    const { lote } = req.query;
+
+    if (!lote) {
+      return res.status(400).json({ message: "El lote es requerido" });
+    }
+
+    // Buscar todos los comestibles y filtrar por lote
+    const productos = await listarComestibles();
+    const resultados = productos.filter(p => p.lote === lote);
+
+    if (resultados.length > 0) {
+      return res.json({ existe: true, productos: resultados });
+    } else {
+      return res.json({ existe: false, productos: [] });
+    }
+  } catch (err) {
+    console.error("❌ Error al buscar comestible por lote:", err);
+    res.status(500).json({ message: "Error al buscar comestible por lote" });
   }
 }
 
@@ -380,6 +440,7 @@ module.exports = {
   listarMovimientosComestibleController,
   buscarRopaController,
   buscarComestibleController,
+  buscarComestiblePorNombreYLoteController,
   actualizarComestibleController,
   actualizarRopaController,
   eliminarRopaController,      
