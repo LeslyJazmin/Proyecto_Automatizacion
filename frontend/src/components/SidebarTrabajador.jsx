@@ -7,7 +7,7 @@ export default function SidebarTrabajador({ onLogout, logoutOpen }) {
 
   const isActiveRoute = (path) => {
     if (path === "logout") return logoutOpen;
-    return location.pathname.toLowerCase().startsWith(path.toLowerCase());
+    return location.pathname.toLowerCase() === path.toLowerCase();
   };
 
   const getButtonClasses = (path) => {
@@ -52,43 +52,38 @@ export default function SidebarTrabajador({ onLogout, logoutOpen }) {
 
       {/* Navegación */}
       <div className="flex-1 px-5 space-y-1 overflow-y-auto">
-
         {/* Dashboard Principal */}
         <button
-          className={getButtonClasses("/TrabajadorDashboard")}
-          onClick={() => navigate("/TrabajadorDashboard")}
+          className={getButtonClasses("/trabajador-dashboard")}
+          onClick={() => navigate("/trabajador-dashboard")}
         >
-          <Info {...getIconProps("/TrabajadorDashboard")} />
+          <Info {...getIconProps("/trabajador-dashboard")} />
           <span className="text-[12.5px] tracking-wide">Dashboard Principal</span>
         </button>
 
         {/* Gestión de Inventario */}
         <button
-          className={getButtonClasses("/TInventario")}
-          onClick={() => navigate("/TInventario")}
+          className={getButtonClasses("/tinventario")}
+          onClick={() => navigate("/tinventario")}
         >
-          <Package {...getIconProps("/TInventario")} />
-          <span className="text-[12.5px] tracking-wide">Gestión de Inventario</span>
-        </button>
-
-        {/* Transacciones y Flujo */}
-        <button
-          className={getButtonClasses("/TMovimientos")}
-          onClick={() => navigate("/TMovimientos")}
-        >
-          <TrendingUp {...getIconProps("/TMovimientos")} />
+          <Package {...getIconProps("/tinventario")} />
           <span className="text-[12.5px] tracking-wide">Transacciones y Flujo</span>
         </button>
 
+        {/* Reportes */}
+        <button
+          className={getButtonClasses("/treportes")}
+          onClick={() => navigate("/treportes")}
+        >
+          <TrendingUp {...getIconProps("/treportes")} />
+          <span className="text-[12.5px] tracking-wide">Análisis</span>
+        </button>
       </div>
 
       {/* Cerrar sesión */}
       <div className="px-5 pb-6 mt-auto">
         <div className="h-px bg-white/10 mb-4"></div>
-        <button
-          onClick={onLogout}
-          className={getButtonClasses("logout")}
-        >
+        <button onClick={onLogout} className={getButtonClasses("logout")}>
           <LogOut {...getIconProps("logout")} />
           <span className="text-[12.5px] tracking-wide">Cerrar Sesión</span>
         </button>

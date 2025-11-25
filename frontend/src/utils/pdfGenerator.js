@@ -83,7 +83,7 @@ export async function generarPDFInventario(ropa = [], comestibles = [], options 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(28); // un poco más grande
     doc.setTextColor(110, 0, 30); // color vino más intenso
-    doc.text("GIMNASIO TERRONES", pageWidth / 2, pageHeight / 2, {
+    doc.text("", pageWidth / 2, pageHeight / 2, {
       align: "center",
       angle: 0, // centrado sin rotación
     });

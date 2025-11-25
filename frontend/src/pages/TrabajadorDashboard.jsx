@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/SidebarTrabajador";
 import Modal from "../components/ui/Modal";
 import InfoEmpresa from "../components/InfoEmpresa";
-import UserList from "../components/UserList";
-import useUsers from "../hooks/useUsers";
 import { jwtDecode } from "jwt-decode";
 
 export default function TrabajadorDashboard({ user, setToken, setUser }) {
@@ -12,9 +10,6 @@ export default function TrabajadorDashboard({ user, setToken, setUser }) {
   const [nombreUsuario, setNombreUsuario] = useState("Trabajador");
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Obtener usuarios desde hook
-  const { users, loading: usersLoading, error } = useUsers();
 
   useEffect(() => {
     if (!user) {
@@ -85,31 +80,6 @@ export default function TrabajadorDashboard({ user, setToken, setUser }) {
               alt="Información de la empresa"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-          </div>
-        </div>
-
-        {/* Tabla de trabajadores (solo lectura) */}
-        <div className="rounded-2xl shadow-lg border border-neutral-200 overflow-hidden">
-          <div
-            className="bg-gradient-to-r from-blue-900 via-black to-blue-950 
-                       border-b border-blue-700 
-                       p-4 flex justify-between items-center"
-          >
-            <h2 className="text-white text-xl font-semibold tracking-wide">
-              Personal Registrado
-            </h2>
-          </div>
-
-          <div className="bg-white p-5">
-            <UserList
-              users={users}
-              loading={usersLoading}
-              error={error}
-              currentUser={{ username: nombreUsuario, rol: "trabajador" }}
-              onEdit={() => {}}
-              onDelete={() => {}}
-              readOnly={true}
-            />
           </div>
         </div>
       </main>

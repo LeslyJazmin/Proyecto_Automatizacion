@@ -82,7 +82,7 @@ export default function Sidebar({ onLogout, logoutOpen }) {
           onClick={() => navigate("/Reportes")}
         >
           <BarChart3 {...getIconProps("/Reportes")} />
-          <span className="text-[12.5px] tracking-wide">Análisis y Reportes</span>
+          <span className="text-[12.5px] tracking-wide">Análisis</span>
         </button>
       </div>
 

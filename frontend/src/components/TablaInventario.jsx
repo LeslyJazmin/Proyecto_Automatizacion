@@ -27,21 +27,17 @@ export default function TablaInventario({
   const baseBtn =
     "p-1.5 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white font-bold";
   const imgBtn = `${baseBtn} bg-red-700 hover:bg-black hover:shadow-red-800/50`;
+  const imgBtnGray =
+    "p-1.5 rounded-full bg-gray-400/70 cursor-not-allowed flex items-center justify-center";
   const editBtn = `${baseBtn} bg-blue-600 hover:bg-blue-800 hover:shadow-blue-600/50 z-10`;
   const delBtn = `${baseBtn} bg-red-700 hover:bg-red-900 hover:shadow-red-900/50 z-10`;
 
-  // clases condicionales solo para comestibles (mejor espacio)
   const nameCellClass = tipo === "comestible" ? `${tdClass} max-w-[220px] truncate` : tdClass;
   const marcaCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
   const loteCellClass = tipo === "comestible" ? `${tdClass} whitespace-nowrap` : tdClass;
   const saborCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
   const pesoCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
   const litrosCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
-
-  const thumbWrapperClass = tipo === "comestible" ? "relative w-10 h-8" : "relative w-14 h-12";
-  const thumbImgClass = tipo === "comestible" ? "w-10 h-8 object-contain rounded-md border border-gray-200 shadow-sm" : "w-14 h-12 object-contain rounded-md border border-gray-200 shadow-sm";
-
-  
 
   if (loading)
     return (
@@ -96,14 +92,17 @@ export default function TablaInventario({
 
           <tbody>
             {datos.map((p) => {
+              console.log("PRODUCTO:", p);      // 🔥 DEBUG
+              console.log("IMAGEN:", p.imagen); // 🔥 DEBUG
+
               const id = tipo === "ropa" ? p.id_ropa : p.id_comestible;
               const stock = p.stock_actual ?? 0;
+
               const stockColor =
                 stock < 50
                   ? "text-red-700 font-bold"
                   : "text-green-700 font-bold";
 
-              // ✅ Dar formato a la fecha de vencimiento
               const fechaVenc =
                 p.fecha_vencimiento &&
                 new Date(p.fecha_vencimiento).toLocaleDateString("es-PE", {
@@ -114,24 +113,18 @@ export default function TablaInventario({
 
               return (
                 <tr key={id} className={trClass}>
-                  <td
-                    className={
-                      tdClass + " font-mono text-gray-900 font-semibold"
-                    }
-                  >
+                  <td className={tdClass + " font-mono text-gray-900 font-semibold"}>
                     {id}
                   </td>
 
-                  {/* 🆕 Mostrar lote al costado del ID solo para comestibles */}
                   {tipo === "comestible" && (
                     <td className={loteCellClass}>{p.lote || "—"}</td>
                   )}
 
                   <td className={nameCellClass} title={p.nombre}>{p.nombre}</td>
                   <td className={marcaCellClass} title={p.marca}>{p.marca || "N/A"}</td>
-                  <td className={`${tdClass} text-center ${stockColor}`}>
-                    {stock}
-                  </td>
+
+                  <td className={`${tdClass} text-center ${stockColor}`}>{stock}</td>
 
                   {tipo === "ropa" ? (
                     <>
@@ -143,7 +136,6 @@ export default function TablaInventario({
                       <td className={saborCellClass} title={p.sabor}>{p.sabor || "N/A"}</td>
                       <td className={pesoCellClass}>{p.peso ? `${p.peso} kg` : "-"}</td>
                       <td className={litrosCellClass}>{p.litros ? `${p.litros} L` : "-"}</td>
-                      {/* ✅ Mostrar fecha de vencimiento */}
                       <td className={tdClass + " text-center"}>
                         {fechaVenc || "—"}
                       </td>
@@ -153,71 +145,56 @@ export default function TablaInventario({
                   <td className={tdClass + " font-bold text-green-700"}>
                     S/ {parseFloat(p.precio).toFixed(2) || "0.00"}
                   </td>
+
                   <td className={tdClass}>{p.ubicacion || "N/A"}</td>
 
-
-                  {/* --- Ícono de imagen centrado y resaltado --- */}
-                  <td className={`${tdClass} text-center font-bold`}>
-                    <div className="flex justify-center items-center">
+                  {/* ---------- IMAGEN ---------- */}
+                  <td className={`${tdClass} text-center`}>
+                    <div className="flex justify-center">
                       {p.imagen ? (
-                        <div className={thumbWrapperClass}>
-                          <img
-                            src={`${API_URL}${p.imagen}`}
-                            alt={`Imagen ${id}`}
-                            className={thumbImgClass}
-                          />
-                          <button
-                            onClick={() => onVerImagen(`${API_URL}${p.imagen}`)}
-                            className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/75"
-                            title="Ver imagen"
-                          >
-                            <ImageIcon size={14} />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onVerImagen(`${API_URL}/${p.imagen}`)}
+                          className={imgBtn}
+                          title="Ver imagen"
+                        >
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </button>
                       ) : (
-                        <span className="text-gray-400 font-bold">-</span>
+                        <div className={imgBtnGray}>
+                          <ImageIcon className="w-4 h-4 text-white/60" />
+                        </div>
                       )}
                     </div>
                   </td>
 
-                  {/* --- Ícono de comprobante centrado y resaltado --- */}
-                  <td className={`${tdClass} text-center font-bold`}>
-                    <div className="flex justify-center items-center">
+                  {/* ---------- COMPROBANTE ---------- */}
+                  <td className={`${tdClass} text-center`}>
+                    <div className="flex justify-center">
                       {p.img_comp ? (
-                        <div className={thumbWrapperClass}>
-                          <img
-                            src={`${API_URL}${p.img_comp}`}
-                            alt={`Comprobante ${id}`}
-                            className={thumbImgClass}
-                          />
-                          <button
-                            onClick={() => onVerImagen(`${API_URL}${p.img_comp}`)}
-                            className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/75"
-                            title="Ver comprobante"
-                          >
-                            <ImageIcon size={14} />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onVerImagen(`${API_URL}/${p.img_comp}`)}
+                          className={imgBtn}
+                          title="Ver comprobante"
+                        >
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </button>
                       ) : (
-                        <span className="text-gray-400 font-bold">-</span>
+                        <div className={imgBtnGray}>
+                          <ImageIcon className="w-4 h-4 text-white/60" />
+                        </div>
                       )}
                     </div>
                   </td>
 
                   <td className={tdClass + " text-center"}>
                     <div className="flex justify-center gap-1.5">
-                      <button
-                        onClick={() => onEditar(p)}
-                        className={editBtn}
-                        title="Editar"
-                      >
+                      <button onClick={() => onEditar(p)} className={editBtn} title="Editar">
                         <Wand2 size={14} />
                       </button>
-                      <button
-                        onClick={() => onEliminar(id, tipo)}
-                        className={delBtn}
-                        title="Eliminar"
-                      >
+
+                      <button onClick={() => onEliminar(id, tipo)} className={delBtn} title="Eliminar">
                         <Trash2 size={14} />
                       </button>
                     </div>

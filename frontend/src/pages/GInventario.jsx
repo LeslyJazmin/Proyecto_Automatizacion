@@ -56,6 +56,7 @@ export default function GInventario() {
   const [loadingComestibles, setLoadingComestibles] = useState(true);
 
   const [mensaje, setMensaje] = useState({ open: false, tipo: "", texto: "" });
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const usuarioId = "ADM2235";
   const location = useLocation();
@@ -393,6 +394,25 @@ export default function GInventario() {
           </div>
         </div>
       )}
+<Button
+  onClick={() => setLogoutModalOpen(true)}
+  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.05] active:scale-95"
+>
+  <Shirt className="w-5 h-5" /> {/* O reemplaza con un ícono de logout */}
+  <span>Cerrar Sesión</span>
+</Button>
+<ModalConfirmacion
+  isOpen={logoutModalOpen}
+  onClose={() => setLogoutModalOpen(false)}
+  onConfirm={() => {
+    sessionStorage.clear();
+    window.location.href = "/login"; // redirige al login
+  }}
+  title="¿Cerrar sesión?"
+  description="¿Deseas salir de tu cuenta?"
+  cancelText="Cancelar"
+  confirmText="Cerrar Sesión"
+/>
 
       {productoEditar && (
         <ActualizarProducto

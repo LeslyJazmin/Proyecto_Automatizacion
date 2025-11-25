@@ -4,8 +4,10 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import TrabajadorDashboard from "./pages/TrabajadorDashboard";
 import GInventario from "./pages/GInventario";
+import TInventario from "./pages/TInventario";
 import Movimientos from "./pages/Movimientos";
 import Reportes from "./pages/Reportes";
+import TReportes from "./pages/TReportes";
 import { jwtDecode } from "jwt-decode";
 
 function App() {
@@ -13,13 +15,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar SOLO el token desde sessionStorage
   useEffect(() => {
     const savedToken = sessionStorage.getItem("token");
-
     if (savedToken) {
       setToken(savedToken);
-
       try {
         const decoded = jwtDecode(savedToken);
         setUser({
@@ -31,15 +30,10 @@ function App() {
         console.error("Token inválido:", error);
       }
     }
-
     setLoading(false);
   }, []);
 
-  // ⛔ YA NO GUARDAMOS USER EN SESSIONSTORAGE
-  // ❌ useEffect eliminado
-
   if (loading) return <div className="text-center mt-10">Cargando...</div>;
-
   if (!token) return <Login setToken={setToken} setUser={setUser} />;
 
   return (
@@ -49,11 +43,22 @@ function App() {
         <>
           <Route
             path="/AdminDashboard"
-            element={<AdminDashboard user={user} setUser={setUser} setToken={setToken} />}
+            element={
+              <AdminDashboard user={user} setUser={setUser} setToken={setToken} />
+            }
           />
-          <Route path="/GInventario" element={<GInventario />} />
-          <Route path="/Movimientos" element={<Movimientos />} />
-          <Route path="/Reportes" element={<Reportes />} />
+          <Route
+            path="/GInventario"
+            element={<GInventario user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route
+            path="/Movimientos"
+            element={<Movimientos user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route
+            path="/Reportes"
+            element={<Reportes user={user} setUser={setUser} setToken={setToken} />}
+          />
           <Route path="*" element={<Navigate to="/AdminDashboard" replace />} />
         </>
       )}
@@ -62,10 +67,20 @@ function App() {
       {(user?.rol === "trabajador" || user?.rol === "user") && (
         <>
           <Route
-            path="/TrabajadorDashboard"
-            element={<TrabajadorDashboard user={user} setUser={setUser} setToken={setToken} />}
+            path="/trabajador-dashboard"
+            element={
+              <TrabajadorDashboard user={user} setUser={setUser} setToken={setToken} />
+            }
           />
-          <Route path="*" element={<Navigate to="/TrabajadorDashboard" replace />} />
+          <Route
+            path="/tinventario"
+            element={<TInventario user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route
+            path="/treportes"
+            element={<TReportes user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route path="*" element={<Navigate to="/trabajador-dashboard" replace />} />
         </>
       )}
     </Routes>

@@ -320,9 +320,10 @@ async function buscarComestible(criterio) {
         c.id_comestible, 
         c.nombre, 
         c.marca, 
-        c.sabor, 
-        c.peso, 
-        c.litros, 
+          c.sabor, 
+          c.peso, 
+          c.litros, 
+          c.lote,
         c.precio, 
         c.stock_actual, 
         c.fecha_vencimiento, 
@@ -528,7 +529,7 @@ async function registrarSalidaComestible(data) {
 // --- BUSCAR COMESTIBLE POR NOMBRE + LOTE ---
 async function buscarComestiblePorNombreYLote(nombre, lote) {
   try {
-    const pool = await sql.connect(config);
+    const pool = await getPool();
 
     const result = await pool.request()
       .input("nombre", sql.NVarChar(200), nombre)
