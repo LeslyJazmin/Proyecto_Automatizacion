@@ -86,8 +86,14 @@ export async function obtenerComestibles() {
 /* ---------------- MOVIMIENTOS ---------------- */
 
 // ✅ LISTAR MOVIMIENTOS DE ROPA
-export async function obtenerMovimientosRopa() {
-  const res = await fetch(`${API_BASE}/movimientos/ropa`, {
+export async function obtenerMovimientosRopa(anio, mes) {
+  const params = new URLSearchParams();
+  // Solo agregar parámetros si no son nulos ni indefinidos
+  if (anio !== null && anio !== undefined) params.append('anio', anio);
+  if (mes !== null && mes !== undefined) params.append('mes', mes);
+  const queryString = params.toString();
+
+  const res = await fetch(`${API_BASE}/movimientos/ropa${queryString ? `?${queryString}` : ''}`, {
     method: "GET",
     headers: getHeaders(),
   });
@@ -100,8 +106,14 @@ export async function obtenerMovimientosRopa() {
 }
 
 // ✅ LISTAR MOVIMIENTOS DE COMESTIBLES
-export async function obtenerMovimientosComestibles() {
-  const res = await fetch(`${API_BASE}/movimientos/comestibles`, {
+export async function obtenerMovimientosComestibles(anio, mes) {
+  const params = new URLSearchParams();
+  // Solo agregar parámetros si no son nulos ni indefinidos
+  if (anio !== null && anio !== undefined) params.append('anio', anio);
+  if (mes !== null && mes !== undefined) params.append('mes', mes);
+  const queryString = params.toString();
+
+  const res = await fetch(`${API_BASE}/movimientos/comestibles${queryString ? `?${queryString}` : ''}`, {
     method: "GET",
     headers: getHeaders(),
   });

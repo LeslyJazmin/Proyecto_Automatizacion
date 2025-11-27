@@ -70,15 +70,9 @@ async function entradaComestible(req, res) {
     };
 
     const registro = await registrarEntradaComestible(data);
-
     res.json(registro);
-
   } catch (err) {
-    if (err.message.includes("lote")) {
-      return res.status(400).json({ message: err.message });
-    }
-
-    res.status(500).json({ message: "Error al registrar entrada de comestibles" });
+    res.status(500).json({ message: "Error al registrar entrada de comestible" });
   }
 }
 
@@ -89,7 +83,13 @@ async function entradaComestibleExistente(req, res) {
     if (!img_comp && req.files && req.files.img_comp) {
       img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
     }
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
+
+    const data = { 
+      ...req.body, 
+      id_usuario: req.user?.id || "ADM2235",
+      img_comp
+    };
+
     const registro = await registrarEntradaComestibleExistente(data);
     res.json(registro);
   } catch (err) {
@@ -97,7 +97,7 @@ async function entradaComestibleExistente(req, res) {
   }
 }
 
-// --- LISTADOS ---
+// --- LISTAR ROPA ---
 async function listarRopaController(req, res) {
   try {
     const productos = await listarRopa();
@@ -107,6 +107,7 @@ async function listarRopaController(req, res) {
   }
 }
 
+// --- LISTAR COMESTIBLES ---
 async function listarComestiblesController(req, res) {
   try {
     const productos = await listarComestibles();
@@ -119,7 +120,14 @@ async function listarComestiblesController(req, res) {
 // --- LISTAR MOVIMIENTOS ROPA ---
 async function listarMovimientosRopaController(req, res) {
   try {
-    const movimientos = await listarMovimientosRopa();
+    // Manejar correctamente los parámetros nulos o indefinidos
+    const { anio, mes } = req.query;
+    
+    // Convertir a número si están definidos y no son nulos
+    const anioNum = (anio !== undefined && anio !== null && anio !== '') ? parseInt(anio, 10) : null;
+    const mesNum = (mes !== undefined && mes !== null && mes !== '') ? parseInt(mes, 10) : null;
+    
+    const movimientos = await listarMovimientosRopa(anioNum, mesNum);
 
     const dias = [
       "Domingo", "Lunes", "Martes", "Miércoles",
@@ -147,7 +155,14 @@ async function listarMovimientosRopaController(req, res) {
 // --- LISTAR MOVIMIENTOS COMESTIBLE ---
 async function listarMovimientosComestibleController(req, res) {
   try {
-    const movimientos = await listarMovimientosComestible();
+    // Manejar correctamente los parámetros nulos o indefinidos
+    const { anio, mes } = req.query;
+    
+    // Convertir a número si están definidos y no son nulos
+    const anioNum = (anio !== undefined && anio !== null && anio !== '') ? parseInt(anio, 10) : null;
+    const mesNum = (mes !== undefined && mes !== null && mes !== '') ? parseInt(mes, 10) : null;
+    
+    const movimientos = await listarMovimientosComestible(anioNum, mesNum);
 
     const dias = [
       "Domingo", "Lunes", "Martes", "Miércoles",
@@ -180,25 +195,15 @@ async function buscarRopaController(req, res) {
     const resultados = await buscarRopa(q);
 
     // Buscar coincidencia exacta
-    const exacto = resultados.find(
-      (r) =>
-        r.id_ropa?.toLowerCase() === q.toLowerCase() ||
-        r.nombre?.toLowerCase() === q.toLowerCase()
+    const exactMatch = resultados.find(r => 
+      r.nombre.toLowerCase() === q.toLowerCase()
     );
 
-    // Si hay coincidencia exacta, solo devolvemos esa
-    if (exacto) {
-      return res.json([exacto]);
+    if (exactMatch) {
+      return res.json([exactMatch, ...resultados.filter(r => r.id_ropa !== exactMatch.id_ropa)]);
     }
 
-    // Si no hay coincidencia exacta, devolvemos resultados parciales
-    const parciales = resultados.filter(
-      (r) =>
-        r.id_ropa?.toLowerCase().includes(q.toLowerCase()) ||
-        r.nombre?.toLowerCase().includes(q.toLowerCase())
-    );
-
-    res.json(parciales);
+    res.json(resultados);
   } catch (err) {
     res.status(500).json({ message: "Error al buscar ropa" });
   }
@@ -212,120 +217,68 @@ async function buscarComestibleController(req, res) {
 
     const resultados = await buscarComestible(q);
 
-    const exacto = resultados.find(
-      (c) =>
-        c.id_comestible?.toLowerCase() === q.toLowerCase() ||
-        c.nombre?.toLowerCase() === q.toLowerCase()
+    // Buscar coincidencia exacta
+    const exactMatch = resultados.find(c => 
+      c.nombre.toLowerCase() === q.toLowerCase()
     );
 
-    if (exacto) {
-      return res.json([exacto]);
+    if (exactMatch) {
+      return res.json([exactMatch, ...resultados.filter(c => c.id_comestible !== exactMatch.id_comestible)]);
     }
 
-    const parciales = resultados.filter(
-      (c) =>
-        c.id_comestible?.toLowerCase().includes(q.toLowerCase()) ||
-        c.nombre?.toLowerCase().includes(q.toLowerCase())
-    );
-
-    res.json(parciales);
+    res.json(resultados);
   } catch (err) {
-    res.status(500).json({ message: "Error al buscar comestibles" });
+    res.status(500).json({ message: "Error al buscar comestible" });
   }
 }
 
 // --- BUSCAR COMESTIBLE POR NOMBRE + LOTE ---
 async function buscarComestiblePorNombreYLoteController(req, res) {
   try {
-    const { lote } = req.query;
+    const { nombre, lote } = req.query;
+    if (!nombre || !lote) return res.status(400).json({ message: "Debe ingresar nombre y lote" });
 
-    if (!lote) {
-      return res.status(400).json({ message: "El lote es requerido" });
-    }
-
-    // Buscar todos los comestibles y filtrar por lote
-    const productos = await listarComestibles();
-    const resultados = productos.filter(p => p.lote === lote);
-
-    if (resultados.length > 0) {
-      return res.json({ existe: true, productos: resultados });
-    } else {
-      return res.json({ existe: false, productos: [] });
-    }
+    const resultados = await buscarComestiblePorNombreYLote(nombre, lote);
+    res.json(resultados);
   } catch (err) {
-    res.status(500).json({ message: "Error al buscar comestible por lote" });
+    res.status(500).json({ message: "Error al buscar comestible por nombre y lote" });
   }
 }
 
-// --- ACTUALIZAR COMESTIBLE (editar peso, litros o fecha de vencimiento según corresponda) ---
+// --- ACTUALIZAR COMESTIBLE ---
 async function actualizarComestibleController(req, res) {
   try {
-    const { 
-      id_comestible, 
-      marca, 
-      sabor, 
-      peso, 
-      litros, 
-      ubicacion, 
-      precio, 
-      fecha_vencimiento
-    } = req.body;
+    const { id_comestible, ...updates } = req.body;
 
-    if (!id_comestible) {
-      return res.status(400).json({ message: "Falta el id_comestible" });
-    }
-
-    // 🔍 Obtener producto actual
-    const productos = await listarComestibles();
-    const productoActual = productos.find(p => p.id_comestible === id_comestible);
-
-    if (!productoActual) {
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-
-    // Manejar imagen: verificar req.files.imagen[0] (multer con .fields()) o req.file o req.body.imagen
-    let imagen = productoActual.imagen; // Default to existing image
-      
-    // Si se subió una nueva imagen
-    if (req.files && req.files.imagen && req.files.imagen[0]) {
-      imagen = `/uploads/comestibles/imagenes/${req.files.imagen[0].filename}`;
-    } else if (req.file) {
+    // Si hay imagen nueva, usar esa; si no, mantener la existente
+    let imagen = updates.imagen;
+    if (!imagen && req.file) {
       imagen = `/uploads/comestibles/imagenes/${req.file.filename}`;
-    } else if (req.body.imagen) {
-      // Si se envió una imagen en el cuerpo (ruta existente)
-      imagen = req.body.imagen;
-    }
-    // ⚖️ Determinar si el producto usa peso o litros
-    let nuevoPeso = productoActual.peso;
-    let nuevoLitros = productoActual.litros;
-
-    if (productoActual.litros !== null && productoActual.litros !== 0) {
-      nuevoLitros = litros ?? productoActual.litros;
-      nuevoPeso = null;
-    } else if (productoActual.peso !== null && productoActual.peso !== 0) {
-      nuevoPeso = peso ?? productoActual.peso;
-      nuevoLitros = null;
-    } else {
-      nuevoPeso = peso ?? null;
-      nuevoLitros = litros ?? null;
     }
 
-    // 🧾 Preparar datos para actualizar
+    // Si hay comprobante nuevo, usar ese; si no, mantener el existente
+    let img_comp = updates.img_comp;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
+    }
+
     const data = {
       id_comestible,
-      marca: marca ?? productoActual.marca,
-      sabor: sabor ?? productoActual.sabor,
-      peso: nuevoPeso,
-      litros: nuevoLitros,
-      ubicacion: ubicacion ?? productoActual.ubicacion,
+      nombre: updates.nombre,
+      marca: updates.marca,
+      sabor: updates.sabor,
+      peso: updates.peso,
+      litros: updates.litros,
+      precio: updates.precio,
+      stock_actual: updates.stock_actual,
+      fecha_vencimiento: updates.fecha_vencimiento,
+      lote: updates.lote,
+      ubicacion: updates.ubicacion,
       imagen: imagen,
-      precio: precio ?? productoActual.precio,
-      fecha_vencimiento: fecha_vencimiento ?? productoActual.fecha_vencimiento // ✅ añadido
+      img_comp: img_comp
     };
 
-    // FIX: Se agregó la llamada a la función del modelo, que faltaba en el código original.
-    const resultado = await actualizarComestible(data); 
-
+    const resultado = await actualizarComestible(data);
     res.json(resultado);
 
   } catch (err) {
@@ -333,45 +286,40 @@ async function actualizarComestibleController(req, res) {
   }
 }
 
-// --- ACTUALIZAR ROPA DEPORTIVA ---
+// --- ACTUALIZAR ROPA ---
 async function actualizarRopaController(req, res) {
   try {
-    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion, precio } = req.body;
-    
-    if (!id_ropa) {
-      return res.status(400).json({ message: "Falta el id_ropa" });
-    }
+    const { id_ropa, ...updates } = req.body;
 
-    // Traer el producto actual
-    const productos = await listarRopa();
-    const ropaActual = productos.find(p => p.id_ropa === id_ropa);
-
-    if (!ropaActual) {
-      return res.status(404).json({ message: "Producto no encontrado" });
-    }
-
-    // Manejar imagen: verificar req.files.imagen[0] (multer con .fields()) o req.file o req.body.imagen
-    let imagen = ropaActual.imagen; // Default to existing image
-      
-    // Si se subió una nueva imagen
-    if (req.files && req.files.imagen && req.files.imagen[0]) {
-      imagen = `/uploads/ropa/imagenes/${req.files.imagen[0].filename}`;
-    } else if (req.file) {
+    // Si hay imagen nueva, usar esa; si no, mantener la existente
+    let imagen = updates.imagen;
+    if (!imagen && req.file) {
       imagen = `/uploads/ropa/imagenes/${req.file.filename}`;
-    } else if (req.body.imagen) {
-      // Si se envió una imagen en el cuerpo (ruta existente)
-      imagen = req.body.imagen;
     }
+
+    // Si hay comprobante nuevo, usar ese; si no, mantener el existente
+    let img_comp = updates.img_comp;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
+    }
+
+    const ropaActual = await listarRopa();
+    const ropaEncontrada = ropaActual.find(r => r.id_ropa === id_ropa);
+    if (!ropaEncontrada) {
+      return res.status(404).json({ message: "Ropa no encontrada" });
+    }
+
+    const { nombre, marca, talla, color, precio, stock_actual, ubicacion } = updates;
+
     const data = {
       id_ropa,
-      nombre: nombre ?? ropaActual.nombre,
-      marca: marca ?? ropaActual.marca,
-      talla: talla ?? ropaActual.talla,
-      tipo_ropa: tipo_ropa ?? ropaActual.tipo_ropa,
-      color: color ?? ropaActual.color,
-      ubicacion: ubicacion ?? ropaActual.ubicacion,
+      nombre: nombre ?? ropaEncontrada.nombre,
+      marca: marca ?? ropaEncontrada.marca,
+      talla: talla ?? ropaEncontrada.talla,
+      color: color ?? ropaEncontrada.color,
+      ubicacion: ubicacion ?? ropaEncontrada.ubicacion,
       imagen: imagen,
-      precio: precio ?? ropaActual.precio // 👈 se agrega aquí
+      precio: precio ?? ropaEncontrada.precio // 👈 se agrega aquí
     };
 
     const resultado = await actualizarRopa(data);
