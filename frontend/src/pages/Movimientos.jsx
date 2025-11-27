@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
+import MonthYearSelector from "../components/MonthYearSelector";
 import { useLocation } from "react-router-dom";
 import TablaMovimientos from "../components/TablaMovimientos";
 import { obtenerMovimientosRopa, obtenerMovimientosComestibles } from "../api/inventario";
 import { generarPDFMovimientos } from "../utils/pdfMovimientos";
 import Button from "../components/ui/Button";
-import { Loader2, Zap, Shirt, Pizza, FileDown } from "lucide-react"; // Iconos actualizados
+import { Loader2, Zap, Shirt, Pizza, FileDown } from "lucide-react";
 
 export default function Movimientos() {
   const location = useLocation();
@@ -15,27 +16,36 @@ export default function Movimientos() {
   const [movComestibles, setMovComestibles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchMovimientos() {
-      try {
-        setLoading(true);
-        // Esperar ambas llamadas en paralelo
-        const [ropa, comestibles] = await Promise.all([
-          obtenerMovimientosRopa(),
-          obtenerMovimientosComestibles()
-        ]);
-        
-        setMovRopa(ropa);
-        setMovComestibles(comestibles);
-      } catch (err) {
-        console.error("Error al obtener movimientos:", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchMovimientos = useCallback(async (anio = null, mes = null) => {
+    try {
+      setLoading(true);
+      // Fetch movements with optional year/month filters
+      const [ropa, comestibles] = await Promise.all([
+        obtenerMovimientosRopa(anio, mes),
+        obtenerMovimientosComestibles(anio, mes)
+      ]);
+      
+      setMovRopa(ropa || []);
+      setMovComestibles(comestibles || []);
+    } catch (err) {
+      console.error("Error al obtener movimientos:", err);
+      // En caso de error, establecer arrays vacíos para mostrar el mensaje correspondiente
+      setMovRopa([]);
+      setMovComestibles([]);
+    } finally {
+      setLoading(false);
     }
-
-    fetchMovimientos();
   }, []);
+
+  // Fetch all movements initially
+  useEffect(() => {
+    fetchMovimientos();
+  }, [fetchMovimientos]);
+
+  const handleMonthYearSelect = useCallback((anio, mes) => {
+    // When month/year is selected, fetch movements for that period
+    fetchMovimientos(anio, mes);
+  }, [fetchMovimientos]);
 
   const handleLogout = () => console.log("Cerrar sesión");
 
@@ -44,7 +54,7 @@ export default function Movimientos() {
   // Contenedor principal con fondo suave
   const mainContainerClass = "bg-gray-100 min-h-screen";
   // Área de contenido principal: Limpio y con margen adecuado
-  const contentAreaClass = "ml-64 p-10"; 
+  const contentAreaClass = "ml-64 p-10";
 
   // Tarjeta contenedora para el contenido: Fondo blanco, redondeado y flotante
   const cardContainerClass = "bg-white p-8 rounded-2xl shadow-2xl space-y-8 border border-gray-100";
@@ -59,7 +69,6 @@ export default function Movimientos() {
   const noDataClass = "py-8 px-6 text-center text-lg font-medium text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300";
   // ---------------------------------------------
 
-
   return (
     <div className={mainContainerClass}>
       <Sidebar onLogout={handleLogout} active={sidebarActive} />
@@ -68,25 +77,27 @@ export default function Movimientos() {
         <div className={cardContainerClass}>
             
             {/* 🔥 TÍTULO PRINCIPAL + BOTÓN DESCARGAR */}
-            <div className="flex items-center justify-between border-b border-red-700/50 pb-3">
-              <h1 className="flex items-center gap-3 text-3xl font-black text-gray-900 tracking-tighter">
-                <Zap size={30} className="text-red-700 fill-red-200/50" />
-                HISTORIAL DE MOVIMIENTOS
-              </h1>
+            <div className="flex items-center justify-between pb-3 border-b border-red-700/50">
+              <div className="flex items-center gap-4">
+                <h1 className="flex items-center gap-3 text-3xl font-black tracking-tighter text-gray-900">
+                  <Zap size={30} className="text-red-700 fill-red-200/50" />
+                  HISTORIAL DE MOVIMIENTOS
+                </h1>
+                <MonthYearSelector onMonthYearSelect={handleMonthYearSelect} />
+              </div>
 
               <Button
                 onClick={() => generarPDFMovimientos(movRopa, movComestibles)}
-                className="flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-4 py-2 rounded-xl shadow-md transition-all duration-200"
+                className="flex items-center gap-2 px-4 py-2 font-bold text-white transition-all duration-200 bg-red-700 shadow-md hover:bg-red-800 rounded-xl"
               >
                 <FileDown size={18} />
                 Descargar PDF
               </Button>
             </div>
 
-
             {loading ? (
                 <div className={loadingClass}>
-                    <Loader2 size={32} className="animate-spin mb-4" />
+                    <Loader2 size={32} className="mb-4 animate-spin" />
                     <p>Cargando el historial de transacciones, por favor espera...</p>
                 </div>
             ) : (
