@@ -169,11 +169,18 @@ export async function registrarEntradaComestibleExistente(data) {
 
 // Actualizar ropa
 export async function actualizarRopa(datosActualizados) {
-  const formData = new FormData();
-  for (const key in datosActualizados) {
-    const value = datosActualizados[key] ?? "";
-    formData.append(key, value);
+  // Use the provided FormData directly if it's already a FormData object
+  const formData = datosActualizados instanceof FormData ? datosActualizados : new FormData();
+  
+  // If it's not a FormData object, convert it
+  if (!(datosActualizados instanceof FormData)) {
+    for (const key in datosActualizados) {
+      if (datosActualizados[key] !== undefined && datosActualizados[key] !== null) {
+        formData.append(key, datosActualizados[key]);
+      }
+    }
   }
+  
   const res = await fetch(`${API_BASE}/ropa/actualizar`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${getToken()}` },
@@ -184,15 +191,20 @@ export async function actualizarRopa(datosActualizados) {
 
 // Actualizar comestible
 export async function actualizarComestible(datosActualizados) {
-  const formData = new FormData();
-  if (datosActualizados.peso === "" || datosActualizados.peso === undefined)
-    delete datosActualizados.peso;
-  if (datosActualizados.litros === "" || datosActualizados.litros === undefined)
-    delete datosActualizados.litros;
+  // Use the provided FormData directly if it's already a FormData object
+  const formData = datosActualizados instanceof FormData ? datosActualizados : new FormData();
+  
+  // If it's not a FormData object, convert it
+  if (!(datosActualizados instanceof FormData)) {
+    if (datosActualizados.peso === "" || datosActualizados.peso === undefined)
+      delete datosActualizados.peso;
+    if (datosActualizados.litros === "" || datosActualizados.litros === undefined)
+      delete datosActualizados.litros;
 
-  for (const key in datosActualizados) {
-    if (datosActualizados[key] !== undefined && datosActualizados[key] !== null) {
-      formData.append(key, datosActualizados[key]);
+    for (const key in datosActualizados) {
+      if (datosActualizados[key] !== undefined && datosActualizados[key] !== null) {
+        formData.append(key, datosActualizados[key]);
+      }
     }
   }
 

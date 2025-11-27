@@ -20,7 +20,6 @@ function verifyToken(req, res, next) {
     next();
 
   } catch (err) {
-    console.error("❌ Error de verificación de token:", err.message);
 
     if (err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token expirado, inicia sesión nuevamente" });

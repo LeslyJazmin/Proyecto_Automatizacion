@@ -10,12 +10,6 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
   const [nombreExiste, setNombreExiste] = useState(false);
 
-  // Determinar visibilidad de campos según método de pago
-  const metodoPago = formData?.metodo_pago;
-  const mostrarTipoComprobante = metodoPago === "Tarjeta de Crédito";
-  const mostrarNumeroComprobante = metodoPago === "Tarjeta de Crédito";
-  const mostrarOperacion = metodoPago === "Yape" || metodoPago === "Plin";
-
   const handleClose = () => {
     setFormData({});
     setErrors({});
@@ -157,7 +151,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
 
   const FieldLabel = ({ text, required = false }) => (
     <div className="block text-xs font-semibold text-gray-700 mb-0.5"> 
-      {text} {required && <span className="text-red-500 font-extrabold">*</span>}
+      {text} {required && <span className="font-extrabold text-red-500">*</span>}
     </div>
   );
 
@@ -176,7 +170,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
     nombreExiste;
 
   return (
-    <div className="mb-2 w-full">
+    <div className="w-full mb-2">
       <FieldLabel text={label} required={!optional && !disabled} />
       <input
         name={name}
@@ -222,7 +216,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
 };
 
   const renderSelect = (name, label, options) => (
-    <div className="mb-2 w-full"> 
+    <div className="w-full mb-2"> 
       <FieldLabel text={label} required={true} />
       <select
         name={name}
@@ -251,17 +245,17 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
       tipo="entrada"
       headerIcon={TrendingUp}
     >
-      <form onSubmit={handleSubmit} className="bg-gray-100 p-4 rounded-lg shadow-inner space-y-4"> 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4"> 
-          <div className="lg:col-span-2 space-y-4"> 
+      <form onSubmit={handleSubmit} className="p-4 space-y-4 bg-gray-100 rounded-lg shadow-inner"> 
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3"> 
+          <div className="space-y-4 lg:col-span-2"> 
            {/* Información principal */}
-            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200"> 
-              <h3 className="flex items-center gap-2 font-extrabold text-base text-emerald-700 mb-3 border-b border-emerald-100 pb-2"> 
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md"> 
+              <h3 className="flex items-center gap-2 pb-2 mb-3 text-base font-extrabold border-b text-emerald-700 border-emerald-100"> 
                 <Tag size={18} className="text-emerald-500" /> Información Principal del Producto
               </h3>
 
               {/* ID y Nombre */}
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3 items-end"> 
+              <div className="grid items-end grid-cols-1 gap-3 mb-3 sm:grid-cols-5"> 
                 <div className="col-span-1">
                   <FieldLabel text="ID Generado" />
                   <input 
@@ -289,7 +283,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               {tipo === "comestible" ? (
                 <>
                   {/* Marca y Lote lado a lado */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
                     {renderInput("lote", "Lote", "text", false, null, false, "bg-blue-50")}
                   </div>
@@ -302,7 +296,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               ) : (
                 <>
                   {/* Si NO es comestible (es ropa u otro) → Marca + Precio juntos */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
                     {renderInput("precio", "Precio Unitario de Venta (S/)", "number", false, null, false, "bg-blue-50")}
                   </div>
@@ -310,14 +304,14 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               )}
 
               {/* Especificaciones */}
-              <div className="mt-3 border-t border-gray-200 pt-3"> 
+              <div className="pt-3 mt-3 border-t border-gray-200"> 
                 <h4 className="font-semibold text-sm text-gray-700 mb-2 flex items-center gap-1.5">
                   <CheckSquare size={14} className="text-gray-500"/> Especificaciones:
                 </h4>
 
                 {/* Ropa */}
                 {tipo === "ropa" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"> 
                     {renderInput("talla", "Talla", "text", false, null, false, "bg-blue-50")}
                     {renderInput("color", "Color", "text", false, null, false, "bg-blue-50")}
                   </div>
@@ -328,7 +322,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
                   <>
                     {renderInput("sabor", "Sabor/Tipo", "text", false, null, false, "bg-blue-50")}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"> 
                       {renderSelect("unidad_medida", "Unidad de Medida", [
                         { value: "peso", label: "Peso (Kg)" },
                         { value: "litro", label: "Litro (L)" },
@@ -341,7 +335,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
                       }
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    <div className="grid grid-cols-1 gap-3 mt-2 sm:grid-cols-2">
                       {renderInput("fecha_vencimiento", "Fecha de Vencimiento", "date", false, null, false, "bg-yellow-50")}
                     </div>
                   </>
@@ -350,11 +344,11 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
             </div>
 
             {/* Información adicional */}
-            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200"> 
-              <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md"> 
+              <h3 className="flex items-center gap-2 pb-2 mb-3 text-base font-bold text-gray-800 border-b border-gray-200"> 
                 <Image size={18} className="text-emerald-500" /> Información Adicional y Archivos
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"> 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"> 
                 {renderInput("ubicacion", "Ubicación en almacén", "text", true)}
                 <div>
                   <FieldLabel text="Cargar Imagen (Opcional)" optional={true} />
@@ -377,17 +371,17 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
           </div>
 
           {/* Stock y pago */}
-          <div className="lg:col-span-1 space-y-4"> 
-            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 h-fit"> 
-              <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
+          <div className="space-y-4 lg:col-span-1"> 
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md h-fit"> 
+              <h3 className="flex items-center gap-2 pb-2 mb-3 text-base font-bold text-gray-800 border-b border-gray-200"> 
                 <TrendingUp size={18} className="text-emerald-500" /> Gestión de Inventario
               </h3>
               {renderInput("stock_actual", "Cantidad Inicial (Stock)", "number")}
               {renderInput("monto_pagado", "Costo Total de Compra (S/)", "number")}
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 h-fit"> 
-              <h3 className="flex items-center gap-2 font-bold text-base text-gray-800 mb-3 border-b border-gray-200 pb-2"> 
+            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md h-fit"> 
+              <h3 className="flex items-center gap-2 pb-2 mb-3 text-base font-bold text-gray-800 border-b border-gray-200"> 
                 <DollarSign size={18} className="text-emerald-500" /> Detalles de la Transacción
               </h3>
               {renderSelect("metodo_pago", "Método de Pago", [

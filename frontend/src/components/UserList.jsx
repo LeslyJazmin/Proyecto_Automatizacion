@@ -3,54 +3,75 @@ import { Pencil, Trash2 } from "lucide-react";
 import Modal from "./ui/Modal";
 import { listUsers, updateUser, deleteUser } from "../api/users";
 
-export default function UserList({ currentUser }) {
+// Aceptamos el nuevo prop: refreshSignal
+export default function UserList({ currentUser, refreshSignal }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editUser, setEditUser] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null); // Para manejar la confirmación de eliminación
+
+  // Función para refrescar la lista de usuarios
+  const refreshUsers = async () => {
+    try {
+      const data = await listUsers();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await listUsers();
-        setUsers(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
+    refreshUsers();
+  }, [refreshSignal]); 
 
   const handleEdit = async (updatedUser) => {
     try {
       await updateUser(updatedUser.id_usuario, updatedUser);
-      const refreshed = await listUsers();
-      setUsers(refreshed);
+      // Refrescar la lista de usuarios después de la actualización
+      await refreshUsers();
     } catch (err) {
+      // Usamos console.error para logging sin alerts invasivos
+      console.error("Error al actualizar usuario:", err);
+      // Podrías usar un toast o notificación en lugar de alert
       alert("Error al actualizar: " + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
+    // En lugar de usar window.confirm, establecemos el usuario a eliminar
+    const user = users.find(u => u.id_usuario === id);
+    setUserToDelete(user);
+  };
+  
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
     try {
-      await deleteUser(id);
-      const refreshed = await listUsers();
-      setUsers(refreshed);
+      await deleteUser(userToDelete.id_usuario);
+      // Refrescar la lista de usuarios después de la eliminación
+      await refreshUsers();
+      setUserToDelete(null); // Cerramos el modal de confirmación
     } catch (err) {
+      console.error("Error al eliminar usuario:", err);
       alert("Error al eliminar: " + err.message);
+      setUserToDelete(null); // Cerramos el modal de confirmación incluso si hay error
     }
   };
+  
+  const cancelDelete = () => {
+    setUserToDelete(null);
+  };
+  
 
   if (loading)
-    return <p className="text-gray-700 text-center py-8">Cargando usuarios...</p>;
+    return <p className="py-8 text-center text-gray-700">Cargando usuarios...</p>;
   if (error)
-    return <p className="text-red-600 text-center py-8">Error: {error}</p>;
+    return <p className="py-8 text-center text-red-600">Error: {error}</p>;
   if (!users || users.length === 0)
-    return <p className="text-gray-700 text-center py-8">No hay usuarios registrados.</p>;
+    return <p className="py-8 text-center text-gray-700">No hay usuarios registrados.</p>;
 
   return (
     <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
@@ -97,7 +118,7 @@ export default function UserList({ currentUser }) {
             </p>
             <p>
               <span className="font-semibold">Contraseña:</span>{" "}
-              <span className="select-none text-gray-800">••••••••</span>
+              <span className="text-gray-800 select-none">••••••••</span>
             </p>
           </div>
 
@@ -105,7 +126,7 @@ export default function UserList({ currentUser }) {
           <div className="flex justify-end mt-4 space-x-3">
             <button
               onClick={() => setEditUser(user)}
-              className="p-2 rounded-full bg-red-600 hover:bg-red-700 text-white transition"
+              className="p-2 text-white transition bg-red-600 rounded-full hover:bg-red-700"
               title="Editar usuario"
             >
               <Pencil className="w-4 h-4" />
@@ -115,7 +136,7 @@ export default function UserList({ currentUser }) {
             {currentUser?.id_usuario !== user.id_usuario && user.rol !== "admin" && (
               <button
                 onClick={() => handleDelete(user.id_usuario)}
-                className="p-2 rounded-full bg-gray-800 hover:bg-gray-900 text-white transition"
+                className="p-2 text-white transition bg-gray-800 rounded-full hover:bg-gray-900"
                 title="Eliminar usuario"
               >
                 <Trash2 className="w-4 h-4" />
@@ -135,6 +156,8 @@ export default function UserList({ currentUser }) {
               try {
                 await handleEdit(editUser);
                 setEditUser(null);
+              } catch (err) {
+                console.error("Error al guardar cambios:", err);
               } finally {
                 setUpdating(false);
               }
@@ -153,7 +176,7 @@ export default function UserList({ currentUser }) {
                   onChange={(e) =>
                     setEditUser({ ...editUser, [field]: e.target.value })
                   }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-red-600 focus:ring-red-600 sm:text-sm p-2"
+                  className="block w-full p-2 mt-1 text-gray-900 bg-white border border-gray-300 rounded-lg shadow-sm focus:border-red-600 focus:ring-red-600 sm:text-sm"
                 />
               </div>
             ))}
@@ -192,6 +215,36 @@ export default function UserList({ currentUser }) {
               {updating ? "Guardando..." : "Guardar Cambios"}
             </button>
           </form>
+        )}
+      </Modal>
+      
+      {/* Modal de confirmación de eliminación */}
+      <Modal 
+        isOpen={!!userToDelete} 
+        onClose={cancelDelete} 
+        title="Confirmar Eliminación"
+      >
+        {userToDelete && (
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              ¿Estás seguro que deseas eliminar al usuario <span className="font-semibold">{userToDelete.username}</span>?
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end pt-4 space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-gray-700 transition bg-gray-200 rounded-lg hover:bg-gray-300"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-white transition bg-red-600 rounded-lg hover:bg-red-700"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
         )}
       </Modal>
     </div>

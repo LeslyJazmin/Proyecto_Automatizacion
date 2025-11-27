@@ -100,10 +100,15 @@ export default function GInventario() {
   const handleRegistrarProducto = async (tipo, formData) => {
     try {
       let data = formData;
-      // Si no es FormData, lo convertimos
+      // Si no es FormData, solo convertir a FormData si hay archivos (File)
       if (!(formData instanceof FormData)) {
-        data = new FormData();
-        for (const key in formData) data.append(key, formData[key]);
+        const hasFile = Object.values(formData).some((v) => v instanceof File);
+        if (hasFile) {
+          data = new FormData();
+          for (const key in formData) data.append(key, formData[key]);
+        } else {
+          data = formData; // enviar como JSON
+        }
       }
       if (tipo === "ropa") await registrarEntradaRopa(data);
       else await registrarEntradaComestible(data);
@@ -124,8 +129,19 @@ export default function GInventario() {
 
   const handleActualizarProducto = async (tipo, formData) => {
     try {
-      if (tipo === "ropa") await actualizarRopa(formData);
-      else await actualizarComestible(formData);
+      let data = formData;
+      // Si no es FormData, convertir a FormData si hay archivos (File)
+      if (!(formData instanceof FormData)) {
+        const hasFile = Object.values(formData).some((v) => v instanceof File);
+        if (hasFile) {
+          data = new FormData();
+          for (const key in formData) data.append(key, formData[key]);
+        } else {
+          data = formData; // enviar como JSON
+        }
+      }
+      if (tipo === "ropa") await actualizarRopa(data);
+      else await actualizarComestible(data);
 
       await fetchDatos();
       mostrarMensaje("exito", " Producto actualizado con éxito.");
@@ -158,8 +174,8 @@ export default function GInventario() {
   // ---------- RENDER DE SECCIONES ----------
   const renderRopaSection = () => (
     <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center gap-4">
-       <div className="flex gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-4">
+       <div className="flex flex-wrap gap-3">
         {/* 🟩 Registrar nueva prenda */}
         <Button
           onClick={() => { setModalRopaOpen(true); setProductoEditar(null); }}
@@ -192,10 +208,10 @@ export default function GInventario() {
           <input
             type="text"
             placeholder="Buscar prenda por nombre o código..."
-            className="w-96 border border-gray-300 rounded-lg pl-12 pr-5 py-3 text-base text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm placeholder-gray-500 font-light"
+            className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             onChange={(e) => handleBuscar("ropa", e.target.value)}
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
         </div>
       </div>
 
@@ -213,8 +229,8 @@ export default function GInventario() {
 
   const renderComestiblesSection = () => (
     <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center gap-4">
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap gap-3">
         {/* 🟩 Registrar nuevo comestible */}
         <Button
           onClick={() => { setModalComestiblesOpen(true); setProductoEditar(null); }}
@@ -247,10 +263,10 @@ export default function GInventario() {
           <input
             type="text"
             placeholder="Buscar producto comestibles por nombre o código..."
-            className="w-96 border border-gray-300 rounded-lg pl-12 pr-5 py-3 text-base text-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition shadow-sm placeholder-gray-500 font-light"
+            className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             onChange={(e) => handleBuscar("comestible", e.target.value)}
           />
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
         </div>
       </div>
 
@@ -268,13 +284,13 @@ export default function GInventario() {
 
   // ---------- RENDER PRINCIPAL ----------
   return (
-    <div className="bg-gray-50 text-gray-800 min-h-screen font-sans">
+    <div className="min-h-screen font-sans text-gray-800 bg-gray-50">
       <Sidebar active={sidebarActive} />
 
-      <div className="ml-64 p-10">
+      <div className="p-10 ml-64">
         {/* ENCABEZADO */}
-       <div className="mb-8 pb-4 border-b border-gray-200">
-        <div className="flex justify-between items-center">
+       <div className="pb-4 mb-8 border-b border-gray-200">
+        <div className="flex items-center justify-between">
           {/* Título e ícono */}
           <div className="flex items-center gap-3">
             <Package size={36} className="text-blue-600" />
@@ -282,7 +298,7 @@ export default function GInventario() {
               <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
                 Inventario Central: Gestión de Activos Fitness
               </h1>
-              <p className="mt-1 text-gray-500 text-base max-w-3xl font-light leading-snug">
+              <p className="max-w-3xl mt-1 text-base font-light leading-snug text-gray-500">
                 Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
               </p>
             </div>
@@ -308,7 +324,7 @@ export default function GInventario() {
       </div>
 
         {/* TABS */}
-        <div className="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
+        <div className="overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-xl">
           <div className="flex border-b border-gray-200 bg-gray-50/50">
             <button
               onClick={() => changeTab('ropa')}
@@ -379,17 +395,17 @@ export default function GInventario() {
       />
 
       {imagenModalOpen && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-8 rounded-xl shadow-3xl max-w-xl w-full relative border border-gray-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-70">
+          <div className="relative w-full max-w-xl p-8 bg-white border border-gray-200 rounded-xl shadow-3xl">
             <button
               onClick={() => setImagenModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-blue-700 text-xl font-light p-2 transition-colors rounded-full hover:bg-gray-100"
+              className="absolute p-2 text-xl font-light text-gray-500 transition-colors rounded-full top-4 right-4 hover:text-blue-700 hover:bg-gray-100"
             >×</button>
-            <h2 className="text-xl font-semibold mb-6 text-center text-gray-800 border-b pb-3 tracking-wide">
+            <h2 className="pb-3 mb-6 text-xl font-semibold tracking-wide text-center text-gray-800 border-b">
               <Eye className="inline w-5 h-5 mr-2 text-blue-700" /> Vista Previa del Activo
             </h2>
-            <div className="p-2 border border-blue-700/50 rounded-lg bg-gray-50">
-              <img src={imagenSeleccionada} alt="Imagen del producto" className="w-full h-auto rounded-md shadow-xl object-contain max-h-96" />
+            <div className="p-2 border rounded-lg border-blue-700/50 bg-gray-50">
+              <img src={imagenSeleccionada} alt="Imagen del producto" className="object-contain w-full h-auto rounded-md shadow-xl max-h-96" />
             </div>
           </div>
         </div>

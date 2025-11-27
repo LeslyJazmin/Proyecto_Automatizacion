@@ -21,36 +21,31 @@ const {
 // --- ROPA NUEVA ---
 async function entradaRopa(req, res) {
   try {
-    const imagen = req.file ? `/uploads/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/${req.files.imagen[0].filename}` : null);
-    let img_comp = null;
-    if (req.files && req.files.img_comp) {
-      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
-    } else if (req.body.img_comp) {
-      img_comp = req.body.img_comp;
+    // Priorizar URL enviada en el body (ej. Cloudinary); si no existe, usar archivos locales (multer)
+    const imagen = req.body.imagen || (req.file ? `/uploads/ropa/imagenes/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/ropa/imagenes/${req.files.imagen[0].filename}` : null));
+    let img_comp = req.body.img_comp || null;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
     }
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", imagen, img_comp };
     const registro = await registrarEntradaRopa(data);
     res.json(registro);
   } catch (err) {
-    console.error("❌ Error al registrar entrada de ropa:", err);
     res.status(500).json({ message: "Error al registrar entrada de ropa" });
   }
 }
 
 // --- ROPA EXISTENTE ---
 async function entradaRopaExistente(req, res) {
-  try {
-    let img_comp = null;
-    if (req.files && req.files.img_comp) {
-      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
-    } else if (req.body.img_comp) {
-      img_comp = req.body.img_comp;
+    try {
+    let img_comp = req.body.img_comp || null;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
     }
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
     const registro = await registrarEntradaRopaExistente(data);
     res.json(registro);
   } catch (err) {
-    console.error("❌ Error al registrar entrada de ropa existente:", err);
     res.status(500).json({ message: "Error al registrar entrada de ropa existente" });
   }
 }
@@ -58,12 +53,11 @@ async function entradaRopaExistente(req, res) {
 // --- COMESTIBLE NUEVO ---
 async function entradaComestible(req, res) {
   try {
-    const imagen = req.file ? `/uploads/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/${req.files.imagen[0].filename}` : null);
-    let img_comp = null;
-    if (req.files && req.files.img_comp) {
-      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
-    } else if (req.body.img_comp) {
-      img_comp = req.body.img_comp;
+    // Priorizar URL enviada en el body (ej. Cloudinary); si no existe, usar archivos locales (multer)
+    const imagen = req.body.imagen || (req.file ? `/uploads/comestibles/imagenes/${req.file.filename}` : (req.files && req.files.imagen ? `/uploads/comestibles/imagenes/${req.files.imagen[0].filename}` : null));
+    let img_comp = req.body.img_comp || null;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
     }
 
     const data = { 
@@ -80,8 +74,6 @@ async function entradaComestible(req, res) {
     res.json(registro);
 
   } catch (err) {
-    console.error("❌ Error al registrar entrada de comestibles:", err);
-
     if (err.message.includes("lote")) {
       return res.status(400).json({ message: err.message });
     }
@@ -93,17 +85,14 @@ async function entradaComestible(req, res) {
 // --- COMESTIBLE EXISTENTE ---
 async function entradaComestibleExistente(req, res) {
   try {
-    let img_comp = null;
-    if (req.files && req.files.img_comp) {
-      img_comp = `/uploads/comprobante/${req.files.img_comp[0].filename}`;
-    } else if (req.body.img_comp) {
-      img_comp = req.body.img_comp;
+    let img_comp = req.body.img_comp || null;
+    if (!img_comp && req.files && req.files.img_comp) {
+      img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
     }
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
     const registro = await registrarEntradaComestibleExistente(data);
     res.json(registro);
   } catch (err) {
-    console.error("❌ Error al registrar entrada de comestible existente:", err);
     res.status(500).json({ message: "Error al registrar entrada de comestible existente" });
   }
 }
@@ -114,7 +103,6 @@ async function listarRopaController(req, res) {
     const productos = await listarRopa();
     res.json(productos);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error al listar ropa" });
   }
 }
@@ -124,7 +112,6 @@ async function listarComestiblesController(req, res) {
     const productos = await listarComestibles();
     res.json(productos);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Error al listar comestibles" });
   }
 }
@@ -152,7 +139,6 @@ async function listarMovimientosRopaController(req, res) {
 
     res.json(movimientosFormateados);
   } catch (err) {
-    console.error("❌ Error al listar movimientos de ropa:", err);
     res.status(500).json({ message: err.message });
   }
 }
@@ -181,7 +167,6 @@ async function listarMovimientosComestibleController(req, res) {
 
     res.json(movimientosFormateados);
   } catch (err) {
-    console.error("❌ Error al listar movimientos de comestible:", err);
     res.status(500).json({ message: err.message });
   }
 }
@@ -215,7 +200,6 @@ async function buscarRopaController(req, res) {
 
     res.json(parciales);
   } catch (err) {
-    console.error("❌ Error al buscar ropa:", err);
     res.status(500).json({ message: "Error al buscar ropa" });
   }
 }
@@ -246,7 +230,6 @@ async function buscarComestibleController(req, res) {
 
     res.json(parciales);
   } catch (err) {
-    console.error("❌ Error al buscar comestibles:", err);
     res.status(500).json({ message: "Error al buscar comestibles" });
   }
 }
@@ -270,7 +253,6 @@ async function buscarComestiblePorNombreYLoteController(req, res) {
       return res.json({ existe: false, productos: [] });
     }
   } catch (err) {
-    console.error("❌ Error al buscar comestible por lote:", err);
     res.status(500).json({ message: "Error al buscar comestible por lote" });
   }
 }
@@ -289,8 +271,6 @@ async function actualizarComestibleController(req, res) {
       fecha_vencimiento
     } = req.body;
 
-    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
-
     if (!id_comestible) {
       return res.status(400).json({ message: "Falta el id_comestible" });
     }
@@ -303,6 +283,18 @@ async function actualizarComestibleController(req, res) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
 
+    // Manejar imagen: verificar req.files.imagen[0] (multer con .fields()) o req.file o req.body.imagen
+    let imagen = productoActual.imagen; // Default to existing image
+      
+    // Si se subió una nueva imagen
+    if (req.files && req.files.imagen && req.files.imagen[0]) {
+      imagen = `/uploads/comestibles/imagenes/${req.files.imagen[0].filename}`;
+    } else if (req.file) {
+      imagen = `/uploads/comestibles/imagenes/${req.file.filename}`;
+    } else if (req.body.imagen) {
+      // Si se envió una imagen en el cuerpo (ruta existente)
+      imagen = req.body.imagen;
+    }
     // ⚖️ Determinar si el producto usa peso o litros
     let nuevoPeso = productoActual.peso;
     let nuevoLitros = productoActual.litros;
@@ -326,16 +318,17 @@ async function actualizarComestibleController(req, res) {
       peso: nuevoPeso,
       litros: nuevoLitros,
       ubicacion: ubicacion ?? productoActual.ubicacion,
-      imagen: imagen ?? productoActual.imagen,
+      imagen: imagen,
       precio: precio ?? productoActual.precio,
       fecha_vencimiento: fecha_vencimiento ?? productoActual.fecha_vencimiento // ✅ añadido
     };
 
-    const resultado = await actualizarComestible(data);
+    // FIX: Se agregó la llamada a la función del modelo, que faltaba en el código original.
+    const resultado = await actualizarComestible(data); 
+
     res.json(resultado);
 
   } catch (err) {
-    console.error("❌ Error al actualizar comestible:", err);
     res.status(500).json({ message: "Error al actualizar comestible" });
   }
 }
@@ -343,9 +336,8 @@ async function actualizarComestibleController(req, res) {
 // --- ACTUALIZAR ROPA DEPORTIVA ---
 async function actualizarRopaController(req, res) {
   try {
-    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion, precio } = req.body; 
-    const imagen = req.file ? `/uploads/${req.file.filename}` : null;
-
+    const { id_ropa, nombre, marca, talla, tipo_ropa, color, ubicacion, precio } = req.body;
+    
     if (!id_ropa) {
       return res.status(400).json({ message: "Falta el id_ropa" });
     }
@@ -358,6 +350,18 @@ async function actualizarRopaController(req, res) {
       return res.status(404).json({ message: "Producto no encontrado" });
     }
 
+    // Manejar imagen: verificar req.files.imagen[0] (multer con .fields()) o req.file o req.body.imagen
+    let imagen = ropaActual.imagen; // Default to existing image
+      
+    // Si se subió una nueva imagen
+    if (req.files && req.files.imagen && req.files.imagen[0]) {
+      imagen = `/uploads/ropa/imagenes/${req.files.imagen[0].filename}`;
+    } else if (req.file) {
+      imagen = `/uploads/ropa/imagenes/${req.file.filename}`;
+    } else if (req.body.imagen) {
+      // Si se envió una imagen en el cuerpo (ruta existente)
+      imagen = req.body.imagen;
+    }
     const data = {
       id_ropa,
       nombre: nombre ?? ropaActual.nombre,
@@ -366,7 +370,7 @@ async function actualizarRopaController(req, res) {
       tipo_ropa: tipo_ropa ?? ropaActual.tipo_ropa,
       color: color ?? ropaActual.color,
       ubicacion: ubicacion ?? ropaActual.ubicacion,
-      imagen: imagen ?? ropaActual.imagen,
+      imagen: imagen,
       precio: precio ?? ropaActual.precio // 👈 se agrega aquí
     };
 
@@ -374,7 +378,6 @@ async function actualizarRopaController(req, res) {
     res.json(resultado);
 
   } catch (err) {
-    console.error("❌ Error al actualizar ropa:", err);
     res.status(500).json({ message: "Error al actualizar ropa" });
   }
 }
@@ -387,7 +390,6 @@ async function eliminarRopaController(req, res) {
     const resultado = await eliminarRopa(id);
     res.json(resultado);
   } catch (err) {
-    console.error("❌ Error al eliminar ropa:", err);
     res.status(500).json({ message: "Error al eliminar ropa" });
   }
 }
@@ -399,7 +401,6 @@ async function eliminarComestibleController(req, res) {
     const resultado = await eliminarComestible(id);
     res.json(resultado);
   } catch (err) {
-    console.error("❌ Error al eliminar comestible:", err);
     res.status(500).json({ message: "Error al eliminar comestible" });
   }
 }
@@ -410,7 +411,6 @@ async function salidaRopaController(req, res) {
     const registro = await registrarSalidaRopa(data);
     res.json({ message: "✅ Salida de ropa registrada correctamente", registro });
   } catch (err) {
-    console.error("❌ Error al registrar salida de ropa:", err);
     res.status(500).json({ message: err.message || "Error al registrar salida de ropa" });
   }
 }
@@ -422,7 +422,6 @@ async function salidaComestibleController(req, res) {
     const registro = await registrarSalidaComestible(data);
     res.json({ message: "✅ Salida de comestible registrada correctamente", registro });
   } catch (err) {
-    console.error("❌ Error al registrar salida de comestible:", err);
     res.status(500).json({ message: err.message || "Error al registrar salida de comestible" });
   }
 }

@@ -22,11 +22,11 @@ function Campo({
   
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold mb-1 text-gray-700">
+      <label className="block mb-1 text-sm font-semibold text-gray-700">
         {label} {!optional && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
-        {IconComponent && <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">{IconComponent}</div>}
+        {IconComponent && <div className="absolute text-gray-400 transform -translate-y-1/2 pointer-events-none left-3 top-1/2">{IconComponent}</div>}
         
         <input
           type={type}
@@ -49,7 +49,7 @@ function Campo({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="text-red-500 text-xs mt-1"
+            className="mt-1 text-xs text-red-500"
           >
             {error}
           </motion.p>
@@ -59,13 +59,13 @@ function Campo({
   );
 }
 
-/**
- * Componente principal del formulario de actualización de producto (Modal).
- */
 export default function ActualizarProducto({ producto, tipo, onClose, onActualizar }) {
-  const [formData, setFormData] = useState({ ...producto });
+  // Initialize formData without the imagen field to avoid sending it unless a new image is selected
+  const initialFormData = { ...producto };
+  delete initialFormData.imagen; // Remove imagen field to avoid sending it unless a new image is selected
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
-  
+
   // Mantiene la lógica original para mostrar peso/litros, pero se simplifica el renderizado
   const [mostrarCampo, setMostrarCampo] = useState(() => {
     if (tipo !== "comestible") return null;
@@ -78,8 +78,18 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
     const { name, value, files } = e.target;
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    if (files) {
-      setFormData({ ...formData, [name]: files[0] });
+    if (name === "imagen") {
+      // Handle image field specifically
+      if (files && files[0]) {
+        // If a new file is selected, use it
+        const file = files[0];
+        setFormData({ ...formData, [name]: file });
+      } else {
+        // If no file is selected, remove the field entirely to preserve existing image
+        const newFormData = { ...formData };
+        delete newFormData[name];
+        setFormData(newFormData);
+      }
     } else {
       setFormData({ ...formData, [name]: value });
       if (tipo === "comestible" && (name === "peso" || name === "litros")) {
@@ -124,7 +134,13 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    onActualizar(tipo, formData);
+
+    const dataToSend = new FormData();
+    for (const key in formData) {
+      dataToSend.append(key, formData[key]);
+    }
+
+    onActualizar(tipo, dataToSend);
   };
   
   const iconMap = {
@@ -148,25 +164,25 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
       >
         <motion.div
           // MODIFICADO: Aumenta el ancho a max-w-3xl y mantiene el estilo formal
-          className="bg-white shadow-3xl w-full max-w-3xl relative rounded-3xl overflow-hidden"
+          className="relative w-full max-w-4xl overflow-hidden bg-white shadow-3xl rounded-3xl"
           initial={{ scale: 0.9, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 30 }}
           transition={{ type: "spring", stiffness: 150, damping: 20 }}
         >
           {/* Encabezado Formal y Oscuro */}
-          <div className="bg-gray-800 text-white px-6 py-6 flex flex-col items-start relative shadow-lg">
+          <div className="relative flex flex-col items-start px-6 py-6 text-white bg-gray-800 shadow-lg">
             <div className="flex items-center gap-3">
               {MainIcon}
               <h2 className="text-2xl font-extrabold tracking-tight">
                 Editar {MainTitle}
               </h2>
             </div>
-            <p className="text-sm mt-1 text-gray-400">Modifica los detalles del producto seleccionado.</p>
+            <p className="mt-1 text-sm text-gray-400">Modifica los detalles del producto seleccionado.</p>
             
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-gray-300 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-700"
+              className="absolute p-1 text-gray-300 transition-colors rounded-full top-4 right-4 hover:text-white hover:bg-gray-700"
             >
               <XCircle className="w-7 h-7" />
             </button>
@@ -174,8 +190,10 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
 
           {/* Cuerpo del formulario */}
           <div className="p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5 text-gray-700">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 text-gray-700 md:grid-cols-2 gap-x-8 gap-y-5">
               
+            {/* Columna de campos de formulario */}
+            <div className="flex flex-col gap-5">
               {/* Campos Estándar: Nombre (Fila única, readOnly) */}
               <Campo
                 label="Nombre del Producto"
@@ -188,7 +206,7 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
               />
 
               {/* Campos Estándar: Marca y Ubicación (2 Columnas) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <Campo label="Marca" name="marca" value={formData.marca} onChange={handleChange} error={errors.marca} icon={<Zap size={18} />} />
                 <Campo label="Ubicación de Almacén" name="ubicacion" value={formData.ubicacion} onChange={handleChange} optional icon={<Search size={18} />} />
               </div>
@@ -196,7 +214,7 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
               {/* Campos Condicionales */}
               {tipo === "ropa" ? (
                 /* Campos para ROPA (2 Columnas) */
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                   <Campo label="Talla (S, M, L, etc.)" name="talla" value={formData.talla} onChange={handleChange} error={errors.talla} icon={<Shirt size={18} />} />
                   <Campo label="Color" name="color" value={formData.color} onChange={handleChange} error={errors.color} icon={<Pipette size={18} />} />
                 </div>
@@ -204,7 +222,7 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
                 /* Campos para COMESTIBLE */
                 <>
                   {/* Sabor/Variedad y Fecha de Vencimiento (2 Columnas) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <Campo label="Sabor/Variedad" name="sabor" value={formData.sabor} onChange={handleChange} error={errors.sabor} icon={<CupSoda size={18} />} />
                     
                     <Campo
@@ -233,10 +251,11 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
                   </div>
                 </>
               )}
+            </div>
 
-              {/* Imagen opcional - Mejor estilo para el input file */}
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+            {/* Campo de imagen sin vista previa */}
+            <div className="flex flex-col gap-2">
+                <label className="block mb-1 text-sm font-semibold text-gray-700">
                   <Package size={18} className="inline mr-1 -mt-0.5" /> Imagen (opcional)
                 </label>
                 <input
@@ -245,12 +264,12 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
                   accept="image/*"
                   onChange={handleChange}
                   // MODIFICADO: Estilo formal para el input file
-                  className="w-full text-sm file:rounded-xl file:border-none file:bg-indigo-600 file:text-white file:px-4 file:py-2 hover:file:bg-indigo-700 cursor-pointer transition-all"
+                  className="w-full text-sm transition-all cursor-pointer file:rounded-xl file:border-none file:bg-indigo-600 file:text-white file:px-4 file:py-2 hover:file:bg-indigo-700"
                 />
-              </div>
+            </div>
 
               {/* Botones de Acción */}
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 mt-6 md:col-span-2">
                 <button
                   type="button"
                   onClick={onClose}

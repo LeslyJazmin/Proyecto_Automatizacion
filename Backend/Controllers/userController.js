@@ -68,7 +68,7 @@ async function createNewUser(req, res) {
       token = jwt.sign(
         { id: newUser.id_usuario, email: newUser.email, rol: newUser.rol },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "8h" }
       );
     }
 
@@ -84,7 +84,7 @@ async function createNewUser(req, res) {
     });
 
   } catch (err) {
-    console.error("❌ Error en createNewUser:", err.message);
+    // Removed console.error to reduce terminal output
     res.status(500).json({ message: "Error al crear usuario", error: err.message });
   }
 }
@@ -95,7 +95,7 @@ async function listUsers(req, res) {
     const users = await getAllUsers();
     res.json(Array.isArray(users) ? users : []); // garantiza que sea array
   } catch (err) {
-    console.error("❌ Error en listUsers:", err.message);
+    // Removed console.error to reduce terminal output
     res.status(500).json({ message: "Error al listar usuarios", error: err.message });
   }
 }
@@ -108,7 +108,7 @@ async function getUser(req, res) {
     if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
     res.json(user);
   } catch (err) {
-    console.error("❌ Error en getUser:", err.message);
+    // Removed console.error to reduce terminal output
     res.status(500).json({ message: "Error al obtener usuario", error: err.message });
   }
 }
@@ -127,7 +127,7 @@ async function updateUserData(req, res) {
     await updateUser(id, { username, celular, email, activo });
     res.json({ message: "Usuario actualizado correctamente" });
   } catch (err) {
-    console.error("❌ Error en updateUserData:", err.message);
+    // Removed console.error to reduce terminal output
     res.status(500).json({ message: "Error al actualizar usuario", error: err.message });
   }
 }
@@ -139,7 +139,7 @@ async function deleteUserById(req, res) {
     await deleteUser(id);
     res.json({ message: "Usuario eliminado correctamente" });
   } catch (err) {
-    console.error("❌ Error en deleteUserById:", err.message);
+    // Removed console.error to reduce terminal output
     res.status(500).json({ message: "Error al eliminar usuario", error: err.message });
   }
 }
