@@ -14,7 +14,7 @@ export async function generarPDFMovimientos(movRopa = [], movComestibles = [], o
   // 🔰 Encabezado
   // ======================
   try {
-    const logoUrl = "http://localhost:5000/uploads/1762191774524-235873924.png";
+    const logoUrl = `${window.location.origin}/images/GT2.png`;
     const response = await fetch(logoUrl);
     const blob = await response.blob();
     const base64Logo = await new Promise((resolve) => {

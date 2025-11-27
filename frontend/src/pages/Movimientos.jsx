@@ -24,7 +24,7 @@ export default function Movimientos() {
         obtenerMovimientosRopa(anio, mes),
         obtenerMovimientosComestibles(anio, mes)
       ]);
-      
+
       setMovRopa(ropa || []);
       setMovComestibles(comestibles || []);
     } catch (err) {
@@ -50,7 +50,7 @@ export default function Movimientos() {
   const handleLogout = () => console.log("Cerrar sesión");
 
   // --- Estilos de Layout y Contenido Mejorados ---
-  
+
   // Contenedor principal con fondo suave
   const mainContainerClass = "bg-gray-100 min-h-screen";
   // Área de contenido principal: Limpio y con margen adecuado
@@ -75,60 +75,60 @@ export default function Movimientos() {
 
       <div className={contentAreaClass}>
         <div className={cardContainerClass}>
-            
-            {/* 🔥 TÍTULO PRINCIPAL + BOTÓN DESCARGAR */}
-            <div className="flex items-center justify-between pb-3 border-b border-red-700/50">
-              <div className="flex items-center gap-4">
-                <h1 className="flex items-center gap-3 text-3xl font-black tracking-tighter text-gray-900">
-                  <Zap size={30} className="text-red-700 fill-red-200/50" />
-                  HISTORIAL DE MOVIMIENTOS
-                </h1>
-                <MonthYearSelector onMonthYearSelect={handleMonthYearSelect} />
-              </div>
 
-              <Button
-                onClick={() => generarPDFMovimientos(movRopa, movComestibles)}
-                className="flex items-center gap-2 px-4 py-2 font-bold text-white transition-all duration-200 bg-red-700 shadow-md hover:bg-red-800 rounded-xl"
-              >
-                <FileDown size={18} />
-                Descargar PDF
-              </Button>
+          {/* 🔥 TÍTULO PRINCIPAL + BOTÓN DESCARGAR */}
+          <div className="flex items-center justify-between pb-3 border-b border-red-700/50">
+            <div className="flex items-center gap-4">
+              <h1 className="flex items-center gap-3 text-3xl font-black tracking-tighter text-gray-900">
+                <Zap size={30} className="text-red-700 fill-red-200/50" />
+                HISTORIAL DE MOVIMIENTOS
+              </h1>
+              <MonthYearSelector onMonthYearSelect={handleMonthYearSelect} />
             </div>
 
-            {loading ? (
-                <div className={loadingClass}>
-                    <Loader2 size={32} className="mb-4 animate-spin" />
-                    <p>Cargando el historial de transacciones, por favor espera...</p>
-                </div>
-            ) : (
-                <>
-                    {/* SECCIÓN ROPA */}
-                    <h2 className={subTitleClass}>
-                        <Shirt size={24} className="text-red-600"/>
-                        Ropa
-                    </h2>
-                    {movRopa.length === 0 ? (
-                        <div className={noDataClass}>
-                            Aún no hay **Movimientos de Ropa** registrados.
-                        </div>
-                    ) : (
-                        <TablaMovimientos datos={movRopa} />
-                    )}
+            <Button
+              onClick={() => generarPDFMovimientos(movRopa, movComestibles)}
+              className="flex items-center gap-2 px-4 py-2 font-bold text-white transition-all duration-200 bg-red-700 shadow-md hover:bg-red-800 rounded-xl"
+            >
+              <FileDown size={18} />
+              Descargar PDF
+            </Button>
+          </div>
 
-                    {/* SECCIÓN COMESTIBLES */}
-                    <h2 className={subTitleClass}>
-                        <Pizza size={24} className="text-red-600"/>
-                        Comestibles
-                    </h2>
-                    {movComestibles.length === 0 ? (
-                        <div className={noDataClass}>
-                            Aún no hay **Movimientos de Comestibles** registrados.
-                        </div>
-                    ) : (
-                        <TablaMovimientos datos={movComestibles} />
-                    )}
-                </>
-            )}
+          {loading ? (
+            <div className={loadingClass}>
+              <Loader2 size={32} className="mb-4 animate-spin" />
+              <p>Cargando el historial de transacciones, por favor espera...</p>
+            </div>
+          ) : (
+            <>
+              {/* SECCIÓN ROPA */}
+              <h2 className={subTitleClass}>
+                <Shirt size={24} className="text-red-600" />
+                Ropa
+              </h2>
+              {movRopa.length === 0 ? (
+                <div className={noDataClass}>
+                  Aún no hay **Movimientos de Ropa** registrados.
+                </div>
+              ) : (
+                <TablaMovimientos datos={movRopa} />
+              )}
+
+              {/* SECCIÓN COMESTIBLES */}
+              <h2 className={subTitleClass}>
+                <Pizza size={24} className="text-red-600" />
+                Comestibles
+              </h2>
+              {movComestibles.length === 0 ? (
+                <div className={noDataClass}>
+                  Aún no hay **Movimientos de Comestibles** registrados.
+                </div>
+              ) : (
+                <TablaMovimientos datos={movComestibles} />
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -19,7 +19,7 @@ export async function generarPDFInventario(ropa = [], comestibles = [], options 
   // 🔰 ENCABEZADO CON LOGO GRANDE A LA IZQUIERDA
   // ======================
   try {
-    const logoUrl = "http://localhost:5000/uploads/1762191774524-235873924.png";
+    const logoUrl = `${window.location.origin}/images/GT2.png`;
 
     // Convierte imagen a Base64
     const response = await fetch(logoUrl);
