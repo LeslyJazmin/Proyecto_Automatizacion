@@ -15,13 +15,21 @@ export default function ModalConfirmacion({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-         className="fixed inset-0 flex items-center justify-center z-50"
+          className="fixed inset-0 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
+
+          {/* 🔥 FONDO OSCURO TRANSPARENTE */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            onClick={onClose}
+          />
+
+          {/* 🔥 MODAL */}
           <motion.div
-            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative"
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center relative z-50"
             initial={{ scale: 0.8, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 50 }}

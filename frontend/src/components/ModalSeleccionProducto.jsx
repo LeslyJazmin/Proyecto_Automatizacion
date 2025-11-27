@@ -109,41 +109,69 @@ export default function ModalSeleccionProducto({ tipo, modo, onClose, onSelect }
           </div>
         ) : productos.length > 0 ? (
           <table className="w-full text-xs table-auto">
-            <thead>
-              <tr>
-                <th className={`${headerClass} text-left rounded-tl-lg w-1/5 ${cellClass}`}>ID</th>
-                <th className={`${headerClass} text-left w-2/5 ${cellClass}`}>Nombre</th>
-                <th className={`${headerClass} text-left w-1/5 ${cellClass}`}>Marca</th>
-                <th className={`${headerClass} w-1/5 rounded-tr-lg ${cellClass}`}>Acción</th>
-              </tr>
-            </thead>
+           <thead>
+            <tr>
+              <th className={`${headerClass} text-left rounded-tl-lg w-1/5 ${cellClass}`}>
+                ID
+              </th>
+              <th className={`${headerClass} text-left w-2/5 ${cellClass}`}>
+                Nombre
+              </th>
+              <th className={`${headerClass} text-left w-1/5 ${cellClass}`}>
+                Marca
+              </th>
+
+              {/* ✅ Nueva columna SOLO para comestibles */}
+              {tipo === "comestible" && (
+                <th className={`${headerClass} text-left w-1/5 ${cellClass}`}>
+                  Lote
+                </th>
+              )}
+
+              <th className={`${headerClass} w-1/5 rounded-tr-lg ${cellClass}`}>
+                Acción
+              </th>
+            </tr>
+          </thead>
+
             <tbody>
-              {productos.map((p) => (
-                <tr
-                  key={tipo === "ropa" ? p.id_ropa : p.id_comestible}
-                  className={rowClass}
-                  onClick={() => onSelect(p)}
-                >
-                  <td className={`${cellClass} font-mono font-semibold text-xxs`}>
-                    {tipo === "ropa" ? p.id_ropa : p.id_comestible}
-                  </td>
-                  <td className={`${cellClass} font-medium`}>{p.nombre}</td>
-                  <td className={`${cellClass} text-xxs`}>{p.marca || "-"}</td>
-                  <td className={`${cellClass} text-center`}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelect(p);
-                      }}
-                      className={buttonClass}
-                    >
-                      <CheckCircle className="w-2.5 h-2.5 mr-1" />
-                      Seleccionar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {productos.map((p) => (
+    <tr
+      key={tipo === "ropa" ? p.id_ropa : p.id_comestible}
+      className={rowClass}
+      onClick={() => onSelect(p)}
+    >
+      <td className={`${cellClass} font-mono font-semibold text-xxs`}>
+        {tipo === "ropa" ? p.id_ropa : p.id_comestible}
+      </td>
+
+      <td className={`${cellClass} font-medium`}>{p.nombre}</td>
+
+      <td className={`${cellClass} text-xxs`}>{p.marca || "-"}</td>
+
+      {/* ✅ Celda Lote solo si es comestible */}
+      {tipo === "comestible" && (
+        <td className={`${cellClass} text-xxs`}>
+          {p.lote || "-"}
+        </td>
+      )}
+
+      <td className={`${cellClass} text-center`}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(p);
+          }}
+          className={buttonClass}
+        >
+          <CheckCircle className="w-2.5 h-2.5 mr-1" />
+          Seleccionar
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
           </table>
         ) : (
           <div className="text-center py-6 text-gray-500 text-sm flex flex-col items-center justify-center">

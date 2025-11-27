@@ -300,6 +300,10 @@ export default function ModalProductoExistente({
                           <div className="col-span-1 md:col-span-1.5">
                             {renderDetailCard("Peso/Volumen", formData.peso || formData.litros)}
                           </div>
+                          {/* ✅ LOTE agregado */}
+                          <div className="col-span-1 md:col-span-1.5">
+                            {renderDetailCard("Lote", formData.lote)}
+                          </div>
                         </>
                       )}
                     </div>

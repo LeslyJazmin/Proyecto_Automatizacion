@@ -268,6 +268,8 @@ export default function ModalSalidaProducto({
                               formData.peso ?? formData.litros
                             )}
                           </div>
+                          {/* ✅ NUEVO: Mostrar lote */}
+                          <div>{renderDetailCard("Lote", formData.lote)}</div>
                         </>
                       )}
                     </div>
