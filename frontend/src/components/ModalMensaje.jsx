@@ -36,7 +36,7 @@ export default function ModalMensaje({ isOpen, tipo = "info", mensaje, onClose }
 
   return (
     // 2. Fondo con opacidad más suave y mejor transición
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ease-out" onClick={onClose}>
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[1000] transition-opacity duration-300 ease-out" onClick={onClose}>
       
       {/* 3. Modal central con diseño mejorado */}
       <div

@@ -35,7 +35,7 @@ async function login(req, res) {
                 username: user.username   // <-- AGREGA ESTO
             },
             process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "8h" }
         );      
 
         // Responder con datos esenciales
@@ -50,7 +50,7 @@ async function login(req, res) {
             }
         });
     } catch (err) {
-        console.error("❌ Error en login:", err.message);
+        // Removed console.error to reduce terminal output
         res.status(500).json({ message: "Error en login", error: err.message });
     }
 }

@@ -154,7 +154,11 @@ export default function TablaInventario({
                       {p.imagen ? (
                         <button
                           type="button"
-                          onClick={() => onVerImagen(`${API_URL}/${p.imagen}`)}
+                          onClick={() => {
+                            const path = p.imagen;
+                            const url = path && (path.startsWith("http") ? path : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`);
+                            onVerImagen(url);
+                          }}
                           className={imgBtn}
                           title="Ver imagen"
                         >
@@ -174,7 +178,11 @@ export default function TablaInventario({
                       {p.img_comp ? (
                         <button
                           type="button"
-                          onClick={() => onVerImagen(`${API_URL}/${p.img_comp}`)}
+                          onClick={() => {
+                            const path = p.img_comp;
+                            const url = path && (path.startsWith("http") ? path : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`);
+                            onVerImagen(url);
+                          }}
                           className={imgBtn}
                           title="Ver comprobante"
                         >

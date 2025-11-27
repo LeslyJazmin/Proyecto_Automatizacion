@@ -213,9 +213,11 @@ async function registrarEntradaComestibleExistente(data) {
 async function listarRopa() {
   const pool = await getPool();
   const result = await pool.request().query(`
-    SELECT *
-    FROM RopaDeportiva
-    ORDER BY nombre
+    SELECT 
+      r.*,
+      (SELECT TOP 1 img_comp FROM InventarioRopa WHERE id_producto = r.id_ropa AND img_comp IS NOT NULL ORDER BY id_inventario DESC) AS img_comp
+    FROM RopaDeportiva r
+    ORDER BY r.nombre
   `);
   return result.recordset;
 }
@@ -233,12 +235,13 @@ async function listarComestibles() {
       precio,
       stock_actual,
       fecha_vencimiento,
-      lote, -- ✅ agregamos explícitamente
+      lote,
       fecha_creacion,
       ubicacion,
-      imagen
-    FROM ProductosComestibles
-    ORDER BY nombre
+      imagen,
+      (SELECT TOP 1 img_comp FROM InventarioComestible WHERE id_producto = c.id_comestible AND img_comp IS NOT NULL ORDER BY id_inventario DESC) AS img_comp
+    FROM ProductosComestibles c
+    ORDER BY c.nombre
   `);
   return result.recordset;
 }
@@ -303,7 +306,8 @@ async function buscarRopa(criterio) {
         r.stock_actual, 
         r.ubicacion, 
         r.imagen, 
-        r.fecha_creacion
+        r.fecha_creacion,
+        (SELECT TOP 1 img_comp FROM InventarioRopa WHERE id_producto = r.id_ropa AND img_comp IS NOT NULL ORDER BY id_inventario DESC) AS img_comp
       FROM RopaDeportiva r
       WHERE r.id_ropa LIKE @criterio OR r.nombre LIKE @criterio
     `);
@@ -320,16 +324,17 @@ async function buscarComestible(criterio) {
         c.id_comestible, 
         c.nombre, 
         c.marca, 
-          c.sabor, 
-          c.peso, 
-          c.litros, 
-          c.lote,
+        c.sabor, 
+        c.peso, 
+        c.litros, 
+        c.lote,
         c.precio, 
         c.stock_actual, 
         c.fecha_vencimiento, 
         c.ubicacion, 
         c.imagen, 
-        c.fecha_creacion
+        c.fecha_creacion,
+        (SELECT TOP 1 img_comp FROM InventarioComestible WHERE id_producto = c.id_comestible AND img_comp IS NOT NULL ORDER BY id_inventario DESC) AS img_comp
       FROM ProductosComestibles c
       WHERE c.id_comestible LIKE @criterio OR c.nombre LIKE @criterio
     `);
@@ -343,13 +348,17 @@ async function actualizarRopa(data) {
   const pool = await getPool();
   const { id_ropa, marca, talla, color, ubicacion, imagen, precio } = data;
 
+  // Handle null values for optional fields
+  const ubicacionValue = ubicacion || null;
+  const imagenValue = imagen || null;
+
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("marca", sql.NVarChar(20), marca)
     .input("talla", sql.NVarChar(8), talla)
     .input("color", sql.NVarChar(20), color)
-    .input("ubicacion", sql.NVarChar(50), ubicacion)
-    .input("imagen", sql.NVarChar(255), imagen)
+    .input("ubicacion", sql.NVarChar(50), ubicacionValue)
+    .input("imagen", sql.NVarChar(255), imagenValue)
     .input("precio", sql.Decimal(10, 2), precio)
     .query(`
       UPDATE RopaDeportiva
@@ -375,6 +384,11 @@ async function actualizarComestible(data) {
 
   peso = !isNaN(parseFloat(peso)) ? parseFloat(peso) : null;
   litros = !isNaN(parseFloat(litros)) ? parseFloat(litros) : null;
+  
+  // Handle null values for optional fields
+  const ubicacionValue = ubicacion || null;
+  const imagenValue = imagen || null;
+  const fechaVencimientoValue = fecha_vencimiento || null;
 
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
@@ -382,10 +396,10 @@ async function actualizarComestible(data) {
     .input("sabor", sql.NVarChar(20), sabor)
     .input("peso", sql.Decimal(10, 2), peso)
     .input("litros", sql.Decimal(10, 2), litros)
-    .input("ubicacion", sql.NVarChar(50), ubicacion)
-    .input("imagen", sql.NVarChar(255), imagen)
+    .input("ubicacion", sql.NVarChar(50), ubicacionValue)
+    .input("imagen", sql.NVarChar(255), imagenValue)
     .input("precio", sql.Decimal(10, 2), precio)
-    .input("fecha_vencimiento", sql.Date, fecha_vencimiento) 
+    .input("fecha_vencimiento", sql.Date, fechaVencimientoValue) 
     .query(`
       UPDATE ProductosComestibles
       SET 
