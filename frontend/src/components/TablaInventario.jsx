@@ -98,10 +98,17 @@ export default function TablaInventario({
               const id = tipo === "ropa" ? p.id_ropa : p.id_comestible;
               const stock = p.stock_actual ?? 0;
 
-              const stockColor =
-                stock < 50
-                  ? "text-red-700 font-bold"
-                  : "text-green-700 font-bold";
+              let stockColor = "font-bold";
+
+              // Regla para ropa
+              if (tipo === "ropa") {
+                stockColor += stock <= 10 ? " text-red-700" : " text-green-700";
+              }
+
+              // Regla para comestible
+              if (tipo === "comestible") {
+                stockColor += stock <= 30 ? " text-red-700" : " text-green-700";
+              }
 
               const fechaVenc =
                 p.fecha_vencimiento &&
