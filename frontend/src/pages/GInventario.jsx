@@ -10,6 +10,7 @@ import ModalConfirmacion from "../components/ModalConfirmacion";
 import ModalExistenteProducto from "../components/ModalExistenteProducto";
 import ModalSalidaProducto from "../components/ModalSalidaProducto";
 import { generarPDFInventario } from "../utils/pdfGenerator";
+import Modal from "../components/ui/Modal";
 
 import {
   obtenerRopa,
@@ -285,7 +286,8 @@ export default function GInventario() {
   // ---------- RENDER PRINCIPAL ----------
   return (
     <div className="min-h-screen font-sans text-gray-800 bg-gray-50">
-      <Sidebar active={sidebarActive} />
+      {/* Sidebar */}
+      <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
       <div className="p-10 ml-64">
         {/* ENCABEZADO */}
@@ -394,6 +396,33 @@ export default function GInventario() {
         }}
       />
 
+<Modal
+  isOpen={logoutModalOpen}
+  onClose={() => setLogoutModalOpen(false)}
+  title="¿Cerrar sesión?"
+>
+  <p className="text-gray-700 text-center mb-6">
+    ¿Estás seguro que deseas salir?
+  </p>
+  <div className="flex justify-center space-x-4">
+    <button
+      onClick={() => setLogoutModalOpen(false)}
+      className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 transition-all duration-200"
+    >
+      Cancelar
+    </button>
+    <button
+      onClick={() => {
+        sessionStorage.clear();
+        window.location.href = "/login";
+      }}
+      className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all duration-200"
+    >
+      Cerrar Sesión
+    </button>
+  </div>
+</Modal>
+
       {imagenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-70">
           <div className="relative w-full max-w-xl p-8 bg-white border border-gray-200 rounded-xl shadow-3xl">
@@ -410,25 +439,6 @@ export default function GInventario() {
           </div>
         </div>
       )}
-<Button
-  onClick={() => setLogoutModalOpen(true)}
-  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.05] active:scale-95"
->
-  <Shirt className="w-5 h-5" /> {/* O reemplaza con un ícono de logout */}
-  <span>Cerrar Sesión</span>
-</Button>
-<ModalConfirmacion
-  isOpen={logoutModalOpen}
-  onClose={() => setLogoutModalOpen(false)}
-  onConfirm={() => {
-    sessionStorage.clear();
-    window.location.href = "/login"; // redirige al login
-  }}
-  title="¿Cerrar sesión?"
-  description="¿Deseas salir de tu cuenta?"
-  cancelText="Cancelar"
-  confirmText="Cerrar Sesión"
-/>
 
       {productoEditar && (
         <ActualizarProducto
@@ -455,7 +465,7 @@ export default function GInventario() {
         mensaje={mensaje.texto}
         onClose={() => setMensaje({ ...mensaje, open: false })}
       />
-
+      
       {/* 🔹 Modal para registrar entrada de ropa existente */}
       <ModalExistenteProducto
         isOpen={modalExistenteRopaOpen}
