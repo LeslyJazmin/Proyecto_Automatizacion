@@ -31,6 +31,7 @@ async function entradaRopa(req, res) {
     const registro = await registrarEntradaRopa(data);
     res.json(registro);
   } catch (err) {
+    console.error("Error en entradaRopa:", err);
     res.status(500).json({ message: "Error al registrar entrada de ropa" });
   }
 }
@@ -46,6 +47,7 @@ async function entradaRopaExistente(req, res) {
     const registro = await registrarEntradaRopaExistente(data);
     res.json(registro);
   } catch (err) {
+    console.error("Error en entradaRopaExistente:", err);
     res.status(500).json({ message: "Error al registrar entrada de ropa existente" });
   }
 }
@@ -72,6 +74,7 @@ async function entradaComestible(req, res) {
     const registro = await registrarEntradaComestible(data);
     res.json(registro);
   } catch (err) {
+    console.error("Error en entradaComestible:", err);
     res.status(500).json({ message: "Error al registrar entrada de comestible" });
   }
 }
@@ -93,6 +96,7 @@ async function entradaComestibleExistente(req, res) {
     const registro = await registrarEntradaComestibleExistente(data);
     res.json(registro);
   } catch (err) {
+    console.error("Error en entradaComestibleExistente:", err);
     res.status(500).json({ message: "Error al registrar entrada de comestible existente" });
   }
 }
@@ -319,7 +323,7 @@ async function actualizarRopaController(req, res) {
       color: color ?? ropaEncontrada.color,
       ubicacion: ubicacion ?? ropaEncontrada.ubicacion,
       imagen: imagen,
-      precio: precio ?? ropaEncontrada.precio // 👈 se agrega aquí
+      precio: precio ?? ropaEncontrada.precio 
     };
 
     const resultado = await actualizarRopa(data);

@@ -3,7 +3,7 @@ const { getPool } = require("../config/db");
 const { generarIdRopa, generarIdComestible, generarIdInventario } = require("../utils/idGenerator");
 
 // ============================================================
-// 👕 REGISTRAR ENTRADA DE ROPA NUEVA
+// REGISTRAR ENTRADA DE ROPA NUEVA
 // ============================================================
 async function registrarEntradaRopa(data) {
   const pool = await getPool();
@@ -25,7 +25,6 @@ async function registrarEntradaRopa(data) {
     img_comp
   } = data;
 
-  // Registrar producto
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("nombre", sql.NVarChar(20), nombre)
@@ -41,7 +40,6 @@ async function registrarEntradaRopa(data) {
       VALUES (@id_ropa, @nombre, @marca, @talla, @color, @precio, @stock_actual, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), generarIdInventario("IR"))
     .input("id_producto", sql.NVarChar(7), id_ropa)
@@ -52,7 +50,7 @@ async function registrarEntradaRopa(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
-    .input("img_comp", sql.NVarChar(255), img_comp)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
@@ -63,14 +61,13 @@ async function registrarEntradaRopa(data) {
 }
 
 // ============================================================
-// 👕 REGISTRAR ENTRADA DE ROPA EXISTENTE
+// REGISTRAR ENTRADA DE ROPA EXISTENTE
 // ============================================================
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
   const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IR");
 
-  // Actualizar stock
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("cantidad", sql.Int, cantidad)
@@ -80,7 +77,6 @@ async function registrarEntradaRopaExistente(data) {
       WHERE id_ropa = @id_ropa
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_ropa)
@@ -91,7 +87,7 @@ async function registrarEntradaRopaExistente(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
-    .input("img_comp", sql.NVarChar(255), img_comp)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
@@ -102,7 +98,7 @@ async function registrarEntradaRopaExistente(data) {
 }
 
 // ============================================================
-// 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE NUEVO
+// REGISTRAR ENTRADA COMESTIBLE NUEVO
 // ============================================================
 async function registrarEntradaComestible(data) {
   const pool = await getPool();
@@ -129,7 +125,6 @@ async function registrarEntradaComestible(data) {
 
   const idInventario = generarIdInventario("IC");
 
-  // Registrar producto
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("nombre", sql.NVarChar(50), nombre)
@@ -152,7 +147,6 @@ async function registrarEntradaComestible(data) {
        @fecha_vencimiento, @lote, @fecha_creacion, @ubicacion, @imagen)
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
@@ -163,7 +157,7 @@ async function registrarEntradaComestible(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
-    .input("img_comp", sql.NVarChar(255), img_comp)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
@@ -174,14 +168,13 @@ async function registrarEntradaComestible(data) {
 }
 
 // ============================================================
-// 🍪 REGISTRAR ENTRADA DE PRODUCTO COMESTIBLE EXISTENTE
+// REGISTRAR ENTRADA COMESTIBLE EXISTENTE
 // ============================================================
 async function registrarEntradaComestibleExistente(data) {
   const pool = await getPool();
   const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IC");
 
-  // Actualizar stock
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("cantidad", sql.Int, cantidad)
@@ -191,7 +184,6 @@ async function registrarEntradaComestibleExistente(data) {
       WHERE id_comestible = @id_comestible
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
@@ -202,7 +194,7 @@ async function registrarEntradaComestibleExistente(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
-    .input("img_comp", sql.NVarChar(255), img_comp)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
@@ -213,28 +205,20 @@ async function registrarEntradaComestibleExistente(data) {
 }
 
 // ============================================================
-// 👕 REGISTRAR SALIDA DE PRODUCTO DE ROPA 
+// SALIDA ROPA
 // ============================================================
 async function registrarSalidaRopa(data) {
   const pool = await getPool();
   const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
   const idInventario = generarIdInventario("IR");
 
-  // Verificar stock suficiente
   const stockResult = await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .query(`SELECT stock_actual FROM RopaDeportiva WHERE id_ropa = @id_ropa`);
 
-  if (stockResult.recordset.length === 0) {
-    throw new Error("Producto no encontrado");
-  }
+  if (stockResult.recordset.length === 0) throw new Error("Producto no encontrado");
+  if (stockResult.recordset[0].stock_actual < cantidad) throw new Error("Stock insuficiente");
 
-  const stockActual = stockResult.recordset[0].stock_actual;
-  if (stockActual < cantidad) {
-    throw new Error("Stock insuficiente");
-  }
-
-  // Restar stock
   await pool.request()
     .input("id_ropa", sql.NVarChar(7), id_ropa)
     .input("cantidad", sql.Int, cantidad)
@@ -244,7 +228,6 @@ async function registrarSalidaRopa(data) {
       WHERE id_ropa = @id_ropa
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_ropa)
@@ -265,28 +248,20 @@ async function registrarSalidaRopa(data) {
 }
 
 // ============================================================
-// 🍪 REGISTRAR SALIDA DE PRODUCTO COMESTIBLE 
+// SALIDA COMESTIBLE
 // ============================================================
 async function registrarSalidaComestible(data) {
   const pool = await getPool();
   const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
   const idInventario = generarIdInventario("IC");
 
-  // Verificar stock suficiente
   const stockResult = await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .query(`SELECT stock_actual FROM ProductosComestibles WHERE id_comestible = @id_comestible`);
 
-  if (stockResult.recordset.length === 0) {
-    throw new Error("Producto no encontrado");
-  }
+  if (stockResult.recordset.length === 0) throw new Error("Producto no encontrado");
+  if (stockResult.recordset[0].stock_actual < cantidad) throw new Error("Stock insuficiente");
 
-  const stockActual = stockResult.recordset[0].stock_actual;
-  if (stockActual < cantidad) {
-    throw new Error("Stock insuficiente");
-  }
-
-  // Restar stock
   await pool.request()
     .input("id_comestible", sql.NVarChar(7), id_comestible)
     .input("cantidad", sql.Int, cantidad)
@@ -296,7 +271,6 @@ async function registrarSalidaComestible(data) {
       WHERE id_comestible = @id_comestible
     `);
 
-  // Registrar movimiento
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
     .input("id_producto", sql.NVarChar(7), id_comestible)
@@ -317,7 +291,7 @@ async function registrarSalidaComestible(data) {
 }
 
 // ============================================================
-// 📦 LISTAR TODO EL INVENTARIO DE ROPA
+// LISTAR ROPA
 // ============================================================
 async function listarRopa() {
   const pool = await getPool();
@@ -340,7 +314,89 @@ async function listarRopa() {
 }
 
 // ============================================================
-// 📦 LISTAR TODO EL INVENTARIO DE COMESTIBLES
+// LISTAR MOVIMIENTOS ROPA
+// ============================================================
+async function listarMovimientosRopa(anio, mes) {
+  const pool = await getPool();
+  let query = `
+    SELECT 
+      ir.id_inventario,
+      r.nombre AS producto,
+      ir.cantidad,
+      ir.tipo_movimiento,
+      ir.tipo_comprobante,
+      ir.numero_comprobante,
+      ir.metodo_pago,
+      ir.monto_pagado,
+      ir.fecha,
+      u.username AS usuario,
+      ir.img_comp
+    FROM InventarioRopa ir
+    JOIN RopaDeportiva r ON ir.id_producto = r.id_ropa
+    LEFT JOIN Usuarios u ON ir.id_usuario = u.id_usuario
+  `;
+
+  const conditions = [];
+  if (anio) conditions.push("YEAR(ir.fecha) = @anio");
+  if (mes) conditions.push("MONTH(ir.fecha) = @mes");
+
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
+  }
+
+  query += " ORDER BY ir.fecha DESC";
+
+  const request = pool.request();
+  if (anio) request.input("anio", sql.Int, anio);
+  if (mes) request.input("mes", sql.Int, mes);
+
+  const result = await request.query(query);
+  return result.recordset;
+}
+
+// ============================================================
+// LISTAR MOVIMIENTOS COMESTIBLE
+// ============================================================
+async function listarMovimientosComestible(anio, mes) {
+  const pool = await getPool();
+  let query = `
+    SELECT 
+      ic.id_inventario,
+      c.nombre AS producto,
+      ic.cantidad,
+      ic.tipo_movimiento,
+      ic.tipo_comprobante,
+      ic.numero_comprobante,
+      ic.metodo_pago,
+      ic.monto_pagado,
+      ic.fecha,
+      u.username AS usuario,
+      ic.img_comp
+    FROM InventarioComestible ic
+    JOIN ProductosComestibles c ON ic.id_producto = c.id_comestible
+    LEFT JOIN Usuarios u ON ic.id_usuario = u.id_usuario
+  `;
+
+  const conditions = [];
+  if (anio) conditions.push("YEAR(ic.fecha) = @anio");
+  if (mes) conditions.push("MONTH(ic.fecha) = @mes");
+
+  if (conditions.length > 0) {
+    query += " WHERE " + conditions.join(" AND ");
+  }
+
+  query += " ORDER BY ic.fecha DESC";
+
+  const request = pool.request();
+  if (anio) request.input("anio", sql.Int, anio);
+  if (mes) request.input("mes", sql.Int, mes);
+
+  const result = await request.query(query);
+  return result.recordset;
+}
+
+// ============================================================
+// LISTAR COMESTIBLES
 // ============================================================
 async function listarComestibles() {
   const pool = await getPool();
@@ -367,170 +423,7 @@ async function listarComestibles() {
 }
 
 // ============================================================
-// 📊 LISTAR MOVIMIENTOS DE ROPA (con filtros opcionales de año y mes)
-// ============================================================
-async function listarMovimientosRopa(anio = null, mes = null) {
-  const pool = await getPool();
-  
-  let query = `
-    SELECT 
-      i.tipo_movimiento, 
-      i.cantidad, 
-      i.tipo_comprobante, 
-      i.numero_comprobante, 
-      i.metodo_pago, 
-      i.monto_pagado,            
-      u.username AS usuario, 
-      r.nombre AS producto, 
-      i.fecha
-    FROM InventarioRopa i
-    LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
-    LEFT JOIN RopaDeportiva r ON i.id_producto = r.id_ropa
-  `;
-
-  const request = pool.request();
-  let whereClauses = [];
-
-  // Solo aplicar filtros si los parámetros no son nulos
-  if (anio !== null) {
-    whereClauses.push(`YEAR(i.fecha) = @anio`);
-    request.input("anio", sql.Int, anio);
-  }
-  if (mes !== null) {
-    whereClauses.push(`MONTH(i.fecha) = @mes`);
-    request.input("mes", sql.Int, mes);
-  }
-
-  if (whereClauses.length > 0) {
-    query += ` WHERE ` + whereClauses.join(' AND ');
-  }
-
-  query += ` ORDER BY i.fecha DESC`;
-
-  const result = await request.query(query);
-  return result.recordset;
-}
-
-// ============================================================
-// 📊 LISTAR MOVIMIENTOS DE COMESTIBLES (con filtros opcionales de año y mes)
-// ============================================================
-async function listarMovimientosComestible(anio = null, mes = null) {
-  const pool = await getPool();
-  
-  let query = `
-    SELECT 
-      i.tipo_movimiento, 
-      i.cantidad, 
-      i.tipo_comprobante, 
-      i.numero_comprobante, 
-      i.metodo_pago, 
-      i.monto_pagado,            
-      u.username AS usuario, 
-      c.nombre AS producto, 
-      i.fecha
-    FROM InventarioComestible i
-    LEFT JOIN Usuarios u ON i.id_usuario = u.id_usuario
-    LEFT JOIN ProductosComestibles c ON i.id_producto = c.id_comestible
-  `;
-
-  const request = pool.request();
-  let whereClauses = [];
-
-  // Solo aplicar filtros si los parámetros no son nulos
-  if (anio !== null) {
-    whereClauses.push(`YEAR(i.fecha) = @anio`);
-    request.input("anio", sql.Int, anio);
-  }
-  if (mes !== null) {
-    whereClauses.push(`MONTH(i.fecha) = @mes`);
-    request.input("mes", sql.Int, mes);
-  }
-
-  if (whereClauses.length > 0) {
-    query += ` WHERE ` + whereClauses.join(' AND ');
-  }
-
-  query += ` ORDER BY i.fecha DESC`;
-
-  const result = await request.query(query);
-  return result.recordset;
-}
-
-// ============================================================
-// 🔍 BÚSQUEDAS
-// ============================================================
-async function buscarRopa(criterio) {
-  const pool = await getPool();
-  const result = await pool.request()
-    .input("criterio", sql.NVarChar(100), `%${criterio}%`)
-    .query(`
-      SELECT 
-        id_ropa,
-        nombre,
-        marca,
-        talla,
-        color,
-        precio,
-        stock_actual,
-        ubicacion,
-        imagen
-      FROM RopaDeportiva
-      WHERE nombre LIKE @criterio OR marca LIKE @criterio
-      ORDER BY nombre
-    `);
-  return result.recordset;
-}
-
-async function buscarComestible(criterio) {
-  const pool = await getPool();
-  const result = await pool.request()
-    .input("criterio", sql.NVarChar(200), `%${criterio}%`)
-    .query(`
-      SELECT 
-        id_comestible,
-        nombre,
-        marca,
-        sabor,
-        peso,
-        litros,
-        precio,
-        stock_actual,
-        fecha_vencimiento,
-        lote,
-        fecha_creacion,
-        ubicacion,
-        imagen
-      FROM ProductosComestibles
-      WHERE nombre LIKE @criterio OR marca LIKE @criterio OR sabor LIKE @criterio
-      ORDER BY nombre
-    `);
-  return result.recordset;
-}
-
-// --- BUSCAR COMESTIBLE POR NOMBRE + LOTE ---
-async function buscarComestiblePorNombreYLote(nombre, lote) {
-  try {
-    const pool = await getPool();
-
-    const result = await pool.request()
-      .input("nombre", sql.NVarChar(50), nombre)
-      .input("lote", sql.NVarChar(30), lote)
-      .query(`
-        SELECT *
-        FROM ProductosComestibles
-        WHERE nombre = @nombre AND lote = @lote
-      `);
-
-    return result.recordset;
-
-  } catch (err) {
-    console.error("❌ Error en buscarComestiblePorNombreYLote:", err);
-    return [];
-  }
-}
-
-// ============================================================
-// 🛠️ ACTUALIZACIONES
+// ACTUALIZAR ROPA
 // ============================================================
 async function actualizarRopa(data) {
   const pool = await getPool();
@@ -567,9 +460,12 @@ async function actualizarRopa(data) {
       WHERE id_ropa = @id_ropa
     `);
 
-  return { message: "✅ Ropa actualizada correctamente", rowsAffected: result.rowsAffected };
+  return { message: "Ropa actualizada", rowsAffected: result.rowsAffected };
 }
 
+// ============================================================
+// ACTUALIZAR COMESTIBLE
+// ============================================================
 async function actualizarComestible(data) {
   const pool = await getPool();
   const { 
@@ -580,7 +476,6 @@ async function actualizarComestible(data) {
     peso,
     litros,
     precio,
-    stock_actual,
     fecha_vencimiento,
     lote,
     ubicacion,
@@ -592,10 +487,9 @@ async function actualizarComestible(data) {
     .input("nombre", sql.NVarChar(50), nombre)
     .input("marca", sql.NVarChar(20), marca)
     .input("sabor", sql.NVarChar(20), sabor)
-    .input("peso", sql.Decimal(10, 2), peso)
-    .input("litros", sql.Decimal(10, 2), litros)
+    .input("peso", sql.Decimal(10, 2), peso || null)
+    .input("litros", sql.Decimal(10, 2), litros || null)
     .input("precio", sql.Decimal(10, 2), precio)
-    .input("stock_actual", sql.Int, stock_actual)
     .input("fecha_vencimiento", sql.Date, fecha_vencimiento)
     .input("lote", sql.NVarChar(30), lote)
     .input("ubicacion", sql.NVarChar(50), ubicacion)
@@ -609,7 +503,6 @@ async function actualizarComestible(data) {
         peso = @peso,
         litros = @litros,
         precio = @precio,
-        stock_actual = @stock_actual,
         fecha_vencimiento = @fecha_vencimiento,
         lote = @lote,
         ubicacion = @ubicacion,
@@ -617,48 +510,71 @@ async function actualizarComestible(data) {
       WHERE id_comestible = @id_comestible
     `);
 
-  return { message: "✅ Comestible actualizado correctamente", rowsAffected: result.rowsAffected };
+  return { message: "Comestible actualizado", rowsAffected: result.rowsAffected };
+}
+// ============================================================
+// ELIMINAR ROPA
+// ============================================================
+async function eliminarRopa(id_ropa) {
+  const pool = await getPool();
+
+  // Borra primero inventario asociado
+  await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .query(`
+      DELETE FROM InventarioRopa
+      WHERE id_producto = @id_ropa
+    `);
+
+  // Borra producto
+  const result = await pool.request()
+    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .query(`
+      DELETE FROM RopaDeportiva
+      WHERE id_ropa = @id_ropa
+    `);
+
+  if (result.rowsAffected[0] === 0) {
+    throw new Error("Producto no encontrado");
+  }
+
+  return { message: "Ropa eliminada" };
 }
 
 // ============================================================
-// 🗑️ ELIMINACIONES
+// ELIMINAR COMESTIBLE
 // ============================================================
-async function eliminarRopa(id) {
+async function eliminarComestible(id_comestible) {
   const pool = await getPool();
-  
-  // Eliminar movimientos relacionados
+
+  // Borra entradas y salidas de inventario
   await pool.request()
-    .input("id_producto", sql.NVarChar(7), id)
-    .query(`DELETE FROM InventarioRopa WHERE id_producto = @id_producto`);
-  
-  // Eliminar producto
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .query(`
+      DELETE FROM InventarioComestible
+      WHERE id_producto = @id_comestible
+    `);
+
+  // Borra el producto
   const result = await pool.request()
-    .input("id_ropa", sql.NVarChar(7), id)
-    .query(`DELETE FROM RopaDeportiva WHERE id_ropa = @id_ropa`);
-  
-  return { message: "✅ Ropa eliminada correctamente", rowsAffected: result.rowsAffected };
+    .input("id_comestible", sql.NVarChar(7), id_comestible)
+    .query(`
+      DELETE FROM ProductosComestibles
+      WHERE id_comestible = @id_comestible
+    `);
+
+  if (result.rowsAffected[0] === 0) {
+    throw new Error("Producto no encontrado");
+  }
+
+  return { message: "Comestible eliminado" };
 }
 
-async function eliminarComestible(id) {
-  const pool = await getPool();
-  
-  // Eliminar movimientos relacionados
-  await pool.request()
-    .input("id_producto", sql.NVarChar(7), id)
-    .query(`DELETE FROM InventarioComestible WHERE id_producto = @id_producto`);
-  
-  // Eliminar producto
-  const result = await pool.request()
-    .input("id_comestible", sql.NVarChar(7), id)
-    .query(`DELETE FROM ProductosComestibles WHERE id_comestible = @id_comestible`);
-  
-  return { message: "✅ Comestible eliminado correctamente", rowsAffected: result.rowsAffected };
-}
 
 module.exports = {
   registrarEntradaRopa,
-  registrarEntradaComestible,
   registrarEntradaRopaExistente,
+  registrarEntradaComestible,
   registrarEntradaComestibleExistente,
   registrarSalidaRopa,
   registrarSalidaComestible,
@@ -666,11 +582,9 @@ module.exports = {
   listarComestibles,
   listarMovimientosRopa,
   listarMovimientosComestible,
-  buscarRopa,
-  buscarComestible,
-  buscarComestiblePorNombreYLote,
   actualizarRopa,
   actualizarComestible,
   eliminarRopa,
   eliminarComestible
 };
+

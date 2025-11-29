@@ -85,7 +85,6 @@ export default function TablaInventario({
               <th className={thClass}>Precio</th>
               <th className={thClass}>Ubicación</th>
               <th className={thClass + " text-center"}>Img</th>
-              <th className={thClass + " text-center"}>Comprobante</th>
               <th className={thClass + " text-center"}>Acción</th>
             </tr>
           </thead>
@@ -178,31 +177,6 @@ export default function TablaInventario({
                       )}
                     </div>
                   </td>
-
-                  {/* ---------- COMPROBANTE ---------- */}
-                  <td className={`${tdClass} text-center`}>
-                    <div className="flex justify-center">
-                      {p.img_comp ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const path = p.img_comp;
-                            const url = path && (path.startsWith("http") ? path : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`);
-                            onVerImagen(url);
-                          }}
-                          className={imgBtn}
-                          title="Ver comprobante"
-                        >
-                          <ImageIcon className="w-4 h-4 text-white" />
-                        </button>
-                      ) : (
-                        <div className={imgBtnGray}>
-                          <ImageIcon className="w-4 h-4 text-white/60" />
-                        </div>
-                      )}
-                    </div>
-                  </td>
-
                   <td className={tdClass + " text-center"}>
                     <div className="flex justify-center gap-1.5">
                       <button onClick={() => onEditar(p)} className={editBtn} title="Editar">
