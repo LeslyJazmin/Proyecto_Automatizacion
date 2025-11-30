@@ -7,6 +7,7 @@ import { obtenerMovimientosRopa, obtenerMovimientosComestibles } from "../api/in
 import { generarPDFMovimientos } from "../utils/pdfMovimientos";
 import Button from "../components/ui/Button";
 import { Loader2, Zap, Shirt, Pizza, FileDown } from "lucide-react";
+import Modal from "../components/ui/Modal";
 
 export default function Movimientos() {
   const location = useLocation();
@@ -15,6 +16,7 @@ export default function Movimientos() {
   const [movRopa, setMovRopa] = useState([]);
   const [movComestibles, setMovComestibles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const fetchMovimientos = useCallback(async (anio = null, mes = null) => {
     try {
@@ -47,8 +49,6 @@ export default function Movimientos() {
     fetchMovimientos(anio, mes);
   }, [fetchMovimientos]);
 
-  const handleLogout = () => console.log("Cerrar sesión");
-
   // --- Estilos de Layout y Contenido Mejorados ---
 
   // Contenedor principal con fondo suave
@@ -71,7 +71,8 @@ export default function Movimientos() {
 
   return (
     <div className={mainContainerClass}>
-      <Sidebar onLogout={handleLogout} active={sidebarActive} />
+    {/* Sidebar */}
+     <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
       <div className={contentAreaClass}>
         <div className={cardContainerClass}>
@@ -129,6 +130,32 @@ export default function Movimientos() {
               )}
             </>
           )}
+          <Modal
+            isOpen={logoutModalOpen}
+            onClose={() => setLogoutModalOpen(false)}
+            title="¿Cerrar sesión?"
+          >
+            <p className="text-gray-700 text-center mb-6">
+              ¿Estás seguro que deseas salir?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setLogoutModalOpen(false)}
+                className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 transition-all duration-200"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.clear();
+                  window.location.href = "/login";
+                }}
+                className="px-5 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg transition-all duration-200"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          </Modal>
         </div>
       </div>
     </div>

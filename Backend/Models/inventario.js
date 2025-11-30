@@ -570,6 +570,74 @@ async function eliminarComestible(id_comestible) {
   return { message: "Comestible eliminado" };
 }
 
+async function buscarComestiblePorNombreYLote(nombre, lote) {
+  try {
+    const pool = await getPool();
+
+    const result = await pool.request()
+      .input("nombre", sql.NVarChar(50), nombre)
+      .input("lote", sql.NVarChar(30), lote)
+      .query(`
+        SELECT *
+        FROM ProductosComestibles
+        WHERE nombre = @nombre AND lote = @lote
+      `);
+
+    return result.recordset;
+
+  } catch (err) {
+    console.error("❌ Error en buscarComestiblePorNombreYLote:", err);
+    return [];
+  }
+}
+
+async function buscarRopa(criterio) {
+  const pool = await getPool();
+  const result = await pool.request()
+    .input("criterio", sql.NVarChar(100), `%${criterio}%`)
+    .query(`
+      SELECT 
+        id_ropa,
+        nombre,
+        marca,
+        talla,
+        color,
+        precio,
+        stock_actual,
+        ubicacion,
+        imagen
+      FROM RopaDeportiva
+      WHERE nombre LIKE @criterio OR marca LIKE @criterio
+      ORDER BY nombre
+    `);
+  return result.recordset;
+}
+
+async function buscarComestible(criterio) {
+  const pool = await getPool();
+  const result = await pool.request()
+    .input("criterio", sql.NVarChar(200), `%${criterio}%`)
+    .query(`
+      SELECT 
+        id_comestible,
+        nombre,
+        marca,
+        sabor,
+        peso,
+        litros,
+        precio,
+        stock_actual,
+        fecha_vencimiento,
+        lote,
+        fecha_creacion,
+        ubicacion,
+        imagen
+      FROM ProductosComestibles
+      WHERE nombre LIKE @criterio OR marca LIKE @criterio OR sabor LIKE @criterio
+      ORDER BY nombre
+    `);
+  return result.recordset;
+}
 
 module.exports = {
   registrarEntradaRopa,
@@ -584,6 +652,9 @@ module.exports = {
   listarMovimientosComestible,
   actualizarRopa,
   actualizarComestible,
+  buscarComestiblePorNombreYLote,
+  buscarRopa,
+  buscarComestible,
   eliminarRopa,
   eliminarComestible
 };
