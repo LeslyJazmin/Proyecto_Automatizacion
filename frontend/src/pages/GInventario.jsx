@@ -208,7 +208,7 @@ export default function GInventario() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Buscar prenda por nombre o código..."
+            placeholder="Buscar prenda por nombre..."
             className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             onChange={(e) => handleBuscar("ropa", e.target.value)}
           />
@@ -263,7 +263,7 @@ export default function GInventario() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Buscar producto comestibles por nombre o código..."
+            placeholder="Buscar producto comestibles por nombre..."
             className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             onChange={(e) => handleBuscar("comestible", e.target.value)}
           />

@@ -295,14 +295,14 @@ export default function ModalSalidaProducto({
 
                   {renderSelect("tipo_comprobante", "Tipo de Comprobante", [
                     { value: "Boleta", label: "Boleta" },
-                    { value: "Factura", label: "Factura" },
-                    { value: "Nota", label: "Nota" },
+              
                   ])}
                   {renderInput("numero_comprobante", "N° Comprobante")}
                   {renderSelect("metodo_pago", "Método de Pago", [
                     { value: "Efectivo", label: "Efectivo" },
                     { value: "Yape", label: "Yape" },
-                    { value: "Transferencia", label: "Transferencia Bancaria" },
+                    { value: "Tarjeta de Crédito", label: "Tarjeta de Crédito" },
+                    { value: "Plin", label: "Plin" },
                   ])}
                 </div>
 
