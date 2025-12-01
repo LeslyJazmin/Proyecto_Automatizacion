@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TrendingUp, TrendingDown, Image as ImageIcon, X } from "lucide-react";
 
-export default function TablaMovimientos({ datos }) {
+export default function TablaMovimientos({ datos, API_URL = "http://localhost:5000" }) {
   const [modalImagen, setModalImagen] = useState({ open: false, url: "" });
 
   const tableContainerClass = "overflow-x-auto rounded-xl shadow-lg border border-gray-100 bg-white";
@@ -11,18 +11,17 @@ export default function TablaMovimientos({ datos }) {
   const trClass = "border-b border-gray-100 transition duration-150 hover:bg-red-50/70";
   const tdClass = "px-3 py-2 text-gray-700 whitespace-nowrap";
 
-  const abrirModal = (url) => {
-    setModalImagen({ open: true, url });
-  };
+  const baseBtn = "p-1.5 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white font-bold";
+  const imgBtn = `${baseBtn} bg-red-700 hover:bg-black hover:shadow-red-800/50`;
+  const imgBtnGray = "p-1.5 rounded-full bg-gray-400/70 cursor-not-allowed flex items-center justify-center";
 
-  const cerrarModal = () => {
-    setModalImagen({ open: false, url: "" });
-  };
+  const abrirModal = url => setModalImagen({ open: true, url });
+  const cerrarModal = () => setModalImagen({ open: false, url: "" });
 
   if (!datos || datos.length === 0) {
     return (
-      <div className="flex justify-center items-center py-6 bg-white rounded-xl shadow-lg border border-gray-100">
-        <p className="text-gray-500 text-sm italic font-medium">
+      <div className="flex items-center justify-center py-6 bg-white border border-gray-100 shadow-lg rounded-xl">
+        <p className="text-sm italic font-medium text-gray-500">
           🤷‍♂️ No hay movimientos registrados en el historial.
         </p>
       </div>
@@ -56,9 +55,7 @@ export default function TablaMovimientos({ datos }) {
 
               return (
                 <tr key={index} className={trClass}>
-                  <td className={tdClass + " font-semibold text-gray-900"}>
-                    {mov.producto || "N/A"}
-                  </td>
+                  <td className={tdClass + " font-semibold text-gray-900"}>{mov.producto || "N/A"}</td>
                   <td className={tdClass + " text-gray-600"}>{mov.usuario || "N/A"}</td>
                   <td className={tdClass + " text-center font-bold text-base"}>{mov.cantidad}</td>
 
@@ -74,33 +71,33 @@ export default function TablaMovimientos({ datos }) {
                   <td className={tdClass}>{mov.metodo_pago || "-"}</td>
 
                   <td className={tdClass + " text-right font-extrabold text-blue-700"}>
-                    {mov.monto_pagado != null
-                      ? `S/ ${parseFloat(mov.monto_pagado).toFixed(2)}`
-                      : "-"}
+                    {mov.monto_pagado != null ? `S/ ${parseFloat(mov.monto_pagado).toFixed(2)}` : "-"}
                   </td>
 
                   <td className={tdClass + " text-center"}>
-                    {mov.img_comp ? (
-                      <button
-                        onClick={() => {
-                          const url = mov.img_comp.startsWith("http")
-                            ? mov.img_comp
-                            : `http://localhost:5000${mov.img_comp}`;
-                          abrirModal(url);
-                        }}
-                        className="p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                        title="Ver Comprobante"
-                      >
-                        <ImageIcon size={16} />
-                      </button>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
+                    <div className="flex justify-center">
+                      {mov.img_comp ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const path = mov.img_comp;
+                            const url = path && (path.startsWith("http") ? path : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`);
+                            abrirModal(url);
+                          }}
+                          className={imgBtn}
+                          title="Ver comprobante"
+                        >
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </button>
+                      ) : (
+                        <div className={imgBtnGray}>
+                          <ImageIcon className="w-4 h-4 text-white/60" />
+                        </div>
+                      )}
+                    </div>
                   </td>
 
-                  <td className={tdClass + " italic text-gray-500"}>
-                    {mov.fecha || "-"}
-                  </td>
+                  <td className={tdClass + " italic text-gray-500"}>{mov.fecha || "-"}</td>
                 </tr>
               );
             })}
@@ -108,28 +105,25 @@ export default function TablaMovimientos({ datos }) {
         </table>
       </div>
 
-      {/* Modal para ver imagen */}
       {modalImagen.open && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-          onClick={cerrarModal}
-        >
-          <div
-            className="relative bg-white rounded-lg p-4 max-w-2xl max-h-[80vh] overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-transparent">
+          <div className="relative w-full max-w-4xl max-h-[95vh] flex">
             <button
               onClick={cerrarModal}
-              className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all shadow-lg"
-              title="Cerrar"
+              className="absolute p-2 text-white bg-red-600 rounded-full shadow-lg top-4 right-4"
             >
-              <X size={20} />
+              <X size={22} />
             </button>
-            <img
-              src={modalImagen.url}
-              alt="Comprobante"
-              className="max-w-full h-auto rounded-lg"
-            />
+
+            <div className="flex items-center justify-center w-full p-4 bg-black rounded-lg">
+              {modalImagen.url && (
+                <img
+                  src={modalImagen.url}
+                  alt="Comprobante"
+                  className="object-contain max-w-full max-h-[90vh]"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -41,8 +41,8 @@ export default function TablaInventario({
 
   if (loading)
     return (
-      <div className="flex justify-center items-center py-6">
-        <p className="text-sm text-gray-600 font-medium animate-pulse flex items-center gap-2">
+      <div className="flex items-center justify-center py-6">
+        <p className="flex items-center gap-2 text-sm font-medium text-gray-600 animate-pulse">
           <Wand2 size={16} className="text-red-700 animate-spin" />
           Cargando inventario...
         </p>
@@ -51,8 +51,8 @@ export default function TablaInventario({
 
   if (!datos?.length)
     return (
-      <div className="flex justify-center items-center py-6">
-        <p className="text-gray-500 text-sm">
+      <div className="flex items-center justify-center py-6">
+        <p className="text-sm text-gray-500">
           No hay productos registrados en esta categoría.
         </p>
       </div>
@@ -91,9 +91,6 @@ export default function TablaInventario({
 
           <tbody>
             {datos.map((p) => {
-              console.log("PRODUCTO:", p);      // 🔥 DEBUG
-              console.log("IMAGEN:", p.imagen); // 🔥 DEBUG
-
               const id = tipo === "ropa" ? p.id_ropa : p.id_comestible;
               const stock = p.stock_actual ?? 0;
 
