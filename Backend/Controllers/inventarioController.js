@@ -101,13 +101,23 @@ async function entradaComestible(req, res) {
 // --- COMESTIBLE EXISTENTE ---
 async function entradaComestibleExistente(req, res) {
   try {
+    const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado } = req.body;
+
+    if (!id_comestible) return res.status(400).json({ message: "id_comestible requerido" });
+    if (!cantidad) return res.status(400).json({ message: "cantidad requerida" });
+
     let img_comp = req.body.img_comp || null;
     if (!img_comp && req.files && req.files.img_comp) {
       img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
     }
 
     const data = { 
-      ...req.body, 
+      id_comestible,
+      cantidad: Number(cantidad),
+      tipo_comprobante,
+      numero_comprobante,
+      metodo_pago,
+      monto_pagado: monto_pagado ? Number(monto_pagado) : null,
       id_usuario: req.user?.id || "ADM2235",
       img_comp
     };
@@ -408,14 +418,11 @@ async function eliminarComestibleController(req, res) {
 // --- SALIDA DE ROPA ---
 async function salidaRopaController(req, res) {
   try {
-    console.log("salidaRopaController: req.files", req.files); // Debug log
     let img_comp = null;
     if (req.files && req.files.img_comp) {
       img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
     }
-    console.log("salidaRopaController: constructed img_comp path", img_comp); // Debug log
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
-    console.log("salidaRopaController: data to model", data); // Debug log
     const registro = await registrarSalidaRopa(data);
     res.json({ message: "✅ Salida de ropa registrada correctamente", registro });
   } catch (err) {
@@ -426,14 +433,11 @@ async function salidaRopaController(req, res) {
 // --- SALIDA DE COMESTIBLE ---
 async function salidaComestibleController(req, res) {
   try {
-    console.log("salidaComestibleController: req.files", req.files); // Debug log
     let img_comp = null;
     if (req.files && req.files.img_comp) {
       img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
     }
-    console.log("salidaComestibleController: constructed img_comp path", img_comp); // Debug log
     const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
-    console.log("salidaComestibleController: data to model", data); // Debug log
     const registro = await registrarSalidaComestible(data);
     res.json({ message: "✅ Salida de comestible registrada correctamente", registro });
   } catch (err) {
