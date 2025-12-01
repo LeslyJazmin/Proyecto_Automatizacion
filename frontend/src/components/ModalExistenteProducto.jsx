@@ -115,7 +115,7 @@ export default function ModalProductoExistente({
     if (tipo === "ropa") {
       dataToSend.append("id_producto", productoSeleccionado.id_ropa);
     } else {
-      dataToSend.append("id_producto", productoSeleccionado.id_comestible);
+      dataToSend.append("id_comestible", productoSeleccionado.id_comestible);
     }
 
     try {
