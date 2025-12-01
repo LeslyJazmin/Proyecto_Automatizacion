@@ -250,7 +250,7 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
                 {/* ✅ Mostrar preview de la imagen actual o nueva */}
                 {(nuevaImagen || formData.imagen) && (
                   <img
-                    src={nuevaImagen ? URL.createObjectURL(nuevaImagen) : (formData.imagen?.startsWith("http") ? formData.imagen : `${import.meta.env.VITE_API_URL || ""}${formData.imagen}`)}
+                    src={nuevaImagen ? URL.createObjectURL(nuevaImagen) : (formData.imagen?.startsWith("http") ? formData.imagen : `${process.env.REACT_APP_API_URL || ""}${formData.imagen}`)}
                     alt="Preview"
                     className="object-cover w-32 h-32 mt-2 border-2 border-gray-200 rounded-lg"
                   />
