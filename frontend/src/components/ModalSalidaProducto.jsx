@@ -22,7 +22,7 @@ export default function ModalSalidaProducto({
   title,
   onSuccess,
 }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({ comprobante: null });
   const [errors, setErrors] = useState({});
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [cantidadRegistrar, setCantidadRegistrar] = useState(0);
@@ -58,7 +58,14 @@ export default function ModalSalidaProducto({
   }, [productoSeleccionado]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
+
+    if (name === "comprobante") {
+      setFormData((prev) => ({ ...prev, comprobante: files[0] }));
+      setErrors((prev) => ({ ...prev, comprobante: "" }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -70,6 +77,7 @@ export default function ModalSalidaProducto({
       "numero_comprobante",
       "metodo_pago",
       "monto_pagado",
+      "comprobante",
     ];
 
     if (!cantidadRegistrar || Number(cantidadRegistrar) <= 0)
@@ -94,17 +102,26 @@ export default function ModalSalidaProducto({
     e.preventDefault();
     if (!validate()) return;
 
-    const dataToSend = {
-      cantidad: Number(cantidadRegistrar),
-      tipo_comprobante: formData.tipo_comprobante,
-      numero_comprobante: formData.numero_comprobante,
-      metodo_pago: formData.metodo_pago,
-      monto_pagado: Number(formData.monto_pagado) || 0,
-      id_usuario: sessionStorage.getItem("id_usuario") || "US0001",
-      ...(tipo === "ropa"
-        ? { id_ropa: productoSeleccionado.id_ropa }
-        : { id_comestible: productoSeleccionado.id_comestible }),
-    };
+    const dataToSend = new FormData();
+    dataToSend.append("cantidad", Number(cantidadRegistrar));
+    dataToSend.append("tipo_comprobante", formData.tipo_comprobante);
+    dataToSend.append("numero_comprobante", formData.numero_comprobante);
+    dataToSend.append("metodo_pago", formData.metodo_pago);
+    dataToSend.append("monto_pagado", Number(formData.monto_pagado) || 0);
+    dataToSend.append("id_usuario", sessionStorage.getItem("id_usuario") || "US0001");
+
+    console.log("ModalSalidaProducto: formData.comprobante", formData.comprobante); // Debug log
+    dataToSend.append("img_comp", formData.comprobante);
+
+    if (tipo === "ropa")
+      dataToSend.append("id_ropa", productoSeleccionado.id_ropa);
+    else
+      dataToSend.append("id_comestible", productoSeleccionado.id_comestible);
+
+    console.log("ModalSalidaProducto: final dataToSend entries:"); // Debug log
+    for (let pair of dataToSend.entries()) {
+        console.log(pair[0]+ ', '+ pair[1]);
+    }
 
     try {
       if (tipo === "ropa") await registrarSalidaRopa(dataToSend);
@@ -115,15 +132,13 @@ export default function ModalSalidaProducto({
         if (onSuccess) onSuccess();
       }, 600);
     } catch (error) {
-      console.error("❌ Error al registrar la salida:", error);
       mostrarMensaje(
         "error",
-        error?.message || "❌ Ocurrió un error al registrar la salida."
+        error?.message || "Ocurrió un error al registrar la salida."
       );
     }
   };
 
-  // --- estilos ---
   const cardClass = "bg-white p-3 rounded-lg shadow-sm border border-gray-100";
   const inputBaseClass =
     "w-full px-2 py-1 border rounded-md text-xs focus:ring-1 shadow-sm";
@@ -131,7 +146,7 @@ export default function ModalSalidaProducto({
 
   const renderDetailCard = (label, value) => (
     <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col justify-center min-h-[50px]">
-      <label className="text-xxs font-medium text-gray-500 mb-0">{label}</label>
+      <label className="mb-0 font-medium text-gray-500 text-xxs">{label}</label>
       <p className="text-xs font-semibold text-gray-800 truncate">
         {value ?? "N/A"}
       </p>
@@ -182,7 +197,7 @@ export default function ModalSalidaProducto({
         name={name}
         value={formData[name] ?? ""}
         onChange={handleChange}
-        className={`${inputBaseClass} border-gray-300 focus:border-red-500 bg-white`}
+        className={`${inputBaseClass} border-gray-300 bg-white`}
       >
         <option value="" disabled>
           -- Seleccionar --
@@ -203,40 +218,38 @@ export default function ModalSalidaProducto({
         isOpen={isOpen}
         onClose={handleClose}
         title={`Registrar Salida de ${tipo === "ropa" ? "Ropa" : "Comestible"}`}
-        tipo="salida" // 🔴 esto hace que el header sea rojo
+        tipo="salida"
         headerIcon={TrendingDown}
-        >
-
+      >
         {!productoSeleccionado ? (
           <ModalSeleccionProducto
             tipo={tipo}
-            modo="salida" // 🔴 esto activa encabezado y botones rojos
+            modo="salida"
             onClose={handleClose}
             onSelect={setProductoSeleccionado}
           />
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="animate-slideUp bg-gray-50 p-3 -m-3 rounded-b-lg space-y-3"
+            className="p-3 -m-3 space-y-3 rounded-b-lg bg-gray-50"
           >
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              {/* izquierda */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
               <div className="col-span-3">
-                <div className={cardClass + " bg-white p-4 h-full shadow-lg border-none"}>
-                  <div className="flex justify-between items-start gap-3 mb-4 pb-3 border-b border-gray-100">
+                <div className={cardClass + " p-4 shadow-lg border-none"}>
+                  <div className="flex items-start justify-between pb-3 mb-4 border-b border-gray-100">
                     <div className="flex flex-col flex-grow min-w-0">
-                      <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 uppercase">
                         <Info size={14} className="text-red-500" /> Detalles del Producto
                       </h3>
-                      <h4 className="text-lg font-bold text-gray-900 mt-0.5 leading-snug truncate">
+                      <h4 className="text-lg font-bold text-gray-900 mt-0.5 truncate">
                         {formData.nombre ?? "Producto sin nombre"}
                       </h4>
                     </div>
-                    <div className="text-right flex-shrink-0 min-w-[70px]">
-                      <span className="text-xxs font-semibold text-gray-500 uppercase tracking-wide">
+                    <div className="text-right">
+                      <span className="font-semibold text-gray-500 uppercase text-xxs">
                         STOCK
                       </span>
-                      <p className="text-2xl font-extrabold text-red-600 leading-none">
+                      <p className="text-2xl font-extrabold text-red-600">
                         {formData.stock_actual ?? 0}
                       </p>
                     </div>
@@ -249,10 +262,10 @@ export default function ModalSalidaProducto({
                   </div>
 
                   <div className="pt-4 border-t border-gray-100">
-                    <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                    <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-2 uppercase">
                       <Tag size={14} className="text-gray-400" /> Ficha Técnica
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                       <div>{renderDetailCard("Marca", formData.marca)}</div>
                       {tipo === "ropa" ? (
                         <>
@@ -262,13 +275,7 @@ export default function ModalSalidaProducto({
                       ) : (
                         <>
                           <div>{renderDetailCard("Sabor/Tipo", formData.sabor)}</div>
-                          <div>
-                            {renderDetailCard(
-                              "Peso/Volumen",
-                              formData.peso ?? formData.litros
-                            )}
-                          </div>
-                          {/* ✅ NUEVO: Mostrar lote */}
+                          <div>{renderDetailCard("Peso/Volumen", formData.peso ?? formData.litros)}</div>
                           <div>{renderDetailCard("Lote", formData.lote)}</div>
                         </>
                       )}
@@ -277,49 +284,66 @@ export default function ModalSalidaProducto({
                 </div>
               </div>
 
-              {/* derecha */}
               <div className="col-span-2 space-y-2">
                 <div className={cardClass + " p-3"}>
-                  <h3 className="flex items-center gap-1 text-xs font-extrabold text-gray-800 border-b border-gray-200 pb-1 mb-2">
+                  <h3 className="flex items-center gap-1 pb-1 mb-2 text-xs font-extrabold text-gray-800 border-b border-gray-200">
                     <TrendingDown size={16} className="text-red-600" /> Datos de la Salida
                   </h3>
 
                   {renderInput("cantidad", "Cantidad a Retirar", "number", true)}
-                  {renderInput("monto_pagado", "Monto asociado (S/)", "number")}
+                  {renderInput("monto_pagado", "Monto asociado S/", "number")}
                 </div>
 
                 <div className={cardClass + " p-3"}>
-                  <h3 className="flex items-center gap-1 text-xs font-extrabold text-gray-800 border-b border-gray-200 pb-1 mb-2">
+                  <h3 className="flex items-center gap-1 pb-1 mb-2 text-xs font-extrabold text-gray-800 border-b border-gray-200">
                     <FileText size={15} className="text-red-600" /> Detalles de Facturación
                   </h3>
 
                   {renderSelect("tipo_comprobante", "Tipo de Comprobante", [
                     { value: "Boleta", label: "Boleta" },
-              
+                    { value: "Factura", label: "Factura" },
                   ])}
+
                   {renderInput("numero_comprobante", "N° Comprobante")}
+
                   {renderSelect("metodo_pago", "Método de Pago", [
                     { value: "Efectivo", label: "Efectivo" },
                     { value: "Yape", label: "Yape" },
                     { value: "Tarjeta de Crédito", label: "Tarjeta de Crédito" },
                     { value: "Plin", label: "Plin" },
                   ])}
+
+                  <div className="mb-2">
+                    <label className="block text-xxs font-semibold text-gray-700 mb-0.5">
+                      Comprobante Imagen <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="file"
+                      name="comprobante"
+                      accept="image/*"
+                      onChange={handleChange}
+                      className={`${inputBaseClass}`}
+                    />
+                    {errors.comprobante && (
+                      <div className={errorMsgClass}>{errors.comprobante}</div>
+                    )}
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="flex items-center justify-center w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-lg shadow-md shadow-red-500/50 transition duration-300 focus:outline-none focus:ring-4 focus:ring-red-500/50 gap-1"
+                  className="flex items-center justify-center w-full gap-1 px-3 py-2 text-xs font-extrabold text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700"
                 >
                   <Package size={14} /> CONFIRMAR SALIDA
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-start mt-3 pt-2 border-t border-gray-200 gap-2">
+            <div className="flex justify-start gap-2 pt-2 mt-3 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => setProductoSeleccionado(null)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-xxs rounded-md transition duration-200"
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-700 font-semibold text-xxs rounded-md"
               >
                 <ArrowLeft size={12} /> Cambiar Producto
               </button>

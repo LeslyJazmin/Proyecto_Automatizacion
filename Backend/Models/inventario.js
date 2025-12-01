@@ -65,11 +65,11 @@ async function registrarEntradaRopa(data) {
 // ============================================================
 async function registrarEntradaRopaExistente(data) {
   const pool = await getPool();
-  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
+  const { id_producto, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IR");
 
   await pool.request()
-    .input("id_ropa", sql.NVarChar(7), id_ropa)
+    .input("id_ropa", sql.NVarChar(7), id_producto) // Changed back to sql.NVarChar(7)
     .input("cantidad", sql.Int, cantidad)
     .query(`
       UPDATE RopaDeportiva
@@ -79,7 +79,7 @@ async function registrarEntradaRopaExistente(data) {
 
   await pool.request()
     .input("id_inventario", sql.NVarChar(7), idInventario)
-    .input("id_producto", sql.NVarChar(7), id_ropa)
+    .input("id_producto", sql.NVarChar(7), id_producto) // Changed back to sql.NVarChar(7)
     .input("cantidad", sql.Int, cantidad)
     .input("tipo_movimiento", sql.NVarChar(20), "entrada")
     .input("tipo_comprobante", sql.NVarChar(20), tipo_comprobante)
@@ -209,7 +209,7 @@ async function registrarEntradaComestibleExistente(data) {
 // ============================================================
 async function registrarSalidaRopa(data) {
   const pool = await getPool();
-  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const { id_ropa, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IR");
 
   const stockResult = await pool.request()
@@ -238,12 +238,13 @@ async function registrarSalidaRopa(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioRopa
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 
@@ -252,7 +253,7 @@ async function registrarSalidaRopa(data) {
 // ============================================================
 async function registrarSalidaComestible(data) {
   const pool = await getPool();
-  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario } = data;
+  const { id_comestible, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp } = data;
   const idInventario = generarIdInventario("IC");
 
   const stockResult = await pool.request()
@@ -281,12 +282,13 @@ async function registrarSalidaComestible(data) {
     .input("metodo_pago", sql.NVarChar(20), metodo_pago)
     .input("monto_pagado", sql.Decimal(10, 2), monto_pagado)
     .input("id_usuario", sql.NVarChar(7), id_usuario)
+    .input("img_comp", sql.NVarChar(sql.MAX), img_comp || null)
     .query(`
       INSERT INTO InventarioComestible
       (id_inventario, id_producto, cantidad, tipo_movimiento, tipo_comprobante,
-       numero_comprobante, metodo_pago, monto_pagado, id_usuario)
+       numero_comprobante, metodo_pago, monto_pagado, id_usuario, img_comp)
       VALUES (@id_inventario, @id_producto, @cantidad, @tipo_movimiento,
-       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario)
+       @tipo_comprobante, @numero_comprobante, @metodo_pago, @monto_pagado, @id_usuario, @img_comp)
     `);
 }
 

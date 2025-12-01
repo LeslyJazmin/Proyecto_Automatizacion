@@ -10,11 +10,11 @@ import {
   DollarSign,
   Hash,
   MapPin,
-  Tag,
+  Tag
 } from "lucide-react";
 import {
   registrarEntradaRopaExistente,
-  registrarEntradaComestibleExistente,
+  registrarEntradaComestibleExistente
 } from "../api/inventario";
 
 export default function ModalProductoExistente({
@@ -22,7 +22,7 @@ export default function ModalProductoExistente({
   onClose,
   tipo,
   title,
-  onSuccess,
+  onSuccess
 }) {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
@@ -51,7 +51,7 @@ export default function ModalProductoExistente({
       setFormData((prev) => ({
         ...prev,
         ...productoSeleccionado,
-        stock_actual: stock,
+        stock_actual: stock
       }));
 
       setCantidadRegistrar(0);
@@ -70,8 +70,17 @@ export default function ModalProductoExistente({
       "monto_pagado",
       "tipo_comprobante",
       "numero_comprobante",
-      "metodo_pago",
+      "metodo_pago"
     ];
+    if (!productoSeleccionado) {
+      newErrors.productoSeleccionado = "Debe seleccionar un producto";
+    } else {
+      if (tipo === "ropa" && !productoSeleccionado.id_ropa) {
+        newErrors.id_producto = "El ID de la ropa seleccionada es requerido";
+      } else if (tipo === "comestible" && !productoSeleccionado.id_comestible) {
+        newErrors.id_producto = "El ID del comestible seleccionado es requerido";
+      }
+    }
 
     if (!cantidadRegistrar || Number(cantidadRegistrar) <= 0)
       newErrors.cantidad = "La cantidad a registrar debe ser mayor a 0";
@@ -86,35 +95,46 @@ export default function ModalProductoExistente({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      mostrarMensaje("error", "Por favor, complete todos los campos obligatorios y seleccione un producto válido.");
+      return;
+    }
 
-    const dataToSend = {
-      cantidad: Number(cantidadRegistrar),
-      tipo_comprobante: formData.tipo_comprobante,
-      numero_comprobante: formData.numero_comprobante,
-      metodo_pago: formData.metodo_pago,
-      monto_pagado: formData.monto_pagado,
-      id_usuario: sessionStorage.getItem("id_usuario") || "US0001",
-      ...(tipo === "ropa"
-        ? { id_ropa: productoSeleccionado.id_ropa }
-        : { id_comestible: productoSeleccionado.id_comestible }),
-    };
+    const dataToSend = new FormData();
+    dataToSend.append("cantidad", Number(cantidadRegistrar));
+    dataToSend.append("tipo_comprobante", formData.tipo_comprobante);
+    dataToSend.append("numero_comprobante", formData.numero_comprobante);
+    dataToSend.append("metodo_pago", formData.metodo_pago);
+    dataToSend.append("monto_pagado", formData.monto_pagado);
+    dataToSend.append("id_usuario", sessionStorage.getItem("id_usuario") || "US0001");
+
+    if (formData.archivo_comprobante) {
+      dataToSend.append("img_comp", formData.archivo_comprobante);
+    }
+
+    if (tipo === "ropa") {
+      dataToSend.append("id_producto", productoSeleccionado.id_ropa);
+    } else {
+      dataToSend.append("id_producto", productoSeleccionado.id_comestible);
+    }
 
     try {
-      if (tipo === "ropa") await registrarEntradaRopaExistente(dataToSend);
-      else await registrarEntradaComestibleExistente(dataToSend);
+      if (tipo === "ropa") {
+        await registrarEntradaRopaExistente(dataToSend);
+      } else {
+        await registrarEntradaComestibleExistente(dataToSend);
+      }
 
       setTimeout(() => {
         handleClose();
         if (onSuccess) onSuccess();
       }, 800);
     } catch (error) {
-      console.error("❌ Error al registrar la entrada:", error);
-      mostrarMensaje("error", "❌ Ocurrió un error al registrar la entrada.");
+      console.log("Error al registrar entrada", error);
+      mostrarMensaje("error", "Ocurrió un error al registrar la entrada");
     }
   };
 
-  // --- Estilos base ---
   const cardClass = "bg-white p-3 rounded-lg shadow-sm border border-gray-100";
   const inputBaseClass =
     "w-full px-2 py-1 border rounded-md text-xs focus:ring-1 shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
@@ -122,7 +142,7 @@ export default function ModalProductoExistente({
 
   const renderDetailCard = (label, value) => (
     <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 flex flex-col justify-center min-h-[50px]">
-      <label className="text-xxs font-medium text-gray-500 mb-0">{label}</label>
+      <label className="mb-0 font-medium text-gray-500 text-xxs">{label}</label>
       <p className="text-xs font-semibold text-gray-800 truncate">{value || "N/A"}</p>
     </div>
   );
@@ -146,9 +166,7 @@ export default function ModalProductoExistente({
 
     return (
       <div className="mb-2">
-        <label
-          className={`block ${isPrimary ? "text-xs" : "text-xxs"} font-semibold text-gray-700 mb-0.5`}
-        >
+        <label className={`block ${isPrimary ? "text-xs" : "text-xxs"} font-semibold text-gray-700 mb-0.5`}>
           {label} <span className="text-red-500">*</span>
         </label>
         <input
@@ -201,22 +219,21 @@ export default function ModalProductoExistente({
         headerIcon={TrendingUp}
       >
         {!productoSeleccionado ? (
-        <ModalSeleccionProducto
+          <ModalSeleccionProducto
             tipo={tipo}
-            modo="existente"  // ⚫ plomo
+            modo="existente"
             onClose={handleClose}
             onSelect={setProductoSeleccionado}
           />
         ) : (
           <form
-              onSubmit={handleSubmit}
-              className="animate-slideUp bg-white p-3 -m-3 rounded-b-lg space-y-3 shadow-inner"
-            >
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              {/* 🟩 Columna Izquierda */}
+            onSubmit={handleSubmit}
+            className="p-3 -m-3 space-y-3 bg-white rounded-b-lg shadow-inner animate-slideUp"
+          >
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
               <div className="col-span-3">
                 <div className={cardClass + " bg-white p-4 h-full shadow-lg border-none"}>
-                  <div className="flex justify-between items-start gap-3 mb-4 pb-3 border-b border-gray-100">
+                  <div className="flex items-start justify-between gap-3 pb-3 mb-4 border-b border-gray-100">
                     <div className="flex flex-col flex-grow min-w-0">
                       <h3 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 uppercase tracking-wide">
                         <Info size={14} className="text-emerald-500" />
@@ -228,36 +245,35 @@ export default function ModalProductoExistente({
                     </div>
 
                     <div className="text-right flex-shrink-0 min-w-[70px]">
-                      <span className="text-xxs font-semibold text-gray-500 uppercase tracking-wide">
+                      <span className="font-semibold tracking-wide text-gray-500 uppercase text-xxs">
                         STOCK
                       </span>
-                      <p className="text-2xl font-extrabold text-emerald-600 leading-none">
+                      <p className="text-2xl font-extrabold leading-none text-emerald-600">
                         {formData.stock_actual || 0}
                       </p>
                     </div>
                   </div>
 
-                  {/* --- ID, PRECIO, UBICACIÓN (mejorados) --- */}
                   <div className="grid grid-cols-3 gap-3 mb-5">
-                    <div className="p-2 bg-gray-50 rounded-md border border-gray-200 flex flex-col justify-center min-h-[55px]">
+                    <div className="p-2 border border-gray-200 rounded-md bg-gray-50">
                       <label className="flex items-center gap-1 text-[10px] font-medium uppercase text-gray-500">
                         <Hash size={11} className="text-gray-400" /> ID
                       </label>
-                      <p className="mt-0.5 text-[11px] font-semibold text-gray-800 font-mono truncate">
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-800 truncate">
                         {formData[tipo === "ropa" ? "id_ropa" : "id_comestible"] || "N/A"}
                       </p>
                     </div>
 
-                    <div className="p-2 bg-blue-50 rounded-md border border-blue-200 flex flex-col justify-center min-h-[55px]">
+                    <div className="p-2 border border-blue-200 rounded-md bg-blue-50">
                       <label className="flex items-center gap-1 text-[10px] font-medium uppercase text-blue-700">
                         <DollarSign size={11} className="text-blue-500" /> PRECIO
                       </label>
-                      <p className="mt-0.5 text-sm font-bold text-blue-800 leading-tight">
+                      <p className="mt-0.5 text-sm font-bold text-blue-800">
                         S/ {formData.precio || "0.00"}
                       </p>
                     </div>
 
-                    <div className="p-2 bg-yellow-50 rounded-md border border-yellow-200 flex flex-col justify-center min-h-[55px]">
+                    <div className="p-2 border border-yellow-200 rounded-md bg-yellow-50">
                       <label className="flex items-center gap-1 text-[10px] font-medium uppercase text-yellow-700">
                         <MapPin size={11} className="text-yellow-500" /> UBICACIÓN
                       </label>
@@ -267,43 +283,27 @@ export default function ModalProductoExistente({
                     </div>
                   </div>
 
-                  {/* --- FICHA TÉCNICA --- */}
                   <div className="pt-4 border-t border-gray-100">
                     <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                       <Tag size={14} className="text-gray-400" />
                       Ficha Técnica
                     </h4>
 
-                    {/* ✅ Ajuste: Menos columnas, más ancho por campo */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {/* Marca más ancha */}
-                      <div className="col-span-1 md:col-span-1">
-                        {renderDetailCard("Marca", formData.marca)}
-                      </div>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                      <div>{renderDetailCard("Marca", formData.marca)}</div>
 
                       {tipo === "ropa" && (
                         <>
-                          <div className="col-span-1 md:col-span-1">
-                            {renderDetailCard("Talla", formData.talla)}
-                          </div>
-                          <div className="col-span-1 md:col-span-1">
-                            {renderDetailCard("Color", formData.color)}
-                          </div>
+                          <div>{renderDetailCard("Talla", formData.talla)}</div>
+                          <div>{renderDetailCard("Color", formData.color)}</div>
                         </>
                       )}
 
                       {tipo === "comestible" && (
                         <>
-                          <div className="col-span-1 md:col-span-1.5">
-                            {renderDetailCard("Sabor/Tipo", formData.sabor)}
-                          </div>
-                          <div className="col-span-1 md:col-span-1.5">
-                            {renderDetailCard("Peso/Volumen", formData.peso || formData.litros)}
-                          </div>
-                          {/* ✅ LOTE agregado */}
-                          <div className="col-span-1 md:col-span-1.5">
-                            {renderDetailCard("Lote", formData.lote)}
-                          </div>
+                          <div>{renderDetailCard("Sabor/Tipo", formData.sabor)}</div>
+                          <div>{renderDetailCard("Peso/Volumen", formData.peso || formData.litros)}</div>
+                          <div>{renderDetailCard("Lote", formData.lote)}</div>
                         </>
                       )}
                     </div>
@@ -311,10 +311,9 @@ export default function ModalProductoExistente({
                 </div>
               </div>
 
-              {/* 🟨 Columna Derecha */}
               <div className="col-span-2 space-y-2">
                 <div className={cardClass + " p-3"}>
-                  <h3 className="flex items-center gap-1 text-xs font-extrabold text-gray-800 border-b border-gray-200 pb-1 mb-2">
+                  <h3 className="flex items-center gap-1 pb-1 mb-2 text-xs font-extrabold text-gray-800 border-b">
                     <TrendingUp size={16} className="text-emerald-600" />
                     Datos de la Nueva Entrada
                   </h3>
@@ -323,38 +322,53 @@ export default function ModalProductoExistente({
                 </div>
 
                 <div className={cardClass + " p-3"}>
-                  <h3 className="flex items-center gap-1 text-xs font-extrabold text-gray-800 border-b border-gray-200 pb-1 mb-2">
+                  <h3 className="flex items-center gap-1 pb-1 mb-2 text-xs font-extrabold text-gray-800 border-b">
                     <DollarSign size={16} className="text-emerald-600" />
                     Detalles de Facturación
                   </h3>
+
                   {renderSelect("tipo_comprobante", "Tipo de Comprobante", [
                     { value: "Boleta", label: "Boleta" },
-                    { value: "Factura", label: "Factura" },
+                    { value: "Factura", label: "Factura" }
                   ])}
-                  {renderInput("numero_comprobante", "N° Comprobante")}
+
+                  {renderInput("numero_comprobante", "N° Comprobante", "text")}
+
                   {renderSelect("metodo_pago", "Método de Pago", [
                     { value: "Efectivo", label: "Efectivo" },
                     { value: "Yape", label: "Yape" },
                     { value: "Tarjeta de Crédito", label: "Tarjeta de Crédito" },
-                    { value: "Plin", label: "Plin" },
-
+                    { value: "Plin", label: "Plin" }
                   ])}
+
+                  <div className="mb-2">
+                    <label className="block text-xxs font-semibold text-gray-700 mb-0.5">
+                      Comprobante PDF o Imagen
+                    </label>
+                    <input
+                      name="archivo_comprobante"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleChange}
+                      className={inputBaseClass}
+                    />
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="flex items-center justify-center w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow-md shadow-emerald-500/50 transition duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 gap-1"
+                  className="flex items-center justify-center w-full gap-1 px-3 py-2 text-xs font-extrabold text-white rounded-lg shadow-md bg-emerald-600"
                 >
                   <Package size={14} /> CONFIRMAR RECARGA
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-start mt-3 pt-2 border-t border-gray-200 gap-2">
+            <div className="flex justify-start gap-2 pt-2 mt-3 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => setProductoSeleccionado(null)}
-                className="flex items-center gap-1 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold text-xxs rounded-md transition duration-200"
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-700 font-semibold text-xxs rounded-md"
               >
                 <ArrowLeft size={12} /> Cambiar Producto
               </button>
