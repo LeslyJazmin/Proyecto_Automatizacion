@@ -17,6 +17,10 @@ const {
   eliminarRopa,
   eliminarComestible,
 } = require("../Models/inventario");
+const moment = require('moment-timezone');
+
+moment.locale('es'); 
+
 
 // --- ROPA NUEVA ---
 async function entradaRopa(req, res) {
@@ -38,17 +42,32 @@ async function entradaRopa(req, res) {
 
 // --- ROPA EXISTENTE ---
 async function entradaRopaExistente(req, res) {
-    try {
-    let img_comp = req.body.img_comp || null;
-    if (!img_comp && req.files && req.files.img_comp) {
-      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
+  try {
+    const { id_producto, cantidad, tipo_comprobante, numero_comprobante, metodo_pago, monto_pagado } = req.body
+
+    if (!id_producto) return res.status(400).json({ message: "id_producto requerido" })
+    if (!cantidad) return res.status(400).json({ message: "cantidad requerida" })
+
+    let img_comp = null
+    if (req.files?.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`
     }
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
-    const registro = await registrarEntradaRopaExistente(data);
-    res.json(registro);
+
+    const data = {
+      id_producto,
+      cantidad: Number(cantidad),
+      tipo_comprobante,
+      numero_comprobante,
+      metodo_pago,
+      monto_pagado: monto_pagado ? Number(monto_pagado) : null,
+      id_usuario: req.user?.id || "ADM2235",
+      img_comp
+    }
+
+    const resp = await registrarEntradaRopaExistente(data)
+    res.json(resp)
   } catch (err) {
-    console.error("Error en entradaRopaExistente:", err);
-    res.status(500).json({ message: "Error al registrar entrada de ropa existente" });
+    res.status(500).json({ message: "Error al registrar entrada existente" })
   }
 }
 
@@ -133,18 +152,15 @@ async function listarMovimientosRopaController(req, res) {
     
     const movimientos = await listarMovimientosRopa(anioNum, mesNum);
 
-    const dias = [
-      "Domingo", "Lunes", "Martes", "Miércoles",
-      "Jueves", "Viernes", "Sábado"
-    ];
-
     const movimientosFormateados = movimientos.map(m => {
-      const fechaBD = m.fecha ? new Date(m.fecha) : null;
+      if (!m.fecha) {
+        return { ...m, fecha: null };
+      }
 
-      const fechaFormateada = fechaBD
-        ? `${dias[fechaBD.getDay()]} ${String(fechaBD.getDate()).padStart(2, "0")}/${String(fechaBD.getMonth() + 1).padStart(2, "0")}/${fechaBD.getFullYear()} - Hora: ` +
-          `${String(fechaBD.getHours()).padStart(2, "0")}:${String(fechaBD.getMinutes()).padStart(2, "0")}:${String(fechaBD.getSeconds()).padStart(2, "0")}`
-        : null;
+      // Convertir a la zona horaria de Guatemala y formatear
+      const fechaFormateada = moment(m.fecha)
+        .tz("America/Lima").add(1, 'hours')
+        .format("dddd DD/MM/YYYY - [Hora]: hh:mm:ss A");
 
       return { ...m, fecha: fechaFormateada };
     });
@@ -168,18 +184,15 @@ async function listarMovimientosComestibleController(req, res) {
     
     const movimientos = await listarMovimientosComestible(anioNum, mesNum);
 
-    const dias = [
-      "Domingo", "Lunes", "Martes", "Miércoles",
-      "Jueves", "Viernes", "Sábado"
-    ];
-
     const movimientosFormateados = movimientos.map(m => {
-      const fechaBD = m.fecha ? new Date(m.fecha) : null;
+      if (!m.fecha) {
+        return { ...m, fecha: null };
+      }
 
-      const fechaFormateada = fechaBD
-        ? `${dias[fechaBD.getDay()]} ${String(fechaBD.getDate()).padStart(2, "0")}/${String(fechaBD.getMonth() + 1).padStart(2, "0")}/${fechaBD.getFullYear()} - Hora: ` +
-          `${String(fechaBD.getHours()).padStart(2, "0")}:${String(fechaBD.getMinutes()).padStart(2, "0")}:${String(fechaBD.getSeconds()).padStart(2, "0")}`
-        : null;
+      // Convertir a la zona horaria de Guatemala y formatear
+      const fechaFormateada = moment(m.fecha)
+        .tz("America/Lima").add(1, 'hours')
+        .format("dddd DD/MM/YYYY - [Hora]: hh:mm:ss A");
 
       return { ...m, fecha: fechaFormateada };
     });
