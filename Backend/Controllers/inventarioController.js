@@ -254,38 +254,58 @@ async function actualizarComestibleController(req, res) {
   try {
     const { id_comestible, ...updates } = req.body;
 
-    // Si hay imagen nueva, usar esa; si no, mantener la existente
-    let imagen = updates.imagen;
-    if (!imagen && req.file) {
-      imagen = `/uploads/comestibles/imagenes/${req.file.filename}`;
+    // Obtener datos actuales
+    const comestiblesActuales = await listarComestibles();
+    const comestibleEncontrado = comestiblesActuales.find(c => c.id_comestible === id_comestible);
+    if (!comestibleEncontrado) {
+      return res.status(404).json({ message: "Comestible no encontrado" });
     }
 
-    // Si hay comprobante nuevo, usar ese; si no, mantener el existente
-    let img_comp = updates.img_comp;
-    if (!img_comp && req.files && req.files.img_comp) {
-      img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
+    // ✅ SOLUCIÓN: Determinar qué imagen usar
+    let imagen;
+    
+    if (req.file) {
+      // Caso 1: Usuario subió un nuevo archivo (multer)
+      imagen = `/uploads/comestibles/imagenes/${req.file.filename}`;
+    } else if (req.files && req.files.imagen) {
+      // Caso 2: Usuario subió archivo con nombre 'imagen' en array
+      imagen = `/uploads/comestibles/imagenes/${req.files.imagen[0].filename}`;
+    } else if (updates.imagen) {
+      // Caso 3: Usuario NO subió archivo, pero envió la URL como string
+      imagen = updates.imagen;
+    } else {
+      // Caso 4: No se envió nada → mantener la imagen existente
+      imagen = comestibleEncontrado.imagen;
     }
+
+    // ✅ FUNCIÓN HELPER: Convertir "null" string a null real
+    const parseValue = (value, currentValue) => {
+      if (value === "null" || value === null || value === undefined || value === "") {
+        return null;
+      }
+      return value ?? currentValue;
+    };
 
     const data = {
       id_comestible,
-      nombre: updates.nombre,
-      marca: updates.marca,
-      sabor: updates.sabor,
-      peso: updates.peso,
-      litros: updates.litros,
-      precio: updates.precio,
-      stock_actual: updates.stock_actual,
-      fecha_vencimiento: updates.fecha_vencimiento,
-      lote: updates.lote,
-      ubicacion: updates.ubicacion,
-      imagen: imagen,
-      img_comp: img_comp
+      nombre: parseValue(updates.nombre, comestibleEncontrado.nombre),
+      marca: parseValue(updates.marca, comestibleEncontrado.marca),
+      sabor: parseValue(updates.sabor, comestibleEncontrado.sabor),
+      peso: parseValue(updates.peso, comestibleEncontrado.peso),
+      litros: parseValue(updates.litros, comestibleEncontrado.litros), // ← CORREGIDO
+      precio: parseValue(updates.precio, comestibleEncontrado.precio),
+      stock_actual: updates.stock_actual ?? comestibleEncontrado.stock_actual,
+      fecha_vencimiento: parseValue(updates.fecha_vencimiento, comestibleEncontrado.fecha_vencimiento),
+      lote: parseValue(updates.lote, comestibleEncontrado.lote),
+      ubicacion: parseValue(updates.ubicacion, comestibleEncontrado.ubicacion),
+      imagen: imagen
     };
 
     const resultado = await actualizarComestible(data);
     res.json(resultado);
 
   } catch (err) {
+    console.error("Error en actualizarComestibleController:", err);
     res.status(500).json({ message: "Error al actualizar comestible" });
   }
 }
@@ -295,25 +315,41 @@ async function actualizarRopaController(req, res) {
   try {
     const { id_ropa, ...updates } = req.body;
 
-    // Si hay imagen nueva, usar esa; si no, mantener la existente
-    let imagen = updates.imagen;
-    if (!imagen && req.file) {
-      imagen = `/uploads/ropa/imagenes/${req.file.filename}`;
-    }
-
-    // Si hay comprobante nuevo, usar ese; si no, mantener el existente
-    let img_comp = updates.img_comp;
-    if (!img_comp && req.files && req.files.img_comp) {
-      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
-    }
-
+    // Obtener datos actuales
     const ropaActual = await listarRopa();
     const ropaEncontrada = ropaActual.find(r => r.id_ropa === id_ropa);
     if (!ropaEncontrada) {
       return res.status(404).json({ message: "Ropa no encontrada" });
     }
 
-    const { nombre, marca, talla, color, precio, stock_actual, ubicacion } = updates;
+    // ✅ SOLUCIÓN: Determinar qué imagen usar
+    let imagen;
+    
+    if (req.file) {
+      // Caso 1: Usuario subió un nuevo archivo (multer)
+      imagen = `/uploads/ropa/imagenes/${req.file.filename}`;
+    } else if (req.files && req.files.imagen) {
+      // Caso 2: Usuario subió archivo con nombre 'imagen' en array
+      imagen = `/uploads/ropa/imagenes/${req.files.imagen[0].filename}`;
+    } else if (updates.imagen) {
+      // Caso 3: Usuario NO subió archivo, pero envió la URL como string
+      imagen = updates.imagen;
+    } else {
+      // Caso 4: No se envió nada → mantener la imagen existente
+      imagen = ropaEncontrada.imagen;
+    }
+
+    // Mismo proceso para comprobante
+    let img_comp;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
+    } else if (updates.img_comp) {
+      img_comp = updates.img_comp;
+    } else {
+      img_comp = ropaEncontrada.img_comp;
+    }
+
+    const { nombre, marca, talla, color, precio, ubicacion } = updates;
 
     const data = {
       id_ropa,
@@ -321,19 +357,19 @@ async function actualizarRopaController(req, res) {
       marca: marca ?? ropaEncontrada.marca,
       talla: talla ?? ropaEncontrada.talla,
       color: color ?? ropaEncontrada.color,
+      precio: precio ?? ropaEncontrada.precio,
       ubicacion: ubicacion ?? ropaEncontrada.ubicacion,
-      imagen: imagen,
-      precio: precio ?? ropaEncontrada.precio 
+      imagen: imagen // ← Ya tiene el valor correcto
     };
 
     const resultado = await actualizarRopa(data);
     res.json(resultado);
 
   } catch (err) {
+    console.error("Error en actualizarRopaController:", err);
     res.status(500).json({ message: "Error al actualizar ropa" });
   }
 }
-
 
 // --- ELIMINAR ROPA ---
 async function eliminarRopaController(req, res) {

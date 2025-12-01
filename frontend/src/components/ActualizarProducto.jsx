@@ -2,9 +2,6 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { XCircle, Shirt, CupSoda, CalendarDays, Zap, Package, Tag, Pipette, Search } from "lucide-react";
 
-/**
- * Subcomponente de campo de formulario con mejor estilo y manejo de errores.
- */
 function Campo({
   label,
   name,
@@ -16,7 +13,7 @@ function Campo({
   classNameExtra = "",
   error = "",
   optional = false,
-  icon: IconComponent, // Usa un componente Lucide directamente
+  icon: IconComponent,
 }) {
   const isDate = type === "date";
   
@@ -31,7 +28,7 @@ function Campo({
         <input
           type={type}
           name={name}
-          value={value || (isDate && !value ? "" : "")} // Asegurar que el valor vacío sea manejado correctamente para fechas
+          value={value || (isDate && !value ? "" : "")}
           onChange={onChange}
           step={step}
           readOnly={readOnly}
@@ -60,18 +57,16 @@ function Campo({
 }
 
 export default function ActualizarProducto({ producto, tipo, onClose, onActualizar }) {
-  // Initialize formData without the imagen field to avoid sending it unless a new image is selected
-  const initialFormData = { ...producto };
-  delete initialFormData.imagen; // Remove imagen field to avoid sending it unless a new image is selected
-  const [formData, setFormData] = useState(initialFormData);
+  // ✅ SOLUCIÓN: Mantener la imagen original en formData
+  const [formData, setFormData] = useState({ ...producto });
+  const [nuevaImagen, setNuevaImagen] = useState(null); // Archivo nuevo separado
   const [errors, setErrors] = useState({});
 
-  // Mantiene la lógica original para mostrar peso/litros, pero se simplifica el renderizado
   const [mostrarCampo, setMostrarCampo] = useState(() => {
     if (tipo !== "comestible") return null;
     if (producto.peso && !producto.litros) return "peso";
     if (producto.litros && !producto.peso) return "litros";
-    return null; // Muestra ambos campos en un grid
+    return null;
   });
 
   const handleChange = (e) => {
@@ -79,26 +74,19 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
     if (name === "imagen") {
-      // Handle image field specifically
+      // ✅ SOLUCIÓN: Guardar el archivo nuevo en un estado separado
       if (files && files[0]) {
-        // If a new file is selected, use it
-        const file = files[0];
-        setFormData({ ...formData, [name]: file });
+        setNuevaImagen(files[0]);
       } else {
-        // If no file is selected, remove the field entirely to preserve existing image
-        const newFormData = { ...formData };
-        delete newFormData[name];
-        setFormData(newFormData);
+        setNuevaImagen(null);
       }
     } else {
       setFormData({ ...formData, [name]: value });
       if (tipo === "comestible" && (name === "peso" || name === "litros")) {
-        // Si el usuario edita uno de los campos, lo forzamos a mostrar solo ese si el otro está vacío.
-        // Si tienen valor, permitimos que se muestre el grid (null)
         if (!!formData.peso || !!formData.litros) {
-             setMostrarCampo(null);
+          setMostrarCampo(null);
         } else {
-             setMostrarCampo(name);
+          setMostrarCampo(name);
         }
       }
     }
@@ -112,13 +100,11 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
         : ["nombre", "marca", "sabor", "fecha_vencimiento"];
 
     if (tipo === "comestible") {
-      // Si estamos en modo "mostrar uno", requerimos ese campo
       if (mostrarCampo === "peso") {
         if (!formData.peso && formData.peso !== 0) newErrors.peso = "Este campo es obligatorio";
       } else if (mostrarCampo === "litros") {
         if (!formData.litros && formData.litros !== 0) newErrors.litros = "Este campo es obligatorio";
       }
-      // Si estamos en modo "mostrar ambos", la validación es menos estricta
     }
 
     requiredFields.forEach((field) => {
@@ -136,22 +122,34 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
     if (!validate()) return;
 
     const dataToSend = new FormData();
+    
+    // Agregar todos los campos del formulario
     for (const key in formData) {
-      dataToSend.append(key, formData[key]);
+      if (key !== "imagen") { // Excluir imagen, la manejamos por separado
+        dataToSend.append(key, formData[key]);
+      }
+    }
+
+    // ✅ SOLUCIÓN CRÍTICA: Manejo correcto de la imagen
+    if (nuevaImagen) {
+      // Usuario seleccionó una nueva imagen
+      dataToSend.append("imagen", nuevaImagen);
+    } else if (formData.imagen) {
+      // Usuario NO cambió la imagen → enviar la URL/path existente
+      dataToSend.append("imagen", formData.imagen);
     }
 
     onActualizar(tipo, dataToSend);
   };
   
   const iconMap = {
-      ropa: { icon: <Shirt size={24} />, title: "Prenda Deportiva" },
-      comestible: { icon: <CupSoda size={24} />, title: "Producto Comestible" },
+    ropa: { icon: <Shirt size={24} />, title: "Prenda Deportiva" },
+    comestible: { icon: <CupSoda size={24} />, title: "Producto Comestible" },
   };
 
-  // FIX: Agregamos una comprobación de fallback para evitar el error de desestructuración (Cannot destructure property 'icon' of 'iconMap[tipo]' as it is undefined)
   const { icon: MainIcon, title: MainTitle } = iconMap[tipo] || { 
-      icon: <Package size={24} />, 
-      title: "Producto Desconocido (Tipo Inválido)" 
+    icon: <Package size={24} />, 
+    title: "Producto Desconocido (Tipo Inválido)" 
   };
 
   return (
@@ -163,14 +161,12 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
         exit={{ opacity: 0 }}
       >
         <motion.div
-          // MODIFICADO: Aumenta el ancho a max-w-3xl y mantiene el estilo formal
           className="relative w-full max-w-4xl overflow-hidden bg-white shadow-3xl rounded-3xl"
           initial={{ scale: 0.9, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 30 }}
           transition={{ type: "spring", stiffness: 150, damping: 20 }}
         >
-          {/* Encabezado Formal y Oscuro */}
           <div className="relative flex flex-col items-start px-6 py-6 text-white bg-gray-800 shadow-lg">
             <div className="flex items-center gap-3">
               {MainIcon}
@@ -188,73 +184,59 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
             </button>
           </div>
 
-          {/* Cuerpo del formulario */}
           <div className="p-6 md:p-8">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 text-gray-700 md:grid-cols-2 gap-x-8 gap-y-5">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 text-gray-700 md:grid-cols-2 gap-x-8 gap-y-5">
               
-            {/* Columna de campos de formulario */}
-            <div className="flex flex-col gap-5">
-              {/* Campos Estándar: Nombre (Fila única, readOnly) */}
-              <Campo
-                label="Nombre del Producto"
-                name="nombre"
-                value={formData.nombre}
-                readOnly
-                icon={<Tag size={18} />}
-                error={errors.nombre}
-                classNameExtra="border-dashed" // Estilo para campo no editable
-              />
+              <div className="flex flex-col gap-5">
+                <Campo
+                  label="Nombre del Producto"
+                  name="nombre"
+                  value={formData.nombre}
+                  readOnly
+                  icon={<Tag size={18} />}
+                  error={errors.nombre}
+                  classNameExtra="border-dashed"
+                />
 
-              {/* Campos Estándar: Marca y Ubicación (2 Columnas) */}
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <Campo label="Marca" name="marca" value={formData.marca} onChange={handleChange} error={errors.marca} icon={<Zap size={18} />} />
-                <Campo label="Ubicación de Almacén" name="ubicacion" value={formData.ubicacion} onChange={handleChange} optional icon={<Search size={18} />} />
-              </div>
-              
-              {/* Campos Condicionales */}
-              {tipo === "ropa" ? (
-                /* Campos para ROPA (2 Columnas) */
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <Campo label="Talla (S, M, L, etc.)" name="talla" value={formData.talla} onChange={handleChange} error={errors.talla} icon={<Shirt size={18} />} />
-                  <Campo label="Color" name="color" value={formData.color} onChange={handleChange} error={errors.color} icon={<Pipette size={18} />} />
+                  <Campo label="Marca" name="marca" value={formData.marca} onChange={handleChange} error={errors.marca} icon={<Zap size={18} />} />
+                  <Campo label="Ubicación de Almacén" name="ubicacion" value={formData.ubicacion} onChange={handleChange} optional icon={<Search size={18} />} />
                 </div>
-              ) : (
-                /* Campos para COMESTIBLE */
-                <>
-                  {/* Sabor/Variedad y Fecha de Vencimiento (2 Columnas) */}
+                
+                {tipo === "ropa" ? (
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <Campo label="Sabor/Variedad" name="sabor" value={formData.sabor} onChange={handleChange} error={errors.sabor} icon={<CupSoda size={18} />} />
-                    
-                    <Campo
-                      label="Fecha de Vencimiento"
-                      name="fecha_vencimiento"
-                      type="date"
-                      icon={<CalendarDays size={18} />}
-                      // El valor debe ser el slice para que el input type="date" lo maneje correctamente
-                      value={formData.fecha_vencimiento ? formData.fecha_vencimiento.slice(0, 10) : ""}
-                      onChange={handleChange}
-                      error={errors.fecha_vencimiento}
-                    />
+                    <Campo label="Talla (S, M, L, etc.)" name="talla" value={formData.talla} onChange={handleChange} error={errors.talla} icon={<Shirt size={18} />} />
+                    <Campo label="Color" name="color" value={formData.color} onChange={handleChange} error={errors.color} icon={<Pipette size={18} />} />
                   </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                      <Campo label="Sabor/Variedad" name="sabor" value={formData.sabor} onChange={handleChange} error={errors.sabor} icon={<CupSoda size={18} />} />
+                      
+                      <Campo
+                        label="Fecha de Vencimiento"
+                        name="fecha_vencimiento"
+                        type="date"
+                        icon={<CalendarDays size={18} />}
+                        value={formData.fecha_vencimiento ? formData.fecha_vencimiento.slice(0, 10) : ""}
+                        onChange={handleChange}
+                        error={errors.fecha_vencimiento}
+                      />
+                    </div>
 
-
-                  {/* Lógica de Peso/Litros en Grid Dinámico (Se mantiene el grid interno) */}
-                  <div className={`grid ${!mostrarCampo ? 'grid-cols-2 gap-4' : 'grid-cols-1'}`}>
-                    {/* Muestra Peso si aplica o si está en modo grid */}
-                    {(!mostrarCampo || mostrarCampo === "peso") && (
+                    <div className={`grid ${!mostrarCampo ? 'grid-cols-2 gap-4' : 'grid-cols-1'}`}>
+                      {(!mostrarCampo || mostrarCampo === "peso") && (
                         <Campo label="Peso (kg)" name="peso" type="number" step="0.01" value={formData.peso} onChange={handleChange} error={errors.peso} optional={mostrarCampo !== "peso"} />
-                    )}
-                    {/* Muestra Litros si aplica o si está en modo grid */}
-                    {(!mostrarCampo || mostrarCampo === "litros") && (
+                      )}
+                      {(!mostrarCampo || mostrarCampo === "litros") && (
                         <Campo label="Litros (L)" name="litros" type="number" step="0.01" value={formData.litros} onChange={handleChange} error={errors.litros} optional={mostrarCampo !== "litros"} />
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
 
-            {/* Campo de imagen sin vista previa */}
-            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label className="block mb-1 text-sm font-semibold text-gray-700">
                   <Package size={18} className="inline mr-1 -mt-0.5" /> Imagen (opcional)
                 </label>
@@ -263,24 +245,28 @@ export default function ActualizarProducto({ producto, tipo, onClose, onActualiz
                   name="imagen"
                   accept="image/*"
                   onChange={handleChange}
-                  // MODIFICADO: Estilo formal para el input file
                   className="w-full text-sm transition-all cursor-pointer file:rounded-xl file:border-none file:bg-indigo-600 file:text-white file:px-4 file:py-2 hover:file:bg-indigo-700"
                 />
-            </div>
+                {/* ✅ Mostrar preview de la imagen actual o nueva */}
+                {(nuevaImagen || formData.imagen) && (
+                  <img
+                    src={nuevaImagen ? URL.createObjectURL(nuevaImagen) : (formData.imagen?.startsWith("http") ? formData.imagen : `${import.meta.env.VITE_API_URL || ""}${formData.imagen}`)}
+                    alt="Preview"
+                    className="object-cover w-32 h-32 mt-2 border-2 border-gray-200 rounded-lg"
+                  />
+                )}
+              </div>
 
-              {/* Botones de Acción */}
               <div className="flex justify-end gap-3 mt-6 md:col-span-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  // MODIFICADO: Estilo secundario más formal
                   className="px-6 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 rounded-xl font-bold text-gray-800 transition duration-300 hover:scale-[1.02]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  // MODIFICADO: Estilo principal formal (Indigo)
                   className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-300/50 transition-all duration-300 hover:scale-[1.03] active:scale-100"
                 >
                   Guardar Cambios
