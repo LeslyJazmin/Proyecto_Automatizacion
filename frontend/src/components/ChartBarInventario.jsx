@@ -1,110 +1,149 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import { TrendingUp } from "lucide-react"
-import { obtenerRopa, obtenerComestibles } from "../api/inventario"
+import { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { TrendingUp } from "lucide-react";
+import { obtenerRopa, obtenerComestibles } from "../api/inventario";
 
-// Componente reutilizable de gráfico pequeño
-function StockChart({ title, description, datos, color }) {
+// 🎨 Colores
+const COLOR_VERDE = "#22c55e";
+const COLOR_ROJO = "#ef4444";
+
+// 📦 CARD general
+function Card({ title, description, children }) {
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-3 w-full md:w-1/2">
-      {/* Header */}
-      <div className="mb-2">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-gray-500 text-xs">{description}</p>
-      </div>
+    <div className="bg-white shadow-xl rounded-2xl p-5 w-full md:w-1/2 border border-gray-200">
+      <h2 className="text-lg font-semibold text-center">{title}</h2>
+      <p className="text-gray-500 text-xs text-center mb-3">{description}</p>
 
-      {/* Gráfico responsivo */}
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart
-          data={datos.map(p => ({ name: p.nombre, stock: p.stock_actual }))}
-          layout="vertical"
-          margin={{ left: 20, right: 10 }}
-        >
-          <YAxis 
-            dataKey="name" 
-            type="category" 
-            tickLine={false} 
-            axisLine={false} 
-            width={100} 
-            tick={{ fontSize: 12, fill: "#374151" }} 
-          />
-          <XAxis type="number" hide />
-          <Tooltip formatter={(value) => [`${value}`, "Stock"]} cursor={{ fill: "rgba(0,0,0,0.05)" }} />
-          <Bar dataKey="stock" radius={[5, 5, 5, 5]}>
-            {datos.map((entry, index) => (
-              <Cell key={index} fill={color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      {children}
 
-      {/* Footer */}
-      <div className="mt-2 flex flex-col items-start gap-1 text-xs">
-        <div className="flex gap-2 font-medium items-center">
-          Trending up <TrendingUp className="h-3 w-3" />
+      <div className="mt-3 text-center text-xs text-gray-600">
+        <div className="flex justify-center items-center gap-1">
+          Tendencia positiva <TrendingUp className="h-4 w-4" />
         </div>
-        <div className="text-gray-500">
-          Cantidad de productos en stock
-        </div>
+        <p>Actualización dinámica</p>
       </div>
     </div>
-  )
+  );
 }
 
-// Gráfico de ropa
+// 🍩 Donut
+function DonutChart({ datos, tipo }) {
+  const data = datos.map((p) => ({
+    name: `${p.nombre} (${p.stock_actual})`,
+    value: p.stock_actual,
+  }));
+
+  const lowLimit = tipo === "ropa" ? 10 : 30;
+  const getColor = (stock) => (stock <= lowLimit ? COLOR_ROJO : COLOR_VERDE);
+
+  return (
+    <ResponsiveContainer width="100%" height={270}>
+      <PieChart>
+        <Tooltip formatter={(value, name, props) => [`${value} unidades`, props.payload.name]} />
+
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          innerRadius={60}
+          outerRadius={90}
+          paddingAngle={2}
+          label={({ name }) => name}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={getColor(entry.value)} />
+          ))}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+///////////////////////////////////////////////////////////
+// 📌 ROPA — Modo inteligente (bajo stock o todo)
+///////////////////////////////////////////////////////////
 export function ChartStockRopa() {
-  const [datos, setDatos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [datos, setDatos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchRopa() {
-      setLoading(true)
-      try {
-        const ropa = await obtenerRopa()
-        setDatos(ropa.map(p => ({ nombre: p.nombre, stock_actual: p.stock_actual ?? 0 })))
-      } catch (err) {
-        console.error(err)
-        setError("No se pudieron cargar los datos de ropa")
-      } finally {
-        setLoading(false)
+    obtenerRopa()
+      .then((ropa) => {
+        const ropaFormateada = ropa.map((p) => ({
+          nombre: p.nombre,
+          stock_actual: p.stock_actual ?? 0,
+        }));
+
+        // FILTRO DE BAJO STOCK
+        const bajo = ropaFormateada.filter((p) => p.stock_actual <= 10);
+
+        // SI HAY BAJO STOCK → solo mostrar bajo stock
+        // SI NO → mostrar todo
+        setDatos(bajo.length > 0 ? bajo : ropaFormateada);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Cargando gráfico de ropa...</p>;
+
+  return (
+    <Card
+      title={
+        datos.some((p) => p.stock_actual <= 10)
+          ? "Ropa con Stock Bajo"
+          : "Stock de Ropa"
       }
-    }
-    fetchRopa()
-  }, [])
-
-  if (loading) return <p>Cargando gráfico de ropa...</p>
-  if (error) return <p className="text-red-600">{error}</p>
-
-  return <StockChart title="Stock de Ropa" description="Stock actual de ropa" datos={datos} color="#3b82f6" />
+      description={
+        datos.some((p) => p.stock_actual <= 10)
+          ? "Productos críticos que requieren reposición"
+          : "Todos los productos están dentro del nivel normal"
+      }
+    >
+      <DonutChart datos={datos} tipo="ropa" />
+    </Card>
+  );
 }
 
-// Gráfico de comestibles
+///////////////////////////////////////////////////////////
+// 📌 COMESTIBLES — Modo inteligente (bajo stock o todo)
+///////////////////////////////////////////////////////////
 export function ChartStockComestibles() {
-  const [datos, setDatos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [datos, setDatos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchComestibles() {
-      setLoading(true)
-      try {
-        const comestibles = await obtenerComestibles()
-        setDatos(comestibles.map(p => ({ nombre: p.nombre, stock_actual: p.stock_actual ?? 0 })))
-      } catch (err) {
-        console.error(err)
-        setError("No se pudieron cargar los datos de comestibles")
-      } finally {
-        setLoading(false)
+    obtenerComestibles()
+      .then((comestibles) => {
+        const productos = comestibles.map((p) => ({
+          nombre: p.nombre,
+          stock_actual: p.stock_actual ?? 0,
+        }));
+
+        const bajo = productos.filter((p) => p.stock_actual <= 30);
+
+        setDatos(bajo.length > 0 ? bajo : productos);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p>Cargando gráfico de comestibles...</p>;
+
+  return (
+    <Card
+      title={
+        datos.some((p) => p.stock_actual <= 30)
+          ? "Comestibles con Stock Bajo"
+          : "Stock de Comestibles"
       }
-    }
-    fetchComestibles()
-  }, [])
-
-  if (loading) return <p>Cargando gráfico de comestibles...</p>
-  if (error) return <p className="text-red-600">{error}</p>
-
-  return <StockChart title="Stock de Comestibles" description="Stock actual de comestibles" datos={datos} color="#f43f5e" />
+      description={
+        datos.some((p) => p.stock_actual <= 30)
+          ? "Productos críticos que requieren reposición"
+          : "Todos los productos están dentro del nivel normal"
+      }
+    >
+      <DonutChart datos={datos} tipo="comestible" />
+    </Card>
+  );
 }
