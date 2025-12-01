@@ -408,7 +408,14 @@ async function eliminarComestibleController(req, res) {
 // --- SALIDA DE ROPA ---
 async function salidaRopaController(req, res) {
   try {
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    console.log("salidaRopaController: req.files", req.files); // Debug log
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/ropa/comprobantes/${req.files.img_comp[0].filename}`;
+    }
+    console.log("salidaRopaController: constructed img_comp path", img_comp); // Debug log
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
+    console.log("salidaRopaController: data to model", data); // Debug log
     const registro = await registrarSalidaRopa(data);
     res.json({ message: "✅ Salida de ropa registrada correctamente", registro });
   } catch (err) {
@@ -419,7 +426,14 @@ async function salidaRopaController(req, res) {
 // --- SALIDA DE COMESTIBLE ---
 async function salidaComestibleController(req, res) {
   try {
-    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235" };
+    console.log("salidaComestibleController: req.files", req.files); // Debug log
+    let img_comp = null;
+    if (req.files && req.files.img_comp) {
+      img_comp = `/uploads/comestibles/comprobantes/${req.files.img_comp[0].filename}`;
+    }
+    console.log("salidaComestibleController: constructed img_comp path", img_comp); // Debug log
+    const data = { ...req.body, id_usuario: req.user?.id || "ADM2235", img_comp };
+    console.log("salidaComestibleController: data to model", data); // Debug log
     const registro = await registrarSalidaComestible(data);
     res.json({ message: "✅ Salida de comestible registrada correctamente", registro });
   } catch (err) {

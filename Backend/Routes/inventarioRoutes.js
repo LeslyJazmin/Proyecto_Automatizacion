@@ -34,7 +34,7 @@ router.get("/ropa/buscar", buscarRopaController);
 // Aceptar tanto 'imagen' como 'img_comp' (comprobante)
 router.post("/ropa/entrada", setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaRopa);
 router.put("/ropa/actualizar", setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarRopaController);
-router.post("/ropa/entrada-existente", setProductType("ropa"), entradaRopaExistente); // 👈 para producto ya existente
+router.post("/ropa/entrada-existente", setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaRopaExistente); // 👈 para producto ya existente
 
 // --- COMESTIBLES ---
 router.get("/comestibles", listarComestiblesController);
@@ -55,8 +55,8 @@ router.get("/movimientos/ropa", listarMovimientosRopaController);
 router.get("/movimientos/comestibles", listarMovimientosComestibleController);
 
 // SALIDAS
-router.post("/salida-ropa", salidaRopaController);
-router.post("/salida-comestible", salidaComestibleController);
+router.post("/salida-ropa", setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaRopaController);
+router.post("/salida-comestible", setProductType("comestibles"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaComestibleController);
 
 
 module.exports = router;

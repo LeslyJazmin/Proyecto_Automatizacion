@@ -12,7 +12,9 @@ app.use(cors());
 app.use(express.json());
 
 // Archivos estáticos subidos por usuarios
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", (req, res, next) => {
+    next();
+}, express.static(path.join(__dirname, "uploads")));
 
 // Si quieres mantener también tus imágenes internas
 app.use("/images", express.static(path.join(__dirname, "images")));

@@ -36,12 +36,13 @@ export async function registrarEntradaRopa(data) {
 
 // Registrar salida de ropa
 export async function registrarSalidaRopa(data) {
+  const isFormData = data instanceof FormData;
   const res = await fetch(`${API_BASE}/salida-ropa`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
+    body: isFormData ? data : JSON.stringify(data),
   });
-  return res.json();
+  return handleResponse(res);
 }
 
 // Listar ropa
@@ -67,12 +68,13 @@ export async function registrarEntradaComestible(data) {
 
 // Registrar salida de comestible
 export async function registrarSalidaComestible(data) {
+  const isFormData = data instanceof FormData;
   const res = await fetch(`${API_BASE}/salida-comestible`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
+    body: isFormData ? data : JSON.stringify(data),
   });
-  return res.json();
+  return handleResponse(res);
 }
 
 // Listar comestibles
@@ -161,20 +163,22 @@ export async function eliminarRopa(id) {
 
 // Registrar entrada de ropa existente
 export async function registrarEntradaRopaExistente(data) {
+  const isFormData = data instanceof FormData;
   const res = await fetch(`${API_BASE}/ropa/entrada-existente`, {
     method: "POST",
-    headers: getHeaders(true),
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
 }
 
 // Registrar entrada de comestible existente
 export async function registrarEntradaComestibleExistente(data) {
+  const isFormData = data instanceof FormData;
   const res = await fetch(`${API_BASE}/comestibles/entrada-existente`, {
     method: "POST",
-    headers: getHeaders(true),
-    body: JSON.stringify(data),
+    headers: isFormData ? getHeaders(false) : getHeaders(true),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleResponse(res);
 }
