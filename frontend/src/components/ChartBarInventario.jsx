@@ -20,7 +20,7 @@ function Card({ title, description, children }) {
 
       <div className="mt-3 text-center text-xs text-gray-600">
         <div className="flex justify-center items-center gap-1">
-          Tendencia positiva <TrendingUp className="h-4 w-4" />
+           <TrendingUp className="h-4 w-4" />
         </div>
         <p>Actualización dinámica</p>
       </div>
@@ -31,7 +31,7 @@ function Card({ title, description, children }) {
 // 🍩 Donut
 function DonutChart({ datos, tipo }) {
   const data = datos.map((p) => ({
-    name: `${p.nombre} (${p.stock_actual})`,
+    name: `${p.nombre}`,
     value: p.stock_actual,
   }));
 
