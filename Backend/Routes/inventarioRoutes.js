@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../Middleware/upload");
+const { verifyToken } = require("../Middleware/authMiddleware");
 
 const {
   entradaRopa,
@@ -32,31 +33,31 @@ const setProductType = (productType) => (req, res, next) => {
 router.get("/ropa", listarRopaController);
 router.get("/ropa/buscar", buscarRopaController);
 // Aceptar tanto 'imagen' como 'img_comp' (comprobante)
-router.post("/ropa/entrada", setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaRopa);
-router.put("/ropa/actualizar", setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarRopaController);
-router.post("/ropa/entrada-existente", setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaRopaExistente); // 👈 para producto ya existente
+router.post("/ropa/entrada", verifyToken, setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaRopa);
+router.put("/ropa/actualizar", verifyToken, setProductType("ropa"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarRopaController);
+router.post("/ropa/entrada-existente", verifyToken, setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaRopaExistente); // 👈 para producto ya existente
 
 // --- COMESTIBLES ---
 router.get("/comestibles", listarComestiblesController);
 router.get("/comestibles/buscar", buscarComestibleController);
-router.put("/comestibles/actualizar", setProductType("comestibles"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarComestibleController);
-router.post("/comestibles/entrada", setProductType("comestibles"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaComestible);
-router.post("/comestibles/entrada-existente", setProductType("comestibles"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaComestibleExistente); // 👈 para producto ya existente
+router.put("/comestibles/actualizar", verifyToken, setProductType("comestibles"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), actualizarComestibleController);
+router.post("/comestibles/entrada", verifyToken, setProductType("comestibles"), upload.fields([{ name: 'imagen', maxCount: 1 }, { name: 'img_comp', maxCount: 1 }]), entradaComestible);
+router.post("/comestibles/entrada-existente", verifyToken, setProductType("comestibles"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), entradaComestibleExistente); // 👈 para producto ya existente
 router.get(
   "/comestibles/buscar-lote",
   buscarComestiblePorNombreYLoteController
 );
 
-router.delete("/ropa/:id", eliminarRopaController);
-router.delete("/comestible/:id", eliminarComestibleController);
+router.delete("/ropa/:id", verifyToken, eliminarRopaController);
+router.delete("/comestible/:id", verifyToken, eliminarComestibleController);
 
 // routes/inventario.js
 router.get("/movimientos/ropa", listarMovimientosRopaController);
 router.get("/movimientos/comestibles", listarMovimientosComestibleController);
 
 // SALIDAS
-router.post("/salida-ropa", setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaRopaController);
-router.post("/salida-comestible", setProductType("comestibles"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaComestibleController);
+router.post("/salida-ropa", verifyToken, setProductType("ropa"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaRopaController);
+router.post("/salida-comestible", verifyToken, setProductType("comestibles"), upload.fields([{ name: 'img_comp', maxCount: 1 }]), salidaComestibleController);
 
 
 module.exports = router;

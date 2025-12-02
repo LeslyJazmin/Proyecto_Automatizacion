@@ -331,7 +331,10 @@ async function listarMovimientosRopa(anio, mes) {
       ir.metodo_pago,
       ir.monto_pagado,
       ir.fecha,
-      u.username AS usuario,
+      CASE 
+        WHEN u.rol = 'admin' THEN 'Admin'
+        ELSE u.username 
+      END AS usuario,
       ir.img_comp
     FROM InventarioRopa ir
     JOIN RopaDeportiva r ON ir.id_producto = r.id_ropa
@@ -372,7 +375,10 @@ async function listarMovimientosComestible(anio, mes) {
       ic.metodo_pago,
       ic.monto_pagado,
       ic.fecha,
-      u.username AS usuario,
+      CASE 
+        WHEN u.rol = 'admin' THEN 'Admin'
+        ELSE u.username 
+      END AS usuario,
       ic.img_comp
     FROM InventarioComestible ic
     JOIN ProductosComestibles c ON ic.id_producto = c.id_comestible
