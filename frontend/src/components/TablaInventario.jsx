@@ -137,8 +137,8 @@ export default function TablaInventario({
                   ) : (
                     <>
                       <td className={saborCellClass} title={p.sabor}>{p.sabor || "N/A"}</td>
-                      <td className={pesoCellClass}>{p.peso ? `${p.peso} kg` : "-"}</td>
-                      <td className={litrosCellClass}>{p.litros ? `${p.litros} L` : "-"}</td>
+                      <td className={pesoCellClass}>{p.peso ? `${p.peso} mg` : "-"}</td>
+                      <td className={litrosCellClass}>{p.litros ? `${p.litros} ml` : "-"}</td>
                       <td className={tdClass + " text-center"}>
                         {fechaVenc || "—"}
                       </td>
