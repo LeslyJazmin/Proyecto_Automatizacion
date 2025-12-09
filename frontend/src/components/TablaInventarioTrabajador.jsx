@@ -9,18 +9,18 @@ export default function TablaInventario({
 }) {
   const tableContainerClass =
     tipo === "comestible"
-      ? "mx-auto my-4 w-[95%] overflow-auto shadow-2xl border border-gray-200 max-h-[60vh]"
-      : "mx-auto my-4 w-[95%] overflow-hidden shadow-2xl border border-gray-200";
+      ? "mx-auto my-4 w-[95%] overflow-x-auto overflow-y-auto shadow-2xl border border-gray-200 max-h-[60vh] rounded-lg"
+      : "mx-auto my-4 w-[95%] overflow-x-auto shadow-2xl border border-gray-200 rounded-lg";
 
-  const tableClass = "w-full";
+  const tableClass = "w-full min-w-[750px] sm:min-w-full";
   const headClass =
-    "bg-gradient-to-r from-red-900 via-red-800 to-black text-white uppercase text-[12px] tracking-wider font-extrabold";
+    "bg-gradient-to-r from-red-900 via-red-800 to-black text-white uppercase text-[11px] sm:text-[12px] tracking-wider font-extrabold";
   const thClass =
-    "px-3 py-2 border-l border-r border-red-950/50 last:border-r-0 first:border-l-0";
+    "px-2 sm:px-3 py-2 border-l border-r border-red-950/50 last:border-r-0 first:border-l-0 text-[11px] sm:text-[12px] whitespace-nowrap";
   const trClass =
     "bg-white border-b border-gray-100 transition duration-150 hover:bg-red-50";
   const tdClass =
-    "px-3 py-2 text-[13px] text-gray-800 font-medium whitespace-nowrap border-r border-gray-200";
+    "px-2 sm:px-3 py-2 text-[12px] sm:text-[13px] text-gray-800 font-medium whitespace-nowrap border-r border-gray-200 max-w-[120px] truncate";
 
   const baseBtn =
     "p-1.5 rounded-full transition-all duration-300 flex items-center justify-center shadow-md text-white font-bold";
@@ -28,12 +28,9 @@ export default function TablaInventario({
   const imgBtnGray =
     "p-1.5 rounded-full bg-gray-400/70 cursor-not-allowed flex items-center justify-center";
 
-  const nameCellClass = tipo === "comestible" ? `${tdClass} max-w-[220px] truncate` : tdClass;
-  const marcaCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
-  const loteCellClass = tipo === "comestible" ? `${tdClass} whitespace-nowrap` : tdClass;
-  const saborCellClass = tipo === "comestible" ? `${tdClass} max-w-[120px] truncate` : tdClass;
-  const pesoCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
-  const litrosCellClass = tipo === "comestible" ? `${tdClass} text-center` : tdClass;
+  const nameCellClass = `${tdClass} max-w-[180px] sm:max-w-[220px]`;
+  const marcaCellClass = `${tdClass} max-w-[100px] sm:max-w-[120px]`;
+  const saborCellClass = `${tdClass} max-w-[100px] sm:max-w-[120px]`;
 
   if (loading)
     return (
@@ -92,14 +89,14 @@ export default function TablaInventario({
               const stock = p.stock_actual ?? 0;
 
               let stockColor = "font-bold";
-
-              if (tipo === "ropa") {
-                stockColor += stock <= 10 ? " text-red-700" : " text-green-700";
-              }
-
-              if (tipo === "comestible") {
-                stockColor += stock <= 30 ? " text-red-700" : " text-green-700";
-              }
+              stockColor +=
+                tipo === "ropa"
+                  ? stock <= 10
+                    ? " text-red-700"
+                    : " text-green-700"
+                  : stock <= 30
+                  ? " text-red-700"
+                  : " text-green-700";
 
               const fechaVenc =
                 p.fecha_vencimiento &&
@@ -116,7 +113,7 @@ export default function TablaInventario({
                   </td>
 
                   {tipo === "comestible" && (
-                    <td className={loteCellClass}>{p.lote || "—"}</td>
+                    <td className={tdClass}>{p.lote || "—"}</td>
                   )}
 
                   <td className={nameCellClass} title={p.nombre}>
@@ -141,12 +138,8 @@ export default function TablaInventario({
                       <td className={saborCellClass} title={p.sabor}>
                         {p.sabor || "N/A"}
                       </td>
-                      <td className={pesoCellClass}>
-                        {p.peso ? `${p.peso} kg` : "-"}
-                      </td>
-                      <td className={litrosCellClass}>
-                        {p.litros ? `${p.litros} L` : "-"}
-                      </td>
+                      <td className={tdClass}>{p.peso ? `${p.peso} g` : "-"}</td>
+                      <td className={tdClass}>{p.litros ? `${p.litros} ml` : "-"}</td>
                       <td className={tdClass + " text-center"}>
                         {fechaVenc || "—"}
                       </td>
@@ -159,19 +152,15 @@ export default function TablaInventario({
 
                   <td className={tdClass}>{p.ubicacion || "N/A"}</td>
 
-                  {/* ---------- IMAGEN ---------- */}
                   <td className={`${tdClass} text-center`}>
                     <div className="flex justify-center">
                       {p.imagen ? (
                         <button
                           type="button"
                           onClick={() => {
-                            const path = p.imagen;
-                            const url =
-                              path &&
-                              (path.startsWith("http")
-                                ? path
-                                : `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`);
+                            const url = p.imagen.startsWith("http")
+                              ? p.imagen
+                              : `${API_URL}${p.imagen.startsWith("/") ? "" : "/"}${p.imagen}`;
                             onVerImagen(url);
                           }}
                           className={imgBtn}

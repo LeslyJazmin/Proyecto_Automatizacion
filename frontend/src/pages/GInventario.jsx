@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Shirt, CupSoda, Eye, Search,ClipboardList } from "lucide-react"; 
+import { Package, Shirt, CupSoda, Eye, Search, ClipboardList } from "lucide-react"; 
 import Sidebar from "../components/Sidebar";
 import ModalEntrada from "../components/ModalNuevoProducto";
 import TablaInventario from "../components/TablaInventario";
@@ -101,14 +101,13 @@ export default function GInventario() {
   const handleRegistrarProducto = async (tipo, formData) => {
     try {
       let data = formData;
-      // Si no es FormData, solo convertir a FormData si hay archivos (File)
       if (!(formData instanceof FormData)) {
         const hasFile = Object.values(formData).some((v) => v instanceof File);
         if (hasFile) {
           data = new FormData();
           for (const key in formData) data.append(key, formData[key]);
         } else {
-          data = formData; // enviar como JSON
+          data = formData;
         }
       }
       if (tipo === "ropa") await registrarEntradaRopa(data);
@@ -118,7 +117,7 @@ export default function GInventario() {
       else setModalComestiblesOpen(false);
 
       await fetchDatos();
-      mostrarMensaje("exito", " Producto registrado con éxito.");
+      mostrarMensaje("exito", "Producto registrado con éxito.");
     } catch (err) { mostrarMensaje("error", "❌ Error al registrar producto."); }
   };
 
@@ -131,21 +130,20 @@ export default function GInventario() {
   const handleActualizarProducto = async (tipo, formData) => {
     try {
       let data = formData;
-      // Si no es FormData, convertir a FormData si hay archivos (File)
       if (!(formData instanceof FormData)) {
         const hasFile = Object.values(formData).some((v) => v instanceof File);
         if (hasFile) {
           data = new FormData();
           for (const key in formData) data.append(key, formData[key]);
         } else {
-          data = formData; // enviar como JSON
+          data = formData;
         }
       }
       if (tipo === "ropa") await actualizarRopa(data);
       else await actualizarComestible(data);
 
       await fetchDatos();
-      mostrarMensaje("exito", " Producto actualizado con éxito.");
+      mostrarMensaje("exito", "Producto actualizado con éxito.");
       setProductoEditar(null);
       setTipoEdicion(null);
     } catch (err) { mostrarMensaje("error", "❌ Error al actualizar producto."); }
@@ -165,187 +163,183 @@ export default function GInventario() {
       else await eliminarComestible(id);
 
       await fetchDatos();
-      mostrarMensaje("exito", " Producto eliminado correctamente.");
+      mostrarMensaje("exito", "Producto eliminado correctamente.");
     } catch (err) { mostrarMensaje("error", "❌ Error al eliminar producto."); }
     finally { setProductoAEliminar(null); }
   };
 
   const changeTab = (tab) => setActiveTab(tab);
 
-  // ---------- RENDER DE SECCIONES ----------
+  // ---------- SECCIONES ----------
   const renderRopaSection = () => (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between gap-4">
-       <div className="flex flex-wrap gap-3">
-        {/* 🟩 Registrar nueva prenda */}
-        <Button
-          onClick={() => { setModalRopaOpen(true); setProductoEditar(null); }}
-          className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span>Registrar entrada</span>
-        </Button>
+    <div className="p-4 sm:p-8 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => { setModalRopaOpen(true); setProductoEditar(null); }}
+            className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar entrada</span>
+          </Button>
 
-        {/* 🩶 Producto existente */}
-        <Button
-          onClick={() => setModalExistenteRopaOpen(true)}
-          className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
-          <span> Recargar Stock </span>
-        </Button>
+          <Button
+            onClick={() => setModalExistenteRopaOpen(true)}
+            className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
+            <span>Recargar Stock</span>
+          </Button>
 
-        {/* 🟥 Registrar salida */}
-        <Button
-          onClick={() => setModalSalidaRopaOpen(true)}
-          className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <Shirt className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span>Registrar Salida</span>
-        </Button>
-      </div>
+          <Button
+            onClick={() => setModalSalidaRopaOpen(true)}
+            className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <Shirt className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar salida</span>
+          </Button>
+        </div>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <input
             type="text"
             placeholder="Buscar prenda por nombre..."
-            className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="py-2 sm:py-3 pl-10 pr-4 sm:pr-5 text-sm sm:text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-full sm:w-96 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             onChange={(e) => handleBuscar("ropa", e.target.value)}
           />
-          <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+          <Search className="absolute w-4 sm:w-5 h-4 sm:h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
         </div>
       </div>
 
-      <TablaInventario
-        datos={ropa}
-        tipo="ropa"
-        API_URL={API_URL}
-        onVerImagen={(img) => { setImagenSeleccionada(img); setImagenModalOpen(true); }}
-        onEditar={handleEditar}
-        onEliminar={handleEliminar}
-        loading={loadingRopa}
-      />
+      <div className="overflow-x-auto">
+        <TablaInventario
+          datos={ropa}
+          tipo="ropa"
+          API_URL={API_URL}
+          onVerImagen={(img) => { setImagenSeleccionada(img); setImagenModalOpen(true); }}
+          onEditar={handleEditar}
+          onEliminar={handleEliminar}
+          loading={loadingRopa}
+        />
+      </div>
     </div>
   );
 
   const renderComestiblesSection = () => (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between gap-4">
-      <div className="flex flex-wrap gap-3">
-        {/* 🟩 Registrar nuevo comestible */}
-        <Button
-          onClick={() => { setModalComestiblesOpen(true); setProductoEditar(null); }}
-          className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span> Registrar entrada</span>
-        </Button>
+    <div className="p-4 sm:p-8 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => { setModalComestiblesOpen(true); setProductoEditar(null); }}
+            className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar entrada</span>
+          </Button>
 
-        {/* 🩶 Producto existente */}
-        <Button
-          onClick={() => setModalExistenteComestibleOpen(true)}
-          className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
-          <span> Recargar Stock </span>
-        </Button>
+          <Button
+            onClick={() => setModalExistenteComestibleOpen(true)}
+            className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
+            <span>Recargar Stock</span>
+          </Button>
 
-        {/* 🟥 Registrar salida */}
-        <Button
-          onClick={() => setModalSalidaComestibleOpen(true)}
-          className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
-        >
-          <CupSoda className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-          <span>Registrar Salida</span>
-        </Button>
-      </div>
+          <Button
+            onClick={() => setModalSalidaComestibleOpen(true)}
+            className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <CupSoda className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar salida</span>
+          </Button>
+        </div>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <input
             type="text"
-            placeholder="Buscar producto comestibles por nombre..."
-            className="py-3 pl-12 pr-5 text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-96 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            placeholder="Buscar producto comestible por nombre..."
+            className="py-2 sm:py-3 pl-10 pr-4 sm:pr-5 text-sm sm:text-base font-light text-gray-700 placeholder-gray-500 transition border border-gray-300 rounded-lg shadow-sm w-full sm:w-96 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             onChange={(e) => handleBuscar("comestible", e.target.value)}
           />
-          <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+          <Search className="absolute w-4 sm:w-5 h-4 sm:h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
         </div>
       </div>
 
-      <TablaInventario
-        datos={comestibles}
-        tipo="comestible"
-        API_URL={API_URL}
-        onVerImagen={(img) => { setImagenSeleccionada(img); setImagenModalOpen(true); }}
-        onEditar={handleEditar}
-        onEliminar={handleEliminar}
-        loading={loadingComestibles}
-      />
+      <div className="overflow-x-auto">
+        <TablaInventario
+          datos={comestibles}
+          tipo="comestible"
+          API_URL={API_URL}
+          onVerImagen={(img) => { setImagenSeleccionada(img); setImagenModalOpen(true); }}
+          onEditar={handleEditar}
+          onEliminar={handleEliminar}
+          loading={loadingComestibles}
+        />
+      </div>
     </div>
   );
 
   // ---------- RENDER PRINCIPAL ----------
   return (
-    <div className="min-h-screen font-sans text-gray-800 bg-gray-50">
+    <div className="min-h-screen font-sans text-gray-800 bg-gray-50 flex flex-col md:flex-row">
       {/* Sidebar */}
       <Sidebar onLogout={() => setLogoutModalOpen(true)} active={sidebarActive} />
 
-      <div className="p-10 ml-64">
-        {/* ENCABEZADO */}
-       <div className="pb-4 mb-8 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          {/* Título e ícono */}
-          <div className="flex items-center gap-3">
-            <Package size={36} className="text-blue-600" />
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-                Inventario Central: Gestión de Activos Fitness
-              </h1>
-              <p className="max-w-3xl mt-1 text-base font-light leading-snug text-gray-500">
-                Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
-              </p>
+      <div className="flex-1 p-4 sm:p-6 md:p-10 md:ml-64 ml-0 mt-20 md:mt-0">
+        {/* Encabezado */}
+        <div className="pb-4 mb-8 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <Package size={36} className="text-blue-600" />
+              <div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-gray-900">
+                  Inventario Central: Gestión de Activos Fitness
+                </h1>
+                <p className="max-w-full md:max-w-3xl mt-1 text-sm sm:text-base font-light leading-snug text-gray-500">
+                  Plataforma profesional para la administración de Nutrición, Suplementos y Ropa Deportiva en tiempo real.
+                </p>
+              </div>
             </div>
+
+            <Button
+              onClick={() =>
+                generarPDFInventario(ropa, comestibles, {
+                  filename: "Inventario_Stock_Actual.pdf",
+                  meta: {
+                    title: "Inventario Stock Actual",
+                    subtitle: `Generado: ${new Date().toLocaleString("es-PE")}`,
+                  },
+                })
+              }
+              className="mt-2 md:mt-0 flex items-center gap-2 bg-gradient-to-r from-[#4b0000] to-black hover:from-[#5c0000] hover:to-[#1a1a1a] text-white font-semibold px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.05] active:scale-95"
+            >
+              <Package className="w-5 h-5 text-white" />
+              <span className="text-sm sm:text-base">Descargar Inventario en PDF</span>
+            </Button>
           </div>
-
-          {/* Botón de descarga */}
-          <Button
-            onClick={() =>
-              generarPDFInventario(ropa, comestibles, {
-                filename: "Inventario_Stock_Actual.pdf",
-                meta: {
-                  title: "Inventario Stock Actual",
-                  subtitle: `Generado: ${new Date().toLocaleString("es-PE")}`,
-                },
-              })
-            }
-            className="flex items-center gap-2 bg-gradient-to-r from-[#4b0000] to-black hover:from-[#5c0000] hover:to-[#1a1a1a] text-white font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.05] active:scale-95"
-          >
-            <Package className="w-5 h-5 text-white" />
-            <span>Descargar Inventario en PDF</span>
-          </Button>
         </div>
-      </div>
 
-        {/* TABS */}
+        {/* Tabs */}
         <div className="overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-xl">
-          <div className="flex border-b border-gray-200 bg-gray-50/50">
+          <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50/50">
             <button
               onClick={() => changeTab('ropa')}
-              className={`flex items-center gap-2 px-6 py-4 text-lg font-medium transition duration-200 ease-in-out 
+              className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-4 text-sm sm:text-lg font-medium transition duration-200 ease-in-out 
                 ${activeTab === 'ropa' 
                   ? 'text-blue-700 border-b-4 border-blue-600 bg-white/80' 
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 border-b-4 border-transparent'}`}
             >
-              <Shirt className="w-5 h-5" /> Ropa Deportiva
+              <Shirt className="w-4 sm:w-5 h-4 sm:h-5" /> Ropa Deportiva
             </button>
 
             <button
               onClick={() => changeTab('comestible')}
-              className={`flex items-center gap-2 px-6 py-4 text-lg font-medium transition duration-200 ease-in-out 
+              className={`flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-4 text-sm sm:text-lg font-medium transition duration-200 ease-in-out 
                 ${activeTab === 'comestible' 
                   ? 'text-yellow-700 border-b-4 border-yellow-600 bg-white/80' 
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 border-b-4 border-transparent'}`}
             >
-              <CupSoda className="w-5 h-5" /> Nutrición y Suplementos
+              <CupSoda className="w-4 sm:w-5 h-4 sm:h-5" /> Nutrición y Suplementos
             </button>
           </div>
 

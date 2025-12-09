@@ -47,8 +47,13 @@ async function createNewUser(req, res) {
         return res.status(403).json({ message: "Solo el administrador puede crear nuevos usuarios" });
     }
 
+     // 🔹 PREFIJOS SEGÚN ROL
+    let prefix = "USR";
+    if (rol === "admin") prefix = "ADM";
+    else if (rol === "almacenero") prefix = "ALM";
+
+    const id_usuario = await generateUniqueShortId(prefix);
     const password_hash = await bcrypt.hash(password, 10);
-    const id_usuario = await generateUniqueShortId(rol === "admin" ? "ADM" : "USR");
 
     const newUser = {
       id_usuario,

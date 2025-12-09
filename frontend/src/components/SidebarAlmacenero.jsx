@@ -2,7 +2,7 @@ import { LogOut, Building2, Info, Package, TrendingUp, Menu } from "lucide-react
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 
-export default function SidebarTrabajador({ onLogout, logoutOpen }) {
+export default function SidebarAlmacenero({ onLogout, logoutOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -65,9 +65,8 @@ export default function SidebarTrabajador({ onLogout, logoutOpen }) {
             </h2>
           </div>
           <p className="text-[11px] font-normal text-red-300 mt-1 uppercase tracking-widest">
-            PANEL DE RECEPCIÓN
+            PANEL DE ALMACÉN
           </p>
-
           <img
             src="/images/GT2.png"
             alt="Logo"
@@ -79,35 +78,35 @@ export default function SidebarTrabajador({ onLogout, logoutOpen }) {
         {/* Navegación */}
         <div className="flex-1 px-5 space-y-1 overflow-y-auto">
           <button
-            className={getButtonClasses("/trabajador-dashboard")}
+            className={getButtonClasses("/almacenero-dashboard")}
             onClick={() => {
-              navigate("/trabajador-dashboard");
+              navigate("/Almacenero-dashboard");
               setOpen(false);
             }}
           >
-            <Info {...getIconProps("/trabajador-dashboard")} />
+            <Info {...getIconProps("/almacenero-dashboard")} />
             <span className="text-[12.5px] tracking-wide">Dashboard Principal</span>
           </button>
 
           <button
-            className={getButtonClasses("/tinventario")}
+            className={getButtonClasses("/ainventario")}
             onClick={() => {
-              navigate("/tinventario");
+              navigate("/ainventario");
               setOpen(false);
             }}
           >
-            <Package {...getIconProps("/tinventario")} />
+            <Package {...getIconProps("/ainventario")} />
             <span className="text-[12.5px] tracking-wide">Transacciones y Flujo</span>
           </button>
 
           <button
-            className={getButtonClasses("/treportes")}
+            className={getButtonClasses("/areportes")}
             onClick={() => {
-              navigate("/treportes");
+              navigate("/areportes");
               setOpen(false);
             }}
           >
-            <TrendingUp {...getIconProps("/treportes")} />
+            <TrendingUp {...getIconProps("/areportes")} />
             <span className="text-[12.5px] tracking-wide">Análisis</span>
           </button>
         </div>

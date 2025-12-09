@@ -7,6 +7,7 @@ import {
   CupSoda,
   Eye,
   Search,
+  ClipboardList,
 } from "lucide-react";
 import Sidebar from "../components/SidebarTrabajador";
 import ModalEntrada from "../components/ModalNuevoProducto";
@@ -15,7 +16,6 @@ import ModalMensaje from "../components/ModalMensaje";
 import Button from "../components/ui/Button";
 import ActualizarProducto from "../components/ActualizarProducto";
 import ModalExistenteProducto from "../components/ModalExistenteProducto";
-import ModalSalidaProducto from "../components/ModalSalidaProducto";
 import { generarPDFInventario } from "../utils/pdfGenerator";
 import Modal from "../components/ui/Modal";
 
@@ -58,10 +58,6 @@ export default function TInventario() {
 
   const [modalExistenteRopaOpen, setModalExistenteRopaOpen] = useState(false);
   const [modalExistenteComestibleOpen, setModalExistenteComestibleOpen] =
-    useState(false);
-
-  const [modalSalidaRopaOpen, setModalSalidaRopaOpen] = useState(false);
-  const [modalSalidaComestibleOpen, setModalSalidaComestibleOpen] =
     useState(false);
 
   const [productoEditar, setProductoEditar] = useState(null);
@@ -195,14 +191,25 @@ export default function TInventario() {
     <div className="p-4 sm:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
         <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => {
+              setModalRopaOpen(true);
+              setProductoEditar(null);
+            }}
+            className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar entrada</span>
+          </Button>
 
           <Button
-            onClick={() => setModalSalidaRopaOpen(true)}
-            className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+            onClick={() => setModalExistenteRopaOpen(true)}
+            className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
           >
-            <Shirt className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-            <span>Registrar salida</span>
+            <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
+            <span>Recargar Stock</span>
           </Button>
+
         </div>
 
         <div className="relative w-full sm:w-auto">
@@ -235,14 +242,25 @@ export default function TInventario() {
     <div className="p-4 sm:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-wrap">
         <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => {
+              setModalComestiblesOpen(true);
+              setProductoEditar(null);
+            }}
+            className="group flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <Package className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
+            <span>Registrar entrada</span>
+          </Button>
 
           <Button
-            onClick={() => setModalSalidaComestibleOpen(true)}
-            className="group flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+            onClick={() => setModalExistenteComestibleOpen(true)}
+            className="group flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
           >
-            <CupSoda className="w-5 h-5 transition-transform duration-300 group-hover:-rotate-12" />
-            <span>Registrar salida</span>
+            <ClipboardList className="w-5 h-5 transition-transform duration-300 group-hover:rotate-6" />
+            <span>Recargar Stock</span>
           </Button>
+
         </div>
 
         <div className="relative w-full sm:w-auto">
@@ -474,28 +492,6 @@ export default function TInventario() {
         onSuccess={async () => {
           await fetchDatos();
           mostrarMensaje("exito", "Entrada de comestible registrada correctamente.");
-        }}
-      />
-
-      {/* 🔹 Modal para registrar salida de ropa */}
-      <ModalSalidaProducto
-        isOpen={modalSalidaRopaOpen}
-        onClose={() => setModalSalidaRopaOpen(false)}
-        tipo="ropa"
-        onSuccess={async () => {
-          await fetchDatos();
-          mostrarMensaje("exito", "Salida de prenda registrada correctamente.");
-        }}
-      />
-
-      {/* 🔹 Modal para registrar salida de comestible */}
-      <ModalSalidaProducto
-        isOpen={modalSalidaComestibleOpen}
-        onClose={() => setModalSalidaComestibleOpen(false)}
-        tipo="comestible"
-        onSuccess={async () => {
-          await fetchDatos();
-          mostrarMensaje("exito", "Salida de comestible registrada correctamente.");
         }}
       />
     </div>

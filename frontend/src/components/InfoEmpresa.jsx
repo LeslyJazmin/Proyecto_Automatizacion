@@ -12,28 +12,48 @@ import {
 } from "lucide-react";
 import Modal from "./ui/Modal";
 
+/* ------------------------------------------------------
+   InfoRow Original + RESPONSIVE (solo texto y padding)
+------------------------------------------------------- */
 function InfoRow({ label, value, icon, onEdit, readOnly }) {
   return (
-    <div className="flex justify-between items-center bg-white p-2 rounded-md border border-neutral-200 hover:bg-red-50/40 transition-all duration-200">
+    <div
+      className="
+        flex justify-between items-center 
+        bg-white 
+        p-2 sm:p-2 
+        rounded-md border border-neutral-200 
+        hover:bg-red-50/40 
+        transition-all duration-200
+      "
+    >
       <div className="flex items-center space-x-2">
 
-        {/* 🔵 Ahora los iconos SIEMPRE se muestran */}
+        {/* ICONO EXACTO COMO EL ORIGINAL */}
         <div className="flex items-center justify-center w-6 h-6 rounded-md bg-red-100 text-red-700">
           {icon}
         </div>
 
         {label && (
-          <span className="font-medium text-gray-700 text-sm">{label}:</span>
+          <span className="font-medium text-gray-700 text-xs sm:text-sm">
+            {label}:
+          </span>
         )}
-        <span className="text-gray-900 text-sm">{value}</span>
+
+        <span className="text-gray-900 text-xs sm:text-sm">{value}</span>
       </div>
 
-      {/* 🔴 SOLO oculta el lápiz si readOnly === true */}
       {!readOnly && onEdit && (
         <button
           onClick={onEdit}
-          className="p-1 bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 rounded-full transition-all duration-200 shadow-sm hover:shadow-md"
-          title="Editar"
+          className="
+            p-1 
+            bg-gradient-to-r from-red-700 to-red-900 
+            hover:from-red-600 hover:to-red-800
+            rounded-full 
+            transition-all duration-200
+            shadow-sm hover:shadow-md
+          "
         >
           <PencilLine className="w-3.5 h-3.5 text-white" />
         </button>
@@ -42,6 +62,9 @@ function InfoRow({ label, value, icon, onEdit, readOnly }) {
   );
 }
 
+/* ------------------------------------------------------
+   Modal Editar (solo responsivo en texto)
+------------------------------------------------------- */
 function EditFieldModal({
   isOpen,
   onClose,
@@ -59,21 +82,33 @@ function EditFieldModal({
         maxLength={charLimit}
         value={value}
         onChange={onChange}
-        className="w-full p-2 rounded-md bg-black/30 border border-red-700/40 text-black placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-red-600 text-sm"
+        className="
+          w-full p-2 
+          rounded-md bg-black/30 border border-red-700/40 
+          text-black 
+          focus:outline-none focus:ring-1 focus:ring-red-600 
+          text-xs sm:text-sm
+        "
         disabled={saving}
       />
-      <p className="text-xs text-black/60 mb-3 text-right">
+
+      <p className="text-[10px] sm:text-xs text-black/60 mb-3 text-right">
         {value.length}/{charLimit} caracteres
       </p>
 
       <button
         onClick={onSave}
         disabled={saving}
-        className={`w-full flex items-center justify-center gap-2 font-medium p-2.5 rounded-lg text-sm transition-all duration-300 ${
-          saving
-            ? "bg-gray-600 cursor-wait text-white/70"
-            : "bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white shadow-md"
-        }`}
+        className={`
+          w-full flex items-center justify-center gap-2 
+          font-medium p-2.5 rounded-lg text-xs sm:text-sm
+          transition-all duration-300
+          ${
+            saving
+              ? "bg-gray-600 cursor-wait text-white/70"
+              : "bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white shadow-md"
+          }
+        `}
       >
         {saving && <Loader2 className="animate-spin w-4 h-4" />}
         {saving ? "Guardando..." : "Guardar"}
@@ -82,6 +117,9 @@ function EditFieldModal({
   );
 }
 
+/* ------------------------------------------------------
+   COMPONENTE PRINCIPAL RESPONSIVO
+------------------------------------------------------- */
 export default function InfoEmpresa({ readOnly = false }) {
   const [empresa, setEmpresa] = useState(null);
   const [error, setError] = useState(null);
@@ -110,6 +148,7 @@ export default function InfoEmpresa({ readOnly = false }) {
     if (readOnly) return;
 
     const limits = { direccion: 30, telefono: 9, email: 50 };
+
     setEditingModal({
       isOpen: true,
       field,
@@ -119,10 +158,9 @@ export default function InfoEmpresa({ readOnly = false }) {
   }
 
   async function handleSave() {
-    if (readOnly) return;
-
     try {
       setSaving(true);
+
       const updated = await updateInfoEmpresa({
         ...empresa,
         [editingModal.field]: editingModal.value,
@@ -130,10 +168,10 @@ export default function InfoEmpresa({ readOnly = false }) {
 
       setEmpresa(updated);
       setEditingModal({ ...editingModal, isOpen: false });
+
       setSuccessMessage(`${editingModal.field} actualizado correctamente`);
+
       setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      alert("Error al actualizar: " + err.message);
     } finally {
       setSaving(false);
     }
@@ -151,59 +189,40 @@ export default function InfoEmpresa({ readOnly = false }) {
 
   return (
     <div className="relative rounded-xl shadow-md border border-neutral-200 overflow-hidden transition-all">
+
+      {/* MENSAJE DE ÉXITO (sin tocar diseño original) */}
       {successMessage && !readOnly && (
-        <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in-down">
+        <div className="
+          absolute top-4 right-4 
+          bg-green-600 text-white 
+          px-3 sm:px-4 py-2 
+          rounded-lg shadow-lg 
+          flex items-center gap-2 
+          animate-fade-in-down
+          text-xs sm:text-sm
+        ">
           <CheckCircle className="w-4 h-4" />
-          <span className="text-sm">{successMessage}</span>
+          <span>{successMessage}</span>
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-900 via-black to-red-950 border-b border-red-700 shadow-[0_0_15px_#ff1a1a44] px-4 py-3 flex items-center gap-2">
+      {/* HEADER – igual al original */}
+      <div className="bg-gradient-to-r from-red-900 via-black to-red-950 border-b border-red-700 shadow-[0_0_15px_#ff1a1a44] px-3 sm:px-4 py-3 flex items-center gap-2">
         <Building2 className="w-5 h-5 text-white/90" />
-        <h2 className="text-white text-lg font-semibold tracking-wide">
+        <h2 className="text-white text-base sm:text-lg font-semibold tracking-wide">
           Información de la Empresa
         </h2>
       </div>
 
-      {/* Contenido */}
-      <div className="bg-white p-4 space-y-2">
-        <InfoRow
-          icon={<Building2 className="w-4 h-4" />}
-          label="Nombre"
-          value={empresa.nombre}
-          readOnly={readOnly}
-        />
-        <InfoRow
-          icon={<Hash className="w-4 h-4" />}
-          label="RUC"
-          value={empresa.ruc}
-          readOnly={readOnly}
-        />
-        <InfoRow
-          icon={<MapPin className="w-4 h-4" />}
-          label="Dirección"
-          value={empresa.direccion}
-          onEdit={() => handleEdit("direccion")}
-          readOnly={readOnly}
-        />
-        <InfoRow
-          icon={<Phone className="w-4 h-4" />}
-          label="Teléfono"
-          value={empresa.telefono}
-          onEdit={() => handleEdit("telefono")}
-          readOnly={readOnly}
-        />
-        <InfoRow
-          icon={<Mail className="w-4 h-4" />}
-          label="Email"
-          value={empresa.email}
-          onEdit={() => handleEdit("email")}
-          readOnly={readOnly}
-        />
+      {/* CONTENIDO RESPONSIVO */}
+      <div className="bg-white p-3 sm:p-4 space-y-2">
+        <InfoRow icon={<Building2 className="w-4 h-4" />} label="Nombre" value={empresa.nombre} readOnly={readOnly} />
+        <InfoRow icon={<Hash className="w-4 h-4" />} label="RUC" value={empresa.ruc} readOnly={readOnly} />
+        <InfoRow icon={<MapPin className="w-4 h-4" />} label="Dirección" value={empresa.direccion} onEdit={() => handleEdit("direccion")} readOnly={readOnly} />
+        <InfoRow icon={<Phone className="w-4 h-4" />} label="Teléfono" value={empresa.telefono} onEdit={() => handleEdit("telefono")} readOnly={readOnly} />
+        <InfoRow icon={<Mail className="w-4 h-4" />} label="Email" value={empresa.email} onEdit={() => handleEdit("email")} readOnly={readOnly} />
       </div>
 
-      {/* Modal solo si pueden editar */}
       {!readOnly && (
         <EditFieldModal
           isOpen={editingModal.isOpen}

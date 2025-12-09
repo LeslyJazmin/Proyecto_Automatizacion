@@ -45,4 +45,11 @@ function isTrabajador(req, res, next) {
   next();
 }
 
-module.exports = { verifyToken, isAdmin, isTrabajador };
+function isAlmacenero(req, res, next) {
+  if (!req.user || req.user.rol !== "almacenero") {
+    return res.status(403).json({ message: "Acceso denegado, solo almacenero" });
+  }
+  next();
+}
+
+module.exports = { verifyToken, isAdmin, isTrabajador, isAlmacenero };

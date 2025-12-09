@@ -242,7 +242,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
       headerIcon={TrendingUp}
     >
       <form onSubmit={handleSubmit} className="p-4 space-y-4 bg-gray-100 rounded-lg shadow-inner">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             {/* Información principal */}
             <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md">
@@ -251,7 +251,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               </h3>
 
               {/* ID y Nombre */}
-              <div className="grid items-end grid-cols-1 gap-3 mb-3 sm:grid-cols-5">
+              <div className="grid items-end grid-cols-1 gap-3 mb-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 <div className="col-span-1">
                   <FieldLabel text="ID Generado" />
                   <input
@@ -279,7 +279,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
               {tipo === "comestible" ? (
                 <>
                   {/* Marca y Lote lado a lado */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-2">
                     {renderInput("marca", "Marca", "text", false, null, false, "bg-blue-50")}
                     {renderInput("lote", "Lote", "text", false, null, false, "bg-blue-50")}
                   </div>
@@ -307,7 +307,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
 
                 {/* Ropa */}
                 {tipo === "ropa" && (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-2">
                     {renderInput("talla", "Talla", "text", false, null, false, "bg-blue-50")}
                     {renderInput("color", "Color", "text", false, null, false, "bg-blue-50")}
                   </div>
@@ -318,16 +318,16 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
                   <>
                     {renderInput("sabor", "Sabor/Tipo", "text", false, null, false, "bg-blue-50")}
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-2">
                       {renderSelect("unidad_medida", "Unidad de Medida", [
-                        { value: "peso", label: "Peso (Kg)" },
-                        { value: "litro", label: "Litro (L)" },
+                        { value: "peso", label: "Peso (g)" },
+                        { value: "litro", label: "Litro (ml)" },
                       ])}
 
                       {formData.unidad_medida &&
                         (formData.unidad_medida === "peso"
-                          ? renderInput("peso", "Peso (Kg)", "number", false, null, false, "bg-blue-50")
-                          : renderInput("litros", "Volumen (L)", "number", false, null, false, "bg-blue-50"))
+                          ? renderInput("peso", "Peso (g)", "number", false, null, false, "bg-blue-50")
+                          : renderInput("litros", "Volumen (ml)", "number", false, null, false, "bg-blue-50"))
                       }
                     </div>
 
@@ -367,7 +367,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
           </div>
 
           {/* Stock y pago */}
-          <div className="space-y-4 lg:col-span-1">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
             <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md h-fit">
               <h3 className="flex items-center gap-2 pb-2 mb-3 text-base font-bold text-gray-800 border-b border-gray-200">
                 <TrendingUp size={18} className="text-emerald-500" /> Gestión de Inventario
@@ -410,7 +410,7 @@ export default function ModalNuevoProducto({ isOpen, onClose, tipo, title, onSuc
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-3 border-t border-gray-200">
+        <div className="flex flex-wrap justify-end gap-3 pt-3 border-t border-gray-200">
           <button
             type="button"
             onClick={handleClose}

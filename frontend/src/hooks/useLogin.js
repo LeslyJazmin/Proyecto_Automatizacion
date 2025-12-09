@@ -59,6 +59,7 @@ export default function useLogin(setUser, setToken) {
 
       // Redirección por rol
       if (userData.rol === "admin") navigate("/AdminDashboard");
+      else if (userData.rol === "almacenero") navigate("/AlmaceneroDashboard");
       else navigate("/TrabajadorDashboard");
 
     } catch (err) {

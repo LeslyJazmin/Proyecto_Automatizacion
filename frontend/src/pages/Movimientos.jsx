@@ -9,7 +9,7 @@ import Button from "../components/ui/Button";
 import { Loader2, Zap, Shirt, Pizza, FileDown } from "lucide-react";
 import Modal from "../components/ui/Modal";
 
-// ✅ SOLUCIÓN: Definir API_URL
+// API URL
 const API_URL = "http://localhost:5000";
 
 export default function Movimientos() {
@@ -48,12 +48,19 @@ export default function Movimientos() {
     fetchMovimientos(anio, mes);
   }, [fetchMovimientos]);
 
+  // 📌 NUEVAS CLASES RESPONSIVE (sin alterar diseño original)
   const mainContainerClass = "bg-gray-100 min-h-screen";
-  const contentAreaClass = "ml-64 p-10";
-  const cardContainerClass = "bg-white p-8 rounded-2xl shadow-2xl space-y-8 border border-gray-100";
-  const subTitleClass = "flex items-center gap-2 text-2xl font-extrabold text-red-800 pt-6 mt-6 border-t border-gray-100";
-  const loadingClass = "flex flex-col items-center justify-center h-64 text-xl font-semibold text-red-700 bg-red-50 rounded-xl shadow-inner border border-red-200/50 p-6";
-  const noDataClass = "py-8 px-6 text-center text-lg font-medium text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300";
+  const contentAreaClass = "p-4 md:ml-64 md:p-10";
+  const cardContainerClass =
+    "bg-white p-4 md:p-8 rounded-2xl shadow-2xl space-y-8 border border-gray-100";
+  const subTitleClass =
+    "flex items-center gap-2 text-2xl font-extrabold text-red-800 pt-6 mt-6 border-t border-gray-100";
+
+  const loadingClass =
+    "flex flex-col items-center justify-center h-64 text-xl font-semibold text-red-700 bg-red-50 rounded-xl shadow-inner border border-red-200/50 p-6";
+
+  const noDataClass =
+    "py-6 px-4 md:py-8 md:px-6 text-center text-lg font-medium text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300";
 
   return (
     <div className={mainContainerClass}>
@@ -62,16 +69,20 @@ export default function Movimientos() {
       <div className={contentAreaClass}>
         <div className={cardContainerClass}>
 
-          {/* TÍTULO PRINCIPAL + BOTÓN DESCARGAR */}
-          <div className="flex items-center justify-between pb-3 border-b border-red-700/50">
-            <div className="flex items-center gap-4">
+          {/* HEADER PRINCIPAL */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-3 border-b border-red-700/50">
+
+            {/* TÍTULO + SELECTOR */}
+            <div className="flex flex-col items-start gap-3 md:flex-row md:items-center">
               <h1 className="flex items-center gap-3 text-3xl font-black tracking-tighter text-gray-900">
                 <Zap size={30} className="text-red-700 fill-red-200/50" />
                 HISTORIAL DE MOVIMIENTOS
               </h1>
+
               <MonthYearSelector onMonthYearSelect={handleMonthYearSelect} />
             </div>
 
+            {/* BOTÓN DESCARGAR */}
             <Button
               onClick={() => generarPDFMovimientos(movRopa, movComestibles)}
               className="flex items-center gap-2 px-4 py-2 font-bold text-white transition-all duration-200 bg-red-700 shadow-md hover:bg-red-800 rounded-xl"
@@ -81,6 +92,7 @@ export default function Movimientos() {
             </Button>
           </div>
 
+          {/* LOADING */}
           {loading ? (
             <div className={loadingClass}>
               <Loader2 size={32} className="mb-4 animate-spin" />
@@ -93,13 +105,15 @@ export default function Movimientos() {
                 <Shirt size={24} className="text-red-600" />
                 Ropa
               </h2>
+
               {movRopa.length === 0 ? (
                 <div className={noDataClass}>
-                  Aún no hay **Movimientos de Ropa** registrados.
+                  Aún no hay <strong>Movimientos de Ropa</strong> registrados.
                 </div>
               ) : (
-                // ✅ SOLUCIÓN: Pasar API_URL como prop
-                <TablaMovimientos datos={movRopa} API_URL={API_URL} />
+                <div className="overflow-x-auto">
+                  <TablaMovimientos datos={movRopa} API_URL={API_URL} />
+                </div>
               )}
 
               {/* SECCIÓN COMESTIBLES */}
@@ -107,17 +121,20 @@ export default function Movimientos() {
                 <Pizza size={24} className="text-red-600" />
                 Comestibles
               </h2>
+
               {movComestibles.length === 0 ? (
                 <div className={noDataClass}>
-                  Aún no hay **Movimientos de Comestibles** registrados.
+                  Aún no hay <strong>Movimientos de Comestibles</strong> registrados.
                 </div>
               ) : (
-                // ✅ SOLUCIÓN: Pasar API_URL como prop
-                <TablaMovimientos datos={movComestibles} API_URL={API_URL} />
+                <div className="overflow-x-auto">
+                  <TablaMovimientos datos={movComestibles} API_URL={API_URL} />
+                </div>
               )}
             </>
           )}
-          
+
+          {/* MODAL CERRAR SESIÓN */}
           <Modal
             isOpen={logoutModalOpen}
             onClose={() => setLogoutModalOpen(false)}
@@ -126,7 +143,7 @@ export default function Movimientos() {
             <p className="mb-6 text-center text-gray-700">
               ¿Estás seguro que deseas salir?
             </p>
-            <div className="flex justify-center space-x-4">
+            <div className="flex flex-col md:flex-row justify-center space-y-3 md:space-y-0 md:space-x-4">
               <button
                 onClick={() => setLogoutModalOpen(false)}
                 className="px-5 py-2 text-gray-800 transition-all duration-200 bg-gray-200 rounded-lg hover:bg-gray-300"
@@ -144,6 +161,7 @@ export default function Movimientos() {
               </button>
             </div>
           </Modal>
+
         </div>
       </div>
     </div>

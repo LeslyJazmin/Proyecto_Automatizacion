@@ -5,11 +5,17 @@ export default function useUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [newUser, setNewUser] = useState({ username: "", celular: "", email: "", password: "", rol: "user" });
+  const [newUser, setNewUser] = useState({
+    username: "",
+    celular: "",
+    email: "",
+    password: "",
+    rol: "user"
+  });
+
   const [creating, setCreating] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const [showEmailUpdatedModal, setShowEmailUpdatedModal] = useState(false); // 👈 nuevo estado
+  const [showEmailUpdatedModal, setShowEmailUpdatedModal] = useState(false);
 
   const currentUser = JSON.parse(sessionStorage.getItem("user") || "{}");
 
@@ -32,25 +38,67 @@ export default function useUsers() {
     }
   }
 
-  async function createNewUser() {
-    if (!newUser.username || !newUser.email || !newUser.password) {
-      alert("Todos los campos son obligatorios");
-      return;
-    }
-
-    try {
-      setCreating(true);
-      await createUser({ ...newUser, rol: "user" });
-      setNewUser({ username: "", celular: "", email: "", password: "", rol: "user" });
-      setModalOpen(false);
-      fetchUsers();
-    } catch (err) {
-      console.error("Error al crear usuario:", err);
-      alert(err.message || "Error al crear usuario");
-    } finally {
-      setCreating(false);
-    }
+  // 🔵 CREA USUARIO NORMAL
+async function createNewUser() {
+  if (!newUser.username || !newUser.email || !newUser.password) {
+    alert("Todos los campos son obligatorios");
+    return;
   }
+
+  try {
+    setCreating(true);
+
+    await createUser({
+      ...newUser,
+      rol: "user"
+    });
+
+    setNewUser({
+      username: "",
+      celular: "",
+      email: "",
+      password: "",
+      rol: "user"
+    });
+
+    setModalOpen(false);
+    fetchUsers();
+  } catch (err) {
+    console.error("Error al crear usuario:", err);
+    alert(err.message || "Error al crear usuario");
+  } finally {
+    setCreating(false);
+  }
+}
+
+// 🟢 CREA ALMACENERO
+// eslint-disable-next-line no-unused-vars
+async function createAlmacenero() {
+  if (!newUser.username || !newUser.email || !newUser.password) {
+    alert("Todos los campos son obligatorios");
+    return;
+  }
+
+  try {
+    setCreating(true);
+    await createUser({ ...newUser, rol: "almacenero" });
+    setNewUser({
+      username: "",
+      celular: "",
+      email: "",
+      password: "",
+      rol: "almacenero",
+    });
+
+    setModalOpen(false);
+    fetchUsers();
+  } catch (err) {
+    console.error("Error al crear almacenero:", err);
+    alert(err.message || "Error al crear almacenero");
+  } finally {
+    setCreating(false);
+  }
+}
 
   async function updateUserData(updatedUser) {
     if (!updatedUser.username || !updatedUser.email) {
@@ -72,9 +120,9 @@ export default function useUsers() {
         )
       );
 
-      // ✅ Si el usuario cambió su propio email → mostrar modal en lugar de alert()
-      if (oldUser && oldUser.email !== updatedUser.email && currentUser.id_usuario === updatedUser.id_usuario) {
-        setShowEmailUpdatedModal(true); // 👈 abre modal
+      if (oldUser && oldUser.email !== updatedUser.email &&
+          currentUser.id_usuario === updatedUser.id_usuario) {
+        setShowEmailUpdatedModal(true);
       }
 
     } catch (err) {
@@ -83,15 +131,15 @@ export default function useUsers() {
     }
   }
 
-async function deleteUserData(id) {
-  try {
-    await deleteUser(id);
-    setUsers((prevUsers) => prevUsers.filter((user) => user.id_usuario !== id));
-  } catch (err) {
-    console.error(err);
-    alert("Error al eliminar usuario");
+  async function deleteUserData(id) {
+    try {
+      await deleteUser(id);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id_usuario !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar usuario");
+    }
   }
-}
 
   return {
     users,
@@ -103,7 +151,10 @@ async function deleteUserData(id) {
     newUser,
     setNewUser,
     creating,
-    createNewUser,
+
+    createNewUser,     // Usuario normal
+    createAlmacenero,  // Almacenero
+
     updateUserData,
     deleteUserData,
     showEmailUpdatedModal,

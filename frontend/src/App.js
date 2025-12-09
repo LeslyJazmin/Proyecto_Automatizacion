@@ -3,11 +3,14 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import TrabajadorDashboard from "./pages/TrabajadorDashboard";
+import AlmaceneroDashboard from "./pages/AlmaceneroDashboard"; // 👈 NUEVO
 import GInventario from "./pages/GInventario";
 import TInventario from "./pages/TInventario";
+import AInventario from "./pages/AInventario";
 import Movimientos from "./pages/Movimientos";
 import Reportes from "./pages/Reportes";
 import TReportes from "./pages/TReportes";
+import AReportes from "./pages/AReportes";
 import { jwtDecode } from "jwt-decode";
 
 function App() {
@@ -38,7 +41,10 @@ function App() {
 
   return (
     <Routes>
-      {/* RUTAS ADMIN */}
+
+      {/* ====================== */}
+      {/*     RUTAS ADMIN       */}
+      {/* ====================== */}
       {user?.rol === "admin" && (
         <>
           <Route
@@ -63,7 +69,9 @@ function App() {
         </>
       )}
 
-      {/* RUTAS TRABAJADOR */}
+      {/* ====================== */}
+      {/*    RUTAS TRABAJADOR   */}
+      {/* ====================== */}
       {(user?.rol === "trabajador" || user?.rol === "user") && (
         <>
           <Route
@@ -83,6 +91,30 @@ function App() {
           <Route path="*" element={<Navigate to="/trabajador-dashboard" replace />} />
         </>
       )}
+
+      {/* ====================== */}
+      {/*    RUTAS ALMACENERO   */}
+      {/* ====================== */}
+      {user?.rol === "almacenero" && (
+        <>
+          <Route
+            path="/almacenero-dashboard"
+            element={
+              <AlmaceneroDashboard user={user} setUser={setUser} setToken={setToken} />
+            }
+          />
+          <Route
+            path="/ainventario"
+            element={<AInventario user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route
+            path="/areportes"
+            element={<AReportes user={user} setUser={setUser} setToken={setToken} />}
+          />
+          <Route path="*" element={<Navigate to="/almacenero-dashboard" replace />} />
+        </>
+      )}
+
     </Routes>
   );
 }
